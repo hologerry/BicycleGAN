@@ -1,12 +1,14 @@
-from options.video_options import VideoOptions
+import os
+from itertools import islice
+
+import numpy as np
+import torch
+
+import moviepy.editor
 from data import CreateDataLoader
 from models import create_model
-from itertools import islice
+from options.video_options import VideoOptions
 from util import util
-import numpy as np
-import moviepy.editor
-import os
-import torch
 
 
 def get_random_z(opt):
@@ -58,12 +60,14 @@ for i, data in enumerate(islice(dataset, opt.how_many)):
     for n in range(opt.n_samples):
         z0 = z_samples[n]
         z1 = z_samples[n + 1]
-        zs = util.interp_z(z0, z1, num_frames=opt.num_frames, interp_mode=interp_mode)
+        zs = util.interp_z(z0, z1, num_frames=opt.num_frames,
+                           interp_mode=interp_mode)
         for k in range(opt.num_frames):
             zs_k = (torch.Tensor(zs[[k]])).to(model.device)
             _, fake_B_device, _ = model.test(zs_k, encode=False)
             fake_B = util.tensor2im(fake_B_device)
-            fake_B_b = np.full((h + hb, w + wb, opt.output_nc), 255, fake_B.dtype)
+            fake_B_b = np.full(
+                (h + hb, w + wb, opt.output_nc), 255, fake_B.dtype)
             fake_B_b[hb:, wb:, :] = fake_B
             frames[k + opt.num_frames * n].append(fake_B_b)
 

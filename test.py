@@ -1,11 +1,11 @@
 import os
-from options.test_options import TestOptions
+from itertools import islice
+
 from data import CreateDataLoader
 from models import create_model
-from util.visualizer import save_images
-from itertools import islice
+from options.test_options import TestOptions
 from util import html
-
+from util.visualizer import save_images
 
 # options
 opt = TestOptions().parse()

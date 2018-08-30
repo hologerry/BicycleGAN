@@ -16,29 +16,34 @@ class BiCycleGANModel(BaseModel):
         self.loss_names = ['G_GAN', 'D', 'G_GAN2', 'D2', 'G_L1', 'z_L1', 'kl']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         self.visual_names = ['real_A_encoded', 'real_B_encoded', 'fake_B_random', 'fake_B_encoded']
-        # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
+        # specify the models you want to save to the disk.
+        # The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
         use_E = opt.isTrain or not opt.no_encode
         use_vae = True
         self.model_names = ['G']
-        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, which_model_netG=opt.which_model_netG,
+        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf,
+                                      which_model_netG=opt.which_model_netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
                                       gpu_ids=self.gpu_ids, where_add=self.opt.where_add, upsample=opt.upsample)
         D_output_nc = opt.input_nc + opt.output_nc if opt.conditional_D else opt.output_nc
         use_sigmoid = opt.gan_mode == 'dcgan'
         if use_D:
             self.model_names += ['D']
-            self.netD = networks.define_D(D_output_nc, opt.ndf, which_model_netD=opt.which_model_netD, norm=opt.norm, nl=opt.nl,
-                                          use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
+            self.netD = networks.define_D(D_output_nc, opt.ndf, which_model_netD=opt.which_model_netD,
+                                          norm=opt.norm, nl=opt.nl, use_sigmoid=use_sigmoid, init_type=opt.init_type,
+                                          num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
         if use_D2:
             self.model_names += ['D2']
-            self.netD2 = networks.define_D(D_output_nc, opt.ndf, which_model_netD=opt.which_model_netD2, norm=opt.norm, nl=opt.nl,
-                                           use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
+            self.netD2 = networks.define_D(D_output_nc, opt.ndf, which_model_netD=opt.which_model_netD2,
+                                           norm=opt.norm, nl=opt.nl, use_sigmoid=use_sigmoid, init_type=opt.init_type,
+                                           num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
         if use_E:
             self.model_names += ['E']
-            self.netE = networks.define_E(opt.output_nc, opt.nz, opt.nef, which_model_netE=opt.which_model_netE, norm=opt.norm, nl=opt.nl,
-                                          init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
+            self.netE = networks.define_E(opt.output_nc, opt.nz, opt.nef, which_model_netE=opt.which_model_netE,
+                                          norm=opt.norm, nl=opt.nl, init_type=opt.init_type,
+                                          gpu_ids=self.gpu_ids, vaeLike=use_vae)
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)

@@ -1,7 +1,8 @@
 import time
-from options.train_options import TrainOptions
+
 from data import CreateDataLoader
 from models import create_model
+from options.train_options import TrainOptions
 from util.visualizer import Visualizer
 
 if __name__ == '__main__':
