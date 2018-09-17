@@ -1,15 +1,16 @@
 set -ex
 MODEL='bicycle_gan'
 # dataset details
-CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
+CLASS='facades'  # facades, day2night, edges2shoes, edges2handbags, maps
 NZ=8
-NO_FLIP='--no_flip'
-DIRECTION='AtoB'
+NO_FLIP=''
+DIRECTION='BtoA'
 LOAD_SIZE=256
 FINE_SIZE=256
 INPUT_NC=1
-NITER=30
-NITER_DECAY=30
+NITER=200
+NITER_DECAY=200
+SAVE_EPOCH=25
 
 # training
 GPU_ID=0
@@ -18,7 +19,7 @@ CHECKPOINTS_DIR=../checkpoints/${CLASS}/
 NAME=${CLASS}_${MODEL}
 
 # command
-CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
+python ./train.py \
   --display_id ${DISPLAY_ID} \
   --dataroot ./datasets/${CLASS} \
   --name ${NAME} \
@@ -31,4 +32,5 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --input_nc ${INPUT_NC} \
   --niter ${NITER} \
   --niter_decay ${NITER_DECAY} \
+  --save_epoch_freq ${SAVE_EPOCH} \
   --use_dropout

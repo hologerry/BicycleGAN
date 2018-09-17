@@ -3,12 +3,12 @@
 <br><br><br><br>
 
 # BicycleGAN
-[[Project Page]](https://junyanz.github.io/BicycleGAN/) [[Paper]](https://arxiv.org/abs/1711.11586) [[Demo Video]](https://youtu.be/JvGysD2EFhw)
+[Project Page](https://junyanz.github.io/BicycleGAN/) |  [Paper](https://arxiv.org/abs/1711.11586) | [Video](https://youtu.be/JvGysD2EFhw)
 
 
 Pytorch implementation for multimodal image-to-image translation. For example,  given the same night image, our model is able to synthesize possible day images with different types of lighting, sky and clouds. The training requires paired data.
 
-**Note**: The current software works well with PyTorch 0.4. Check out the older [branch](https://github.com/junyanz/BicycleGAN/tree/pytorch0.3.1) that supports PyTorch 0.1-0.3.
+**Note**: The current software works well with PyTorch 0.4+. Check out the older [branch](https://github.com/junyanz/BicycleGAN/tree/pytorch0.3.1) that supports PyTorch 0.1-0.3.
 
 <img src='imgs/teaser.jpg' width=850>  
 
@@ -109,6 +109,7 @@ bash ./datasets/download_dataset.sh dataset_name
 - `maps`: 1096 training images scraped from Google Maps
 - `edges2shoes`: 50k training images from [UT Zappos50K dataset](http://vision.cs.utexas.edu/projects/finegrained/utzap50k). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. [[Citation](datasets/bibtex/shoes.tex)]
 - `edges2handbags`: 137K Amazon Handbag images from [iGAN project](https://github.com/junyanz/iGAN). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. [[Citation](datasets/bibtex/handbags.tex)]
+- `night2day`: around 20K natural scene images from  [Transient Attributes dataset](http://transattr.cs.brown.edu/) [[Citation](datasets/bibtex/transattr.tex)]
 
 ## Models
 Download the pre-trained models with the following script.
@@ -146,12 +147,13 @@ bash ./scripts/test_maps.sh
 If you find this useful for your research, please use the following.
 
 ```
-@incollection{zhu2017multimodal,
-	title = {Toward Multimodal Image-to-Image Translation},
-	author = {Zhu, Jun-Yan and Zhang, Richard and Pathak, Deepak and Darrell, Trevor and Efros, Alexei A and Wang, Oliver and Shechtman, Eli},
-	booktitle = {Advances in Neural Information Processing Systems 30},
-	year = {2017},
+@inproceedings{zhu2017toward,
+  title={Toward multimodal image-to-image translation},
+  author={Zhu, Jun-Yan and Zhang, Richard and Pathak, Deepak and Darrell, Trevor and Efros, Alexei A and Wang, Oliver and Shechtman, Eli},
+  booktitle={Advances in Neural Information Processing Systems},
+  year={2017}
 }
+
 ```
 
 ### Acknowledgements

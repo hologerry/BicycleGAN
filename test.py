@@ -9,8 +9,8 @@ from util.visualizer import save_images
 
 # options
 opt = TestOptions().parse()
-opt.nThreads = 1   # test code only supports nThreads=1
-opt.batchSize = 1   # test code only supports batchSize=1
+opt.num_threads = 1   # test code only supports num_threads=1
+opt.batch_size = 1   # test code only supports batch_size=1
 opt.serial_batches = True  # no shuffle
 
 # create dataset
@@ -30,9 +30,9 @@ if opt.sync:
     z_samples = model.get_z_random(opt.n_samples + 1, opt.nz)
 
 # test stage
-for i, data in enumerate(islice(dataset, opt.how_many)):
+for i, data in enumerate(islice(dataset, opt.num_test)):
     model.set_input(data)
-    print('process input image %3.3d/%3.3d' % (i, opt.how_many))
+    print('process input image %3.3d/%3.3d' % (i, opt.num_test))
     if not opt.sync:
         z_samples = model.get_z_random(opt.n_samples + 1, opt.nz)
     for nn in range(opt.n_samples + 1):
