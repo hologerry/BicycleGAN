@@ -22,7 +22,8 @@ def init_weights(net, init_type='normal', gain=0.02):
             elif init_type == 'orthogonal':
                 init.orthogonal_(m.weight.data, gain=gain)
             else:
-                raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
+                raise NotImplementedError(
+                    'initialization method [%s] is not implemented' % init_type)
             if hasattr(m, 'bias') and m.bias is not None:
                 init.constant_(m.bias.data, 0.0)
         elif classname.find('BatchNorm2d') != -1:
@@ -109,7 +110,8 @@ def define_G(input_nc, output_nc, nz, ngf,
         net = G_Unet_add_all(input_nc, output_nc, nz, 8, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                              use_dropout=use_dropout, upsample=upsample)
     else:
-        raise NotImplementedError('Generator model name [%s] is not recognized' % net)
+        raise NotImplementedError(
+            'Generator model name [%s] is not recognized' % net)
 
     return init_net(net, init_type, gpu_ids)
 
@@ -135,7 +137,8 @@ def define_D(input_nc, ndf, netD,
         net = D_NLayersMulti(input_nc=input_nc, ndf=ndf, n_layers=3, norm_layer=norm_layer,
                              use_sigmoid=use_sigmoid, num_D=num_Ds)
     else:
-        raise NotImplementedError('Discriminator model name [%s] is not recognized' % net)
+        raise NotImplementedError(
+            'Discriminator model name [%s] is not recognized' % net)
     return init_net(net, init_type, gpu_ids)
 
 
@@ -159,7 +162,8 @@ def define_E(input_nc, output_nc, ndf, netE,
         net = E_NLayers(input_nc, output_nc, ndf, n_layers=5, norm_layer=norm_layer,
                         nl_layer=nl_layer, vaeLike=vaeLike)
     else:
-        raise NotImplementedError('Encoder model name [%s] is not recognized' % net)
+        raise NotImplementedError(
+            'Encoder model name [%s] is not recognized' % net)
 
     return init_net(net, init_type, gpu_ids)
 
@@ -177,7 +181,8 @@ class ListModule(object):
         if not isinstance(new_module, nn.Module):
             raise ValueError('Not a Module')
         else:
-            self.module.add_module(self.prefix + str(self.num_module), new_module)
+            self.module.add_module(
+                self.prefix + str(self.num_module), new_module)
             self.num_module += 1
 
     def __len__(self):
@@ -700,7 +705,8 @@ class UnetBlock_with_z(nn.Module):
     def forward(self, x, z):
         # print(x.size())
         if self.nz > 0:
-            z_img = z.view(z.size(0), z.size(1), 1, 1).expand(z.size(0), z.size(1), x.size(2), x.size(3))
+            z_img = z.view(z.size(0), z.size(1), 1, 1).expand(
+                z.size(0), z.size(1), x.size(2), x.size(3))
             x_and_z = torch.cat([x, z_img], 1)
         else:
             x_and_z = x

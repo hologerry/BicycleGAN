@@ -38,17 +38,21 @@ class Pix2PixModel(BaseModel):
         if self.isTrain:
             use_sigmoid = opt.gan_mode == 'dcgan'
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, netD=opt.netD,
-                                          norm=opt.norm, nl=opt.nl, use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
+                                          norm=opt.norm, nl=opt.nl, use_sigmoid=use_sigmoid, init_type=opt.init_type,
+                                          num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
 
         if self.isTrain:
             # define loss functions
-            self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
+            self.criterionGAN = networks.GANLoss(
+                mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
 
             # initialize optimizers
             self.optimizers = []
-            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam(
+                self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_D = torch.optim.Adam(
+                self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
@@ -85,7 +89,8 @@ class Pix2PixModel(BaseModel):
         self.loss_G_GAN, _ = self.criterionGAN(pred_fake, True)
 
         # Second, G(A) = B
-        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        self.loss_G_L1 = self.criterionL1(
+            self.fake_B, self.real_B) * self.opt.lambda_L1
 
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
 
