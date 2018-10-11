@@ -4,7 +4,8 @@ MODEL='bicycle_gan'
 CLASS=${1}
 GPU_ID=${2}
 
-DISPLAY_ID=$((GPU_ID*10+1))
+# DISPLAY_ID=$((GPU_ID*10+1))
+DISPLAY_ID=0
 PORT=2005
 
 NZ=8
