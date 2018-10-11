@@ -22,7 +22,8 @@ def find_dataset_using_name(dataset_name):
             dataset = cls
 
     if dataset is None:
-        print("In %s.py, there should be a subclass of BaseDataset with class name that matches %s in lowercase." % (dataset_filename, target_dataset_name))
+        print("In %s.py, there should be a subclass of BaseDataset with class name that matches %s in lowercase."
+              % (dataset_filename, target_dataset_name))
         exit(0)
 
     return dataset
