@@ -40,7 +40,7 @@ class Visualizer():
         self.name = opt.name
         self.opt = opt
         self.saved = False
-        if self.display_id > 0:
+        if self.use_html and self.display_id > 0:
             import visdom
             self.ncols = opt.display_ncols
             self.vis = visdom.Visdom(server=opt.display_server, port=opt.display_port)
@@ -130,15 +130,16 @@ class Visualizer():
             self.plot_data = {'X': [], 'Y': [], 'legend': list(losses.keys())}
         self.plot_data['X'].append(epoch + counter_ratio)
         self.plot_data['Y'].append([losses[k] for k in self.plot_data['legend']])
-        self.vis.line(
-            X=np.stack([np.array(self.plot_data['X'])] * len(self.plot_data['legend']), 1),
-            Y=np.array(self.plot_data['Y']),
-            opts={
-                'title': self.name + ' loss over time',
-                'legend': self.plot_data['legend'],
-                'xlabel': 'epoch',
-                'ylabel': 'loss'},
-            win=self.display_id)
+        if self.use_html:
+            self.vis.line(
+                X=np.stack([np.array(self.plot_data['X'])] * len(self.plot_data['legend']), 1),
+                Y=np.array(self.plot_data['Y']),
+                opts={
+                    'title': self.name + ' loss over time',
+                    'legend': self.plot_data['legend'],
+                    'xlabel': 'epoch',
+                    'ylabel': 'loss'},
+                win=self.display_id)
 
     # losses: same format as |losses| of plot_current_losses
     def print_current_losses(self, epoch, i, losses, t, t_data):

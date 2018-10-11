@@ -3,8 +3,10 @@ CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
 MODEL='bicycle_gan'
 CLASS=${1}
 GPU_ID=${2}
+
 DISPLAY_ID=$((GPU_ID*10+1))
 PORT=2005
+
 NZ=8
 
 
@@ -79,4 +81,5 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --input_nc ${INPUT_NC} \
   --niter ${NITER} \
   --niter_decay ${NITER_DECAY} \
-  --use_dropout
+  --use_dropout \
+  --no_html
