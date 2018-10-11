@@ -40,7 +40,7 @@ class Visualizer():
         self.name = opt.name
         self.opt = opt
         self.saved = False
-        if self.use_html and self.display_id > 0:
+        if self.display_id > 0:
             import visdom
             self.ncols = opt.display_ncols
             self.vis = visdom.Visdom(server=opt.display_server, port=opt.display_port)
@@ -130,7 +130,7 @@ class Visualizer():
             self.plot_data = {'X': [], 'Y': [], 'legend': list(losses.keys())}
         self.plot_data['X'].append(epoch + counter_ratio)
         self.plot_data['Y'].append([losses[k] for k in self.plot_data['legend']])
-        if self.use_html:
+        if self.display_id > 0:
             self.vis.line(
                 X=np.stack([np.array(self.plot_data['X'])] * len(self.plot_data['legend']), 1),
                 Y=np.array(self.plot_data['Y']),
