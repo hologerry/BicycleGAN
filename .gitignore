@@ -2,6 +2,7 @@
 *.fuse*
 *.pth
 *.pyc
+*.flake8
 debug*
 datasets/
 videos/

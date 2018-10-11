@@ -50,13 +50,14 @@ case ${CLASS} in
   SAVE_EPOCH=25
   DIRECTION='BtoA'
   ;;
-'day2night')
+'night2day')
   NITER=50
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
 *)
-  echo 'WRONG category'${CLASS}
+  echo 'WRONG category: '${CLASS}
+  exit
   ;;
 esac
 
