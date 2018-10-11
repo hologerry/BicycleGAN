@@ -15,7 +15,7 @@ SAVE_EPOCH=25
 # training
 GPU_ID=0
 DISPLAY_ID=$((GPU_ID*10+1))
-CHECKPOINTS_DIR=../checkpoints/${CLASS}/
+CHECKPOINTS_DIR=checkpoints/${CLASS}/
 NAME=${CLASS}_${MODEL}
 
 # command
