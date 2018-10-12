@@ -97,12 +97,18 @@ def define_G(input_nc, output_nc, nz, ngf,
     if nz == 0:
         where_add = 'input'
 
-    if netG == 'unet_128' and where_add == 'input':
+    if netG == 'unet_64' and where_add == 'input':
+        net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
+                               use_dropout=use_dropout, upsample=upsample)
+    elif netG == 'unet_128' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 7, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                                use_dropout=use_dropout, upsample=upsample)
     elif netG == 'unet_256' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 8, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                                use_dropout=use_dropout, upsample=upsample)
+    elif netG == 'unet_64' and where_add == 'all':
+        net = G_Unet_add_all(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
+                             use_dropout=use_dropout, upsample=upsample)
     elif netG == 'unet_128' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 7, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                              use_dropout=use_dropout, upsample=upsample)
@@ -124,12 +130,18 @@ def define_D(input_nc, ndf, netD,
     nl = 'lrelu'  # use leaky relu for D
     nl_layer = get_non_linearity(layer_type=nl)
 
-    if netD == 'basic_128':
+    if netD == 'basic_64':
+        net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
+                        nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+    elif netD == 'basic_128':
         net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
                         nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_256':
         net = D_NLayers(input_nc, ndf, n_layers=3, norm_layer=norm_layer,
                         nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+    elif netD == 'basic_64_multi':
+        net = D_NLayersMulti(input_nc=input_nc, ndf=ndf, n_layers=1, norm_layer=norm_layer,
+                             use_sigmoid=use_sigmoid, num_D=num_Ds)
     elif netD == 'basic_128_multi':
         net = D_NLayersMulti(input_nc=input_nc, ndf=ndf, n_layers=2, norm_layer=norm_layer,
                              use_sigmoid=use_sigmoid, num_D=num_Ds)
@@ -149,12 +161,19 @@ def define_E(input_nc, output_nc, ndf, netE,
     norm_layer = get_norm_layer(layer_type=norm)
     nl = 'lrelu'  # use leaky relu for E
     nl_layer = get_non_linearity(layer_type=nl)
-    if netE == 'resnet_128':
+
+    if netE == 'resnet_64':
+        net = E_ResNet(input_nc, output_nc, ndf, n_blocks=3, norm_layer=norm_layer,
+                       nl_layer=nl_layer, vaeLike=vaeLike)
+    elif netE == 'resnet_128':
         net = E_ResNet(input_nc, output_nc, ndf, n_blocks=4, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'resnet_256':
         net = E_ResNet(input_nc, output_nc, ndf, n_blocks=5, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
+    elif netE == 'conv_64':
+        net = E_NLayers(input_nc, output_nc, ndf, n_layers=3, norm_layer=norm_layer,
+                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'conv_128':
         net = E_NLayers(input_nc, output_nc, ndf, n_layers=4, norm_layer=norm_layer,
                         nl_layer=nl_layer, vaeLike=vaeLike)
@@ -264,7 +283,6 @@ class D_NLayersMulti(nn.Module):
         return result
 
 
-# Defines the conv discriminator with the specified arguments.
 class G_NLayers(nn.Module):
     def __init__(self, output_nc=3, nz=100, ngf=64, n_layers=3,
                  norm_layer=None, nl_layer=None):
@@ -299,6 +317,7 @@ class G_NLayers(nn.Module):
         return self.model(input)
 
 
+# Defines the conv discriminator with the specified arguments.
 class D_NLayers(nn.Module):
     def __init__(self, input_nc=3, ndf=64, n_layers=3,
                  norm_layer=None, nl_layer=None, use_sigmoid=False):
@@ -341,6 +360,43 @@ class D_NLayers(nn.Module):
 
     def forward(self, input):
         output = self.model(input)
+        return output
+
+
+class E_NLayers(nn.Module):
+    def __init__(self, input_nc, output_nc=1, ndf=64, n_layers=3,
+                 norm_layer=None, nl_layer=None, vaeLike=False):
+        super(E_NLayers, self).__init__()
+        self.vaeLike = vaeLike
+
+        kw, padw = 4, 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                              stride=2, padding=padw), nl_layer()]
+
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, n_layers):
+            nf_mult_prev = nf_mult
+            nf_mult = min(2**n, 4)
+            sequence += [
+                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                          kernel_size=kw, stride=2, padding=padw)]
+            if norm_layer is not None:
+                sequence += [norm_layer(ndf * nf_mult)]
+            sequence += [nl_layer()]
+        sequence += [nn.AvgPool2d(8)]
+        self.conv = nn.Sequential(*sequence)
+        self.fc = nn.Sequential(*[nn.Linear(ndf * nf_mult, output_nc)])
+        if vaeLike:
+            self.fcVar = nn.Sequential(*[nn.Linear(ndf * nf_mult, output_nc)])
+
+    def forward(self, x):
+        x_conv = self.conv(x)
+        conv_flat = x_conv.view(x.size(0), -1)
+        output = self.fc(conv_flat)
+        if self.vaeLike:
+            outputVar = self.fcVar(conv_flat)
+            return output, outputVar
         return output
 
 
@@ -392,45 +448,6 @@ class GANLoss(nn.Module):
         return loss, all_losses
 
 
-# Defines the Unet generator.
-# |num_downs|: number of downsamplings in UNet. For example,
-# if |num_downs| == 7, image of size 128x128 will become of size 1x1
-# at the bottleneck
-class G_Unet_add_input(nn.Module):
-    def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
-                 norm_layer=None, nl_layer=None, use_dropout=False,
-                 upsample='basic'):
-        super(G_Unet_add_input, self).__init__()
-        self.nz = nz
-        max_nchn = 8
-        # construct unet structure
-        unet_block = UnetBlock(ngf * max_nchn, ngf * max_nchn, ngf * max_nchn,
-                               innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        for i in range(num_downs - 5):
-            unet_block = UnetBlock(ngf * max_nchn, ngf * max_nchn, ngf * max_nchn, unet_block,
-                                   norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout, upsample=upsample)
-        unet_block = UnetBlock(ngf * 4, ngf * 4, ngf * max_nchn, unet_block,
-                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf * 2, ngf * 2, ngf * 4, unet_block,
-                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf, ngf, ngf * 2, unet_block,
-                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
-                               outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-
-        self.model = unet_block
-
-    def forward(self, x, z=None):
-        if self.nz > 0:
-            z_img = z.view(z.size(0), z.size(1), 1, 1).expand(
-                z.size(0), z.size(1), x.size(2), x.size(3))
-            x_with_z = torch.cat([x, z_img], 1)
-        else:
-            x_with_z = x  # no z
-
-        return self.model(x_with_z)
-
-
 def upsampleLayer(inplanes, outplanes, upsample='basic', padding_type='zero'):
     # padding_type = 'zero'
     if upsample == 'basic':
@@ -444,6 +461,35 @@ def upsampleLayer(inplanes, outplanes, upsample='basic', padding_type='zero'):
         raise NotImplementedError(
             'upsample layer [%s] not implemented' % upsample)
     return upconv
+
+
+def conv3x3(in_planes, out_planes):
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=1,
+                     padding=1, bias=True)
+
+
+# two usage cases, depend on kw and padw
+def upsampleConv(inplanes, outplanes, kw, padw):
+    sequence = []
+    sequence += [nn.Upsample(scale_factor=2, mode='nearest')]
+    sequence += [nn.Conv2d(inplanes, outplanes, kernel_size=kw,
+                           stride=1, padding=padw, bias=True)]
+    return nn.Sequential(*sequence)
+
+
+def meanpoolConv(inplanes, outplanes):
+    sequence = []
+    sequence += [nn.AvgPool2d(kernel_size=2, stride=2)]
+    sequence += [nn.Conv2d(inplanes, outplanes,
+                           kernel_size=1, stride=1, padding=0, bias=True)]
+    return nn.Sequential(*sequence)
+
+
+def convMeanpool(inplanes, outplanes):
+    sequence = []
+    sequence += [conv3x3(inplanes, outplanes)]
+    sequence += [nn.AvgPool2d(kernel_size=2, stride=2)]
+    return nn.Sequential(*sequence)
 
 
 # Defines the submodule with skip connection.
@@ -510,35 +556,6 @@ class UnetBlock(nn.Module):
             return self.model(x)
         else:
             return torch.cat([self.model(x), x], 1)
-
-
-def conv3x3(in_planes, out_planes):
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=1,
-                     padding=1, bias=True)
-
-
-# two usage cases, depend on kw and padw
-def upsampleConv(inplanes, outplanes, kw, padw):
-    sequence = []
-    sequence += [nn.Upsample(scale_factor=2, mode='nearest')]
-    sequence += [nn.Conv2d(inplanes, outplanes, kernel_size=kw,
-                           stride=1, padding=padw, bias=True)]
-    return nn.Sequential(*sequence)
-
-
-def meanpoolConv(inplanes, outplanes):
-    sequence = []
-    sequence += [nn.AvgPool2d(kernel_size=2, stride=2)]
-    sequence += [nn.Conv2d(inplanes, outplanes,
-                           kernel_size=1, stride=1, padding=0, bias=True)]
-    return nn.Sequential(*sequence)
-
-
-def convMeanpool(inplanes, outplanes):
-    sequence = []
-    sequence += [conv3x3(inplanes, outplanes)]
-    sequence += [nn.AvgPool2d(kernel_size=2, stride=2)]
-    return nn.Sequential(*sequence)
 
 
 class BasicBlockUp(nn.Module):
@@ -611,39 +628,6 @@ class E_ResNet(nn.Module):
         else:
             return output
         return output
-
-
-# Defines the Unet generator.
-# |num_downs|: number of downsamplings in UNet. For example,
-# if |num_downs| == 7, image of size 128x128 will become of size 1x1
-# at the bottleneck
-class G_Unet_add_all(nn.Module):
-    def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
-                 norm_layer=None, nl_layer=None, use_dropout=False, upsample='basic'):
-        super(G_Unet_add_all, self).__init__()
-        self.nz = nz
-        # construct unet structure
-        unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, None, innermost=True,
-                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, unet_block,
-                                      norm_layer=norm_layer, nl_layer=nl_layer,
-                                      use_dropout=use_dropout, upsample=upsample)
-        for i in range(num_downs - 6):
-            unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, unet_block,
-                                          norm_layer=norm_layer, nl_layer=nl_layer,
-                                          use_dropout=use_dropout, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf * 4, ngf * 4, ngf * 8, nz, unet_block,
-                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf * 2, ngf * 2, ngf * 4, nz, unet_block,
-                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(
-            ngf, ngf, ngf * 2, nz, unet_block, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block,
-                                      outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        self.model = unet_block
-
-    def forward(self, x, z):
-        return self.model(x, z)
 
 
 class UnetBlock_with_z(nn.Module):
@@ -724,38 +708,73 @@ class UnetBlock_with_z(nn.Module):
             return torch.cat([self.up(x2), x], 1)
 
 
-class E_NLayers(nn.Module):
-    def __init__(self, input_nc, output_nc=1, ndf=64, n_layers=3,
-                 norm_layer=None, nl_layer=None, vaeLike=False):
-        super(E_NLayers, self).__init__()
-        self.vaeLike = vaeLike
+# Defines the Unet generator.
+# |num_downs|: number of downsamplings in UNet. For example,
+# if |num_downs| == 7, image of size 128x128 will become of size 1x1
+# at the bottleneck
+class G_Unet_add_input(nn.Module):
+    def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
+                 norm_layer=None, nl_layer=None, use_dropout=False,
+                 upsample='basic'):
+        super(G_Unet_add_input, self).__init__()
+        self.nz = nz
+        max_nchn = 8
+        # construct unet structure
+        unet_block = UnetBlock(ngf * max_nchn, ngf * max_nchn, ngf * max_nchn,
+                               innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        for i in range(num_downs - 5):
+            unet_block = UnetBlock(ngf * max_nchn, ngf * max_nchn, ngf * max_nchn, unet_block,
+                                   norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout, upsample=upsample)
+        unet_block = UnetBlock(ngf * 4, ngf * 4, ngf * max_nchn, unet_block,
+                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock(ngf * 2, ngf * 2, ngf * 4, unet_block,
+                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock(ngf, ngf, ngf * 2, unet_block,
+                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
+                               outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
 
-        kw, padw = 4, 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
-                              stride=2, padding=padw), nl_layer()]
+        self.model = unet_block
 
-        nf_mult = 1
-        nf_mult_prev = 1
-        for n in range(1, n_layers):
-            nf_mult_prev = nf_mult
-            nf_mult = min(2**n, 4)
-            sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
-                          kernel_size=kw, stride=2, padding=padw)]
-            if norm_layer is not None:
-                sequence += [norm_layer(ndf * nf_mult)]
-            sequence += [nl_layer()]
-        sequence += [nn.AvgPool2d(8)]
-        self.conv = nn.Sequential(*sequence)
-        self.fc = nn.Sequential(*[nn.Linear(ndf * nf_mult, output_nc)])
-        if vaeLike:
-            self.fcVar = nn.Sequential(*[nn.Linear(ndf * nf_mult, output_nc)])
+    def forward(self, x, z=None):
+        if self.nz > 0:
+            z_img = z.view(z.size(0), z.size(1), 1, 1).expand(
+                z.size(0), z.size(1), x.size(2), x.size(3))
+            x_with_z = torch.cat([x, z_img], 1)
+        else:
+            x_with_z = x  # no z
 
-    def forward(self, x):
-        x_conv = self.conv(x)
-        conv_flat = x_conv.view(x.size(0), -1)
-        output = self.fc(conv_flat)
-        if self.vaeLike:
-            outputVar = self.fcVar(conv_flat)
-            return output, outputVar
-        return output
+        return self.model(x_with_z)
+
+
+# Defines the Unet generator.
+# |num_downs|: number of downsamplings in UNet. For example,
+# if |num_downs| == 7, image of size 128x128 will become of size 1x1
+# at the bottleneck
+class G_Unet_add_all(nn.Module):
+    def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
+                 norm_layer=None, nl_layer=None, use_dropout=False, upsample='basic'):
+        super(G_Unet_add_all, self).__init__()
+        self.nz = nz
+        # construct unet structure
+        unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, None, innermost=True,
+                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, unet_block,
+                                      norm_layer=norm_layer, nl_layer=nl_layer,
+                                      use_dropout=use_dropout, upsample=upsample)
+        for i in range(num_downs - 6):
+            unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, unet_block,
+                                          norm_layer=norm_layer, nl_layer=nl_layer,
+                                          use_dropout=use_dropout, upsample=upsample)
+        unet_block = UnetBlock_with_z(ngf * 4, ngf * 4, ngf * 8, nz, unet_block,
+                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock_with_z(ngf * 2, ngf * 2, ngf * 4, nz, unet_block,
+                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock_with_z(
+            ngf, ngf, ngf * 2, nz, unet_block, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block,
+                                      outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        self.model = unet_block
+
+    def forward(self, x, z):
+        return self.model(x, z)

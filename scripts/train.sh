@@ -23,6 +23,12 @@ LOAD_SIZE=286
 FINE_SIZE=256
 RESIZE_OR_CROP='resize_and_crop'
 INPUT_NC=3
+NGF=64
+NDF=64
+NEF=64
+NET_G='unet_64'
+NET_D='basic_64_multi'
+NET_E='resnet_64'
 
 # dataset parameters
 case ${CLASS} in
@@ -59,37 +65,20 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'capitals64')
+'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
-  NITER=50
-  NITER_DECAY=50
+  NITER=60
+  NITER_DECAY=60
   SAVE_EPOCH=10
-  ;;
-'gray2grad0')
-  LOAD_SIZE=64
-  FINE_SIZE=64
-  RESIZE_OR_CROP='none'
-  NITER=50
-  NITER_DECAY=50
-  SAVE_EPOCH=10
-  ;;
-'gray2grad1')
-  LOAD_SIZE=64
-  FINE_SIZE=64
-  RESIZE_OR_CROP='none'
-  NITER=50
-  NITER_DECAY=50
-  SAVE_EPOCH=10
-  ;;
-'gray2grad2')
-  LOAD_SIZE=64
-  FINE_SIZE=64
-  RESIZE_OR_CROP='none'
-  NITER=50
-  NITER_DECAY=50
-  SAVE_EPOCH=10
+  NEF=32
+  NGF=32
+  NDF=32
+  NET_G='unet_64'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -116,4 +105,11 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --input_nc ${INPUT_NC} \
   --niter ${NITER} \
   --niter_decay ${NITER_DECAY} \
+  --ngf ${NGF} \
+  --ndf ${NDF} \
+  --nef ${NEF} \
+  --netG ${NET_G} \
+  --netE ${NET_E} \
+  --netD ${NET_D} \
+  --netD2 ${NET_D2} \
   --use_dropout

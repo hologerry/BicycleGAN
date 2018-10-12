@@ -16,7 +16,7 @@ class BaseOptions():
         parser.add_argument('--dataroot', required=True,
                             help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
         parser.add_argument('--batch_size', type=int,
-                            default=2, help='input batch size')
+                            default=16, help='input batch size')
         parser.add_argument('--loadSize', type=int,
                             default=286, help='scale images to this size')
         parser.add_argument('--fineSize', type=int,
@@ -46,7 +46,7 @@ class BaseOptions():
                             default='AtoB', help='AtoB or BtoA')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=4,
+        parser.add_argument('--num_threads', default=8,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
@@ -65,14 +65,14 @@ class BaseOptions():
                             help='number of Discrminators')
         parser.add_argument('--gan_mode', type=str,
                             default='lsgan', help='dcgan|lsgan')
-        parser.add_argument(
-            '--netD', type=str, default='basic_256_multi', help='selects model to use for netD')
-        parser.add_argument(
-            '--netD2', type=str, default='basic_256_multi', help='selects model to use for netD')
+        parser.add_argument('--netD', type=str, default='basic_256_multi',
+                            help='selects model to use for netD')
+        parser.add_argument('--netD2', type=str, default='basic_256_multi',
+                            help='selects model to use for netD')
         parser.add_argument('--netG', type=str, default='unet_256',
                             help='selects model to use for netG')
-        parser.add_argument(
-            '--netE', type=str, default='resnet_256', help='selects model to use for netE')
+        parser.add_argument('--netE', type=str, default='resnet_256',
+                            help='selects model to use for netE')
         parser.add_argument('--norm', type=str, default='instance',
                             help='instance normalization or batch normalization')
         parser.add_argument('--upsample', type=str,
