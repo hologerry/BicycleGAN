@@ -2,7 +2,7 @@ import os.path
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, get_transform
+from data.base_dataset import BaseDataset, transform_pair
 from data.image_folder import make_dataset
 
 
@@ -16,7 +16,6 @@ class AlignedDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_AB = os.path.join(opt.dataroot, opt.phase)
         self.AB_paths = sorted(make_dataset(self.dir_AB))
-        self.transforms = get_transform(opt)
 
     def __getitem__(self, index):
         AB_path = self.AB_paths[index]
@@ -26,8 +25,7 @@ class AlignedDataset(BaseDataset):
         A = AB.crop((0, 0, w2, h))
         B = AB.crop((w2, 0, w, h))
 
-        A = self.transforms(A)
-        B = self.transforms(B)
+        A, B = transform_pair(self.opt, A, B)
 
         if self.opt.direction == 'BtoA':
             input_nc = self.opt.output_nc
