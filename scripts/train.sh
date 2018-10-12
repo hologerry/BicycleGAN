@@ -23,6 +23,9 @@ LOAD_SIZE=286
 FINE_SIZE=256
 RESIZE_OR_CROP='resize_and_crop'
 INPUT_NC=3
+BATCH_SIZE=16
+
+# Networks module
 NGF=64
 NDF=64
 NEF=64
@@ -66,6 +69,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
+  BATCH_SIZE=64
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -97,6 +101,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --display_port ${PORT} \
   --direction ${DIRECTION} \
   --checkpoints_dir ${CHECKPOINTS_DIR} \
+  --batch_size ${BATCH_SIZE} \
   --loadSize ${LOAD_SIZE} \
   --fineSize ${FINE_SIZE} \
   --resize_or_crop ${RESIZE_OR_CROP} \
