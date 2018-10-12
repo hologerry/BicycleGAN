@@ -73,6 +73,7 @@ case ${CLASS} in
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
   NITER=60
   NITER_DECAY=60
   SAVE_EPOCH=10
@@ -105,6 +106,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --loadSize ${LOAD_SIZE} \
   --fineSize ${FINE_SIZE} \
   --resize_or_crop ${RESIZE_OR_CROP} \
+  $P{NO_FLIP} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \
