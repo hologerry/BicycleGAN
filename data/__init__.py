@@ -4,18 +4,18 @@ from data.base_data_loader import BaseDataLoader
 from data.base_dataset import BaseDataset
 
 
-def find_dataset_using_name(dataset_name):
-    # Given the option --dataset_mode [datasetname],
-    # the file "data/datasetname_dataset.py"
+def find_dataset_using_name(dataset_mode):
+    # Given the option --dataset_mode [datasetmode],
+    # the file "data/datasetmode_dataset.py"
     # will be imported.
-    dataset_filename = "data." + dataset_name + "_dataset"
+    dataset_filename = "data." + dataset_mode + "_dataset"
     datasetlib = importlib.import_module(dataset_filename)
 
-    # In the file, the class called DatasetNameDataset() will
+    # In the file, the class called DatasetModeDataset() will
     # be instantiated. It has to be a subclass of BaseDataset,
     # and it is case-insensitive.
     dataset = None
-    target_dataset_name = dataset_name.replace('_', '') + 'dataset'
+    target_dataset_name = dataset_mode.replace('_', '') + 'dataset'
     for name, cls in datasetlib.__dict__.items():
         if name.lower() == target_dataset_name.lower() \
            and issubclass(cls, BaseDataset):

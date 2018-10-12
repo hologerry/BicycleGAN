@@ -36,8 +36,8 @@ class BaseOptions():
                             help='gpu ids: e.g. 0  0,1,2, 0,2, -1 for CPU mode')
         parser.add_argument('--name', type=str, default='',
                             help='name of the experiment. It decides where to store samples and models')
-        parser.add_argument('--resize_or_crop', type=str,
-                            default='resize_and_crop', help='not implemented')
+        parser.add_argument('--resize_or_crop', type=str, default='resize_and_crop',
+                            help='resize_and_crop, crop, scale_width, scale_width_and_crop, or none')
         parser.add_argument('--dataset_mode', type=str,
                             default='aligned', help='aligned,single')
         parser.add_argument('--model', type=str, default='bicycle_gan',

@@ -13,7 +13,7 @@ NZ=8
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 DATE=`date '+%d_%m_%Y_%H'`
-NAME=${CLASS}_${MODEL}_${DATE}
+NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
 # dataset
@@ -21,6 +21,7 @@ NO_FLIP=''
 DIRECTION='AtoB'
 LOAD_SIZE=286
 FINE_SIZE=256
+RESIZE_OR_CROP='resize_and_crop'
 INPUT_NC=3
 
 # dataset parameters
@@ -58,6 +59,38 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
+'capitals64')
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NITER=50
+  NITER_DECAY=50
+  SAVE_EPOCH=10
+  ;;
+'gray2grad0')
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NITER=50
+  NITER_DECAY=50
+  SAVE_EPOCH=10
+  ;;
+'gray2grad1')
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NITER=50
+  NITER_DECAY=50
+  SAVE_EPOCH=10
+  ;;
+'gray2grad2')
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NITER=50
+  NITER_DECAY=50
+  SAVE_EPOCH=10
+  ;;
 *)
   echo 'WRONG category: '${CLASS}
   exit
@@ -77,6 +110,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --checkpoints_dir ${CHECKPOINTS_DIR} \
   --loadSize ${LOAD_SIZE} \
   --fineSize ${FINE_SIZE} \
+  --resize_or_crop ${RESIZE_OR_CROP} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \
