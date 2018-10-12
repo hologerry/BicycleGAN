@@ -45,8 +45,8 @@ class BiCycleGANModel(BaseModel):
                                            gpu_ids=self.gpu_ids)
         if use_E:
             self.model_names += ['E']
-            self.netE = networks.define_E(opt.output_nc, opt.nz, opt.nef, netE=opt.netE, norm=opt.norm, nl=opt.nl,
-                                          init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
+            self.netE = networks.define_E(opt.input_nc*opt.nencode, opt.nz, opt.nef, netE=opt.netE, norm=opt.norm,
+                                          nl=opt.nl, init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(

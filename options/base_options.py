@@ -25,6 +25,7 @@ class BaseOptions():
                             help='# of input image channels')
         parser.add_argument('--output_nc', type=int, default=3,
                             help='# of output image channels')
+        parser.add_argument('--nencode', type=int, default=5, help='# of image(s) for encoder')
         parser.add_argument('--nz', type=int, default=8, help='# latent vector')
         parser.add_argument('--nef', type=int, default=64,
                             help='# of encoder filters in first conv layer')
