@@ -24,6 +24,7 @@ FINE_SIZE=256
 RESIZE_OR_CROP='resize_and_crop'
 INPUT_NC=3
 BATCH_SIZE=16
+DATASET_MODE='aligned'
 
 # Networks module
 NGF=64
@@ -84,6 +85,7 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
+  DATASET_MODE='multi_aligned'
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -119,4 +121,5 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --netE ${NET_E} \
   --netD ${NET_D} \
   --netD2 ${NET_D2} \
-  --use_dropout
+  --use_dropout \
+  --dataset_mode ${DATASET_MODE}

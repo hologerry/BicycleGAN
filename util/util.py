@@ -15,7 +15,9 @@ def tensor2im(input_image, imtype=np.uint8):
         image_tensor = input_image.data
     else:
         return input_image
+    # Only use first image of one batch
     image_numpy = image_tensor[0].cpu().float().numpy()
+    # One channel image
     if image_numpy.shape[0] == 1:
         image_numpy = np.tile(image_numpy, (3, 1, 1))
     image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0

@@ -40,7 +40,7 @@ class BaseOptions():
         parser.add_argument('--resize_or_crop', type=str, default='resize_and_crop',
                             help='resize_and_crop, crop, scale_width, scale_width_and_crop, or none')
         parser.add_argument('--dataset_mode', type=str,
-                            default='aligned', help='aligned,single')
+                            default='aligned', help='multi_aligned,aligned,single')
         parser.add_argument('--model', type=str, default='bicycle_gan',
                             help='chooses which model to use. bicycle,, ...')
         parser.add_argument('--direction', type=str,
