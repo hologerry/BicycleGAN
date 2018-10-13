@@ -70,7 +70,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
-  BATCH_SIZE=64
+  BATCH_SIZE=8
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -78,7 +78,7 @@ case ${CLASS} in
   NITER=60
   NITER_DECAY=60
   SAVE_EPOCH=10
-  NEF=32
+  NEF=64
   NGF=32
   NDF=32
   NET_G='unet_64'
@@ -108,7 +108,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --loadSize ${LOAD_SIZE} \
   --fineSize ${FINE_SIZE} \
   --resize_or_crop ${RESIZE_OR_CROP} \
-  $P{NO_FLIP} \
+  ${NO_FLIP} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \

@@ -154,7 +154,7 @@ def define_D(input_nc, ndf, netD,
     return init_net(net, init_type, gpu_ids)
 
 
-def define_E(input_nc, output_nc, ndf, netE,
+def define_E(input_nc, output_nc, nef, netE,
              norm='batch', nl='lrelu',
              init_type='xavier', gpu_ids=[], vaeLike=False):
     net = None
@@ -163,22 +163,22 @@ def define_E(input_nc, output_nc, ndf, netE,
     nl_layer = get_non_linearity(layer_type=nl)
 
     if netE == 'resnet_64':
-        net = E_ResNet(input_nc, output_nc, ndf, n_blocks=4, norm_layer=norm_layer,
+        net = E_ResNet(input_nc, output_nc, nef, n_blocks=3, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'resnet_128':
-        net = E_ResNet(input_nc, output_nc, ndf, n_blocks=4, norm_layer=norm_layer,
+        net = E_ResNet(input_nc, output_nc, nef, n_blocks=4, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'resnet_256':
-        net = E_ResNet(input_nc, output_nc, ndf, n_blocks=5, norm_layer=norm_layer,
+        net = E_ResNet(input_nc, output_nc, nef, n_blocks=5, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'conv_64':
-        net = E_NLayers(input_nc, output_nc, ndf, n_layers=4, norm_layer=norm_layer,
+        net = E_NLayers(input_nc, output_nc, nef, n_layers=3, norm_layer=norm_layer,
                         nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'conv_128':
-        net = E_NLayers(input_nc, output_nc, ndf, n_layers=4, norm_layer=norm_layer,
+        net = E_NLayers(input_nc, output_nc, nef, n_layers=4, norm_layer=norm_layer,
                         nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'conv_256':
-        net = E_NLayers(input_nc, output_nc, ndf, n_layers=5, norm_layer=norm_layer,
+        net = E_NLayers(input_nc, output_nc, nef, n_layers=5, norm_layer=norm_layer,
                         nl_layer=nl_layer, vaeLike=vaeLike)
     else:
         raise NotImplementedError(

@@ -36,7 +36,7 @@ class MultiAlignedDataset(BaseDataset):
                 AB_path_list[-8] = char  # /path/to/img/XXX_X_XX.jpg
                 c_path = "".join(AB_path_list)
                 C_paths.append(c_path)
-                C.append(Image.open(c_path).convert('RGB'))
+                C.append(Image.open(c_path).convert('RGB').crop((w2, 0, w, h)))
         else:
             C.append(B)
             C_paths.append(AB_path)

@@ -134,7 +134,7 @@ class BiCycleGANModel(BaseModel):
         # compute z_predict
         if self.opt.lambda_z > 0.0:
             self.mu2, logvar2 = self.netE(
-                self.fake_B_random)  # mu2 is a point estimate
+                self.fake_B_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
 
     def backward_D(self, netD, real, fake):
         # Fake, stop backprop to the generator by detaching fake_B
@@ -177,7 +177,7 @@ class BiCycleGANModel(BaseModel):
         # 3. reconstruction |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
             self.loss_G_L1 = self.criterionL1(
-                self.fake_B_encoded, self.real_B_encoded) * self.opt.lambda_L1
+                self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
         else:
             self.loss_G_L1 = 0.0
 
