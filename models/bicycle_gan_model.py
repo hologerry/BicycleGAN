@@ -78,6 +78,7 @@ class BiCycleGANModel(BaseModel):
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = input['A' if AtoB else 'B'].to(self.device)
         self.real_B = input['B' if AtoB else 'A'].to(self.device)
+        self.real_C = input['C'].to(self.device)
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):
@@ -97,42 +98,38 @@ class BiCycleGANModel(BaseModel):
     def test(self, z0=None, encode=False):
         with torch.no_grad():
             if encode:  # use encoded z
-                z0, _ = self.netE(self.real_B)
+                z0, _ = self.netE(self.real_C)
             if z0 is None:
                 z0 = self.get_z_random(self.real_A.size(0), self.opt.nz)
             self.fake_B = self.netG(self.real_A, z0)
             return self.real_A, self.fake_B, self.real_B
 
     def forward(self):
-        # get real images
-        half_size = self.opt.batch_size // 2
-        # A1, B1 for encoded; A2, B2 for random
-        self.real_A_encoded = self.real_A[0:half_size]
-        self.real_B_encoded = self.real_B[0:half_size]
-        self.real_B_random = self.real_B[half_size:]
+        # compute encoded or random B on whole batch
         # get encoded z
-        self.z_encoded, self.mu, self.logvar = self.encode(self.real_B_encoded)
+        self.z_encoded, self.mu, self.logvar = self.encode(self.real_C)
         # get random z
         self.z_random = self.get_z_random(
-            self.real_A_encoded.size(0), self.opt.nz)
+            self.real_A.size(0), self.opt.nz)
         # generate fake_B_encoded
-        self.fake_B_encoded = self.netG(self.real_A_encoded, self.z_encoded)
+        self.fake_B_encoded = self.netG(self.real_A, self.z_encoded)
         # generate fake_B_random
-        self.fake_B_random = self.netG(self.real_A_encoded, self.z_random)
+        self.fake_B_random = self.netG(self.real_A, self.z_random)
+
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_encoded = torch.cat(
-                [self.real_A_encoded, self.fake_B_encoded], 1)
+                [self.real_A, self.fake_B_encoded], 1)
             self.real_data_encoded = torch.cat(
-                [self.real_A_encoded, self.real_B_encoded], 1)
+                [self.real_A, self.real_B_encoded], 1)
             self.fake_data_random = torch.cat(
-                [self.real_A_encoded, self.fake_B_random], 1)
+                [self.real_A, self.fake_B_random], 1)
             self.real_data_random = torch.cat(
-                [self.real_A[half_size:], self.real_B_random], 1)
+                [self.real_A, self.real_B_random], 1)
         else:
             self.fake_data_encoded = self.fake_B_encoded
             self.fake_data_random = self.fake_B_random
-            self.real_data_encoded = self.real_B_encoded
-            self.real_data_random = self.real_B_random
+            self.real_data_encoded = self.real_B
+            self.real_data_random = self.real_B
 
         # compute z_predict
         if self.opt.lambda_z > 0.0:
@@ -160,7 +157,7 @@ class BiCycleGANModel(BaseModel):
         return loss_G_GAN * ll
 
     def backward_EG(self):
-        # 1, G(A) should fool D
+        # 1. G(A) should fool D
         self.loss_G_GAN = self.backward_G_GAN(
             self.fake_data_encoded, self.netD, self.opt.lambda_GAN)
         if self.opt.use_same_D:
@@ -177,7 +174,7 @@ class BiCycleGANModel(BaseModel):
                 kl_element).mul_(-0.5) * self.opt.lambda_kl
         else:
             self.loss_kl = 0
-        # 3, reconstruction |fake_B-real_B|
+        # 3. reconstruction |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
             self.loss_G_L1 = self.criterionL1(
                 self.fake_B_encoded, self.real_B_encoded) * self.opt.lambda_L1
@@ -206,7 +203,7 @@ class BiCycleGANModel(BaseModel):
             self.optimizer_D2.step()
 
     def backward_G_alone(self):
-        # 3, reconstruction |(E(G(A, z_random)))-z_random|
+        # 3. reconstruction |(E(G(A, z_random)))-z_random|
         if self.opt.lambda_z > 0.0:
             self.loss_z_L1 = torch.mean(
                 torch.abs(self.mu2 - self.z_random)) * self.opt.lambda_z

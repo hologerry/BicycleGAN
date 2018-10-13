@@ -26,20 +26,21 @@ class MultiAlignedDataset(BaseDataset):
         w2 = int(w / 2)
         A = AB.crop((0, 0, w2, h))
         B = AB.crop((w2, 0, w, h))
-
+        C = []
+        C_paths = []
         if self.opt.nencode > 1:
-            C = []
-            C_paths = []
             AB_path_list = list(AB_path)
             random.shuffle(self.alphabets)
             chars_random = self.alphabets[:self.opt.nencode]
             for char in chars_random:
                 AB_path_list[-8] = char  # /path/to/img/XXX_X_XX.jpg
-                C_paths.append(AB_path_list)
-                C.append(Image.open(AB_path_list).convert('RGB'))
-            A, B, C = transform_pair(self.opt, A, B, C)
+                c_path = "".join(AB_path_list)
+                C_paths.append(c_path)
+                C.append(Image.open(c_path).convert('RGB'))
         else:
-            A, B = transform_pair(self.opt, A, B)
+            C.append(B)
+            C_paths.append(AB_path)
+        A, B, C = transform_pair(self.opt, A, B, C)
 
         if self.opt.direction == 'BtoA':
             input_nc = self.opt.output_nc
@@ -56,12 +57,8 @@ class MultiAlignedDataset(BaseDataset):
             tmp = B[0, ...] * 0.299 + B[1, ...] * 0.587 + B[2, ...] * 0.114
             B = tmp.unsqueeze(0)
 
-        if self.opt.nencode > 1:
-            return {'A': A, 'B': B, 'C': C,
-                    'A_paths': AB_path, 'B_paths': AB_path, 'C_paths': C_paths}
-        else:
-            return {'A': A, 'B': B,
-                    'A_paths': AB_path, 'B_paths': AB_path}
+        return {'A': A, 'B': B, 'C': C,
+                'A_paths': AB_path, 'B_paths': AB_path, 'C_paths': C_paths}
 
     def __len__(self):
         return len(self.AB_paths)

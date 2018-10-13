@@ -163,7 +163,7 @@ def define_E(input_nc, output_nc, ndf, netE,
     nl_layer = get_non_linearity(layer_type=nl)
 
     if netE == 'resnet_64':
-        net = E_ResNet(input_nc, output_nc, ndf, n_blocks=3, norm_layer=norm_layer,
+        net = E_ResNet(input_nc, output_nc, ndf, n_blocks=4, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'resnet_128':
         net = E_ResNet(input_nc, output_nc, ndf, n_blocks=4, norm_layer=norm_layer,
@@ -172,7 +172,7 @@ def define_E(input_nc, output_nc, ndf, netE,
         net = E_ResNet(input_nc, output_nc, ndf, n_blocks=5, norm_layer=norm_layer,
                        nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'conv_64':
-        net = E_NLayers(input_nc, output_nc, ndf, n_layers=3, norm_layer=norm_layer,
+        net = E_NLayers(input_nc, output_nc, ndf, n_layers=4, norm_layer=norm_layer,
                         nl_layer=nl_layer, vaeLike=vaeLike)
     elif netE == 'conv_128':
         net = E_NLayers(input_nc, output_nc, ndf, n_layers=4, norm_layer=norm_layer,
@@ -364,13 +364,13 @@ class D_NLayers(nn.Module):
 
 
 class E_NLayers(nn.Module):
-    def __init__(self, input_nc, output_nc=1, ndf=64, n_layers=3,
+    def __init__(self, input_nc, output_nc=1, nef=64, n_layers=3,
                  norm_layer=None, nl_layer=None, vaeLike=False):
         super(E_NLayers, self).__init__()
         self.vaeLike = vaeLike
 
         kw, padw = 4, 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
+        sequence = [nn.Conv2d(input_nc, nef, kernel_size=kw,
                               stride=2, padding=padw), nl_layer()]
 
         nf_mult = 1
@@ -379,16 +379,16 @@ class E_NLayers(nn.Module):
             nf_mult_prev = nf_mult
             nf_mult = min(2**n, 4)
             sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                nn.Conv2d(nef * nf_mult_prev, nef * nf_mult,
                           kernel_size=kw, stride=2, padding=padw)]
             if norm_layer is not None:
-                sequence += [norm_layer(ndf * nf_mult)]
+                sequence += [norm_layer(nef * nf_mult)]
             sequence += [nl_layer()]
         sequence += [nn.AvgPool2d(8)]
         self.conv = nn.Sequential(*sequence)
-        self.fc = nn.Sequential(*[nn.Linear(ndf * nf_mult, output_nc)])
+        self.fc = nn.Sequential(*[nn.Linear(nef * nf_mult, output_nc)])
         if vaeLike:
-            self.fcVar = nn.Sequential(*[nn.Linear(ndf * nf_mult, output_nc)])
+            self.fcVar = nn.Sequential(*[nn.Linear(nef * nf_mult, output_nc)])
 
     def forward(self, x):
         x_conv = self.conv(x)
@@ -598,24 +598,24 @@ class BasicBlock(nn.Module):
 
 
 class E_ResNet(nn.Module):
-    def __init__(self, input_nc=3, output_nc=1, ndf=64, n_blocks=4,
+    def __init__(self, input_nc=3, output_nc=1, nef=64, n_blocks=4,
                  norm_layer=None, nl_layer=None, vaeLike=False):
         super(E_ResNet, self).__init__()
         self.vaeLike = vaeLike
-        max_ndf = 4
+        max_nef = 4
         conv_layers = [
-            nn.Conv2d(input_nc, ndf, kernel_size=4, stride=2, padding=1, bias=True)]
+            nn.Conv2d(input_nc, nef, kernel_size=4, stride=2, padding=1, bias=True)]
         for n in range(1, n_blocks):
-            input_ndf = ndf * min(max_ndf, n)
-            output_ndf = ndf * min(max_ndf, n + 1)
-            conv_layers += [BasicBlock(input_ndf,
-                                       output_ndf, norm_layer, nl_layer)]
+            input_nef = nef * min(max_nef, n)
+            output_nef = nef * min(max_nef, n + 1)
+            conv_layers += [BasicBlock(input_nef,
+                                       output_nef, norm_layer, nl_layer)]
         conv_layers += [nl_layer(), nn.AvgPool2d(8)]
         if vaeLike:
-            self.fc = nn.Sequential(*[nn.Linear(output_ndf, output_nc)])
-            self.fcVar = nn.Sequential(*[nn.Linear(output_ndf, output_nc)])
+            self.fc = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
+            self.fcVar = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
         else:
-            self.fc = nn.Sequential(*[nn.Linear(output_ndf, output_nc)])
+            self.fc = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
         self.conv = nn.Sequential(*conv_layers)
 
     def forward(self, x):
