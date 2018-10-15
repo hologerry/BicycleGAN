@@ -59,23 +59,24 @@ class Visualizer():
         self.saved = False
 
     # |visuals|: dictionary of images to display or save
-    def display_current_results(self, visuals, epoch, save_result):
+    def display_current_results(self, visuals, epoch, total_steps, save_result):
         if self.display_id > 0:  # show images in the browser
             ncols = self.ncols
             if ncols > 0:
                 ncols = min(ncols, len(visuals))
-                h, w = next(iter(visuals.values())).shape[:2]
                 table_css = """<style>
                         table {border-collapse: separate; border-spacing:4px; white-space:nowrap; text-align:center}
-                        table td {width: %dpx; height: %dpx; padding: 4px; outline: 4px solid black}
-                        </style>""" % (w, h)
+                        table td {width: 10px; height: 6px; padding: 2px; outline: 2px solid black}
+                        </style>"""
                 title = self.name
                 label_html = ''
                 label_html_row = ''
                 images = []
                 idx = 0
+
+                # visuals are dictionary of (label batch), length == 4
                 for label, image in visuals.items():
-                    image_numpy = util.tensor2im(image)
+                    image_numpy = util.tensor2im(image)  # only use the first image of one batch
                     label_html_row += '<td>%s</td>' % label
                     images.append(image_numpy.transpose([2, 0, 1]))
                     idx += 1
@@ -106,9 +107,11 @@ class Visualizer():
         if self.use_html and (save_result or not self.saved):  # save images to a html file
             self.saved = True
             for label, image in visuals.items():
-                image_numpy = util.tensor2im(image)
-                img_path = os.path.join(self.img_dir, 'epoch%.3d_%s.png' % (epoch, label))
-                util.save_image(image_numpy, img_path)
+                image_numpy = util.tensor2im(image)  # only use the first image of one batch
+                img_path = os.path.join(self.img_dir, 'epoch-%.3d_itr-%.6d_%s.png' % (epoch, total_steps, label))
+                util.save_image(image_numpy, img_path)  # save for image history
+                img_path = os.path.join(self.img_dir, 'epoch-%.3d_%s.png' % (epoch, label))
+                util.save_image(image_numpy, img_path)  # save for html webpage
             # update website
             webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, reflesh=1)
             for n in range(epoch, 0, -1):
@@ -117,7 +120,7 @@ class Visualizer():
 
                 for label, image_numpy in visuals.items():
                     image_numpy = util.tensor2im(image)
-                    img_path = 'epoch%.3d_%s.png' % (n, label)
+                    img_path = 'epoch-%.3d_%s.png' % (n, label)
                     ims.append(img_path)
                     txts.append(label)
                     links.append(img_path)

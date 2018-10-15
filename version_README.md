@@ -10,3 +10,6 @@ BicycleGAN on Capitals64 dataset
 
 ### v1.0
 BicycleGAN on Capitals64 dataset, only one image (B) used in Encoder
+
+### v1.1
+BicycleGAN on Capitals64 dataset, nulti images except B used in Encoder
