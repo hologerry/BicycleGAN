@@ -696,9 +696,7 @@ class UnetBlock_with_z(nn.Module):
             x1 = self.down(x_and_z)
             print("--- UnetBlock_with_z mid x1 size", x1.size())
             x2 = self.submodule(x1, z)
-            print(x1)
-            print(z)
-            print("--- UnetBlock_with_z mid x2 size", x2.size())
+            print("--- UnetBlock_with_z mid x2 size", x2.dim())
             return torch.cat([self.up(x2), x], 1)
 
 
