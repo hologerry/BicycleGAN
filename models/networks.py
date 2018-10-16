@@ -565,7 +565,8 @@ class UnetBlock(nn.Module):
         downnorm = norm_layer(inner_nc) if norm_layer is not None else None
         uprelu = nl_layer()
         upnorm = norm_layer(outer_nc) if norm_layer is not None else None
-        attn_layer = get_self_attention_layer(outer_nc)
+        if use_attention:
+            attn_layer = get_self_attention_layer(outer_nc)
 
         if outermost:
             upconv = upsampleLayer(
@@ -636,7 +637,8 @@ class UnetBlock_with_z(nn.Module):
         # downsample is different from upsample
         downrelu = nn.LeakyReLU(0.2, True)
         uprelu = nl_layer()
-        attn_layer = get_self_attention_layer(outer_nc)
+        if use_attention:
+            attn_layer = get_self_attention_layer(outer_nc)
 
         if outermost:
             upconv = upsampleLayer(
@@ -694,6 +696,8 @@ class UnetBlock_with_z(nn.Module):
             x1 = self.down(x_and_z)
             print("--- UnetBlock_with_z mid x1 size", x1.size())
             x2 = self.submodule(x1, z)
+            print(x1)
+            print(z)
             print("--- UnetBlock_with_z mid x2 size", x2.size())
             return torch.cat([self.up(x2), x], 1)
 
