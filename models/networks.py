@@ -592,7 +592,7 @@ class UnetBlock(nn.Module):
                 up += [upnorm]
 
             if use_attention:
-                up += attn_layer
+                up += [attn_layer]
 
             if use_dropout:
                 model = down + [submodule] + up + [nn.Dropout(0.5)]
@@ -606,6 +606,89 @@ class UnetBlock(nn.Module):
             return self.model(x)
         else:
             return torch.cat([self.model(x), x], 1)
+
+
+class UnetBlock_with_z(nn.Module):
+    def __init__(self, input_nc, outer_nc, inner_nc, nz=0,
+                 submodule=None, outermost=False, innermost=False,
+                 norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
+                 upsample='basic', padding_type='zero'):
+        super(UnetBlock_with_z, self).__init__()
+        p = 0
+        downconv = []
+        if padding_type == 'reflect':
+            downconv += [nn.ReflectionPad2d(1)]
+        elif padding_type == 'replicate':
+            downconv += [nn.ReplicationPad2d(1)]
+        elif padding_type == 'zero':
+            p = 1
+        else:
+            raise NotImplementedError(
+                'padding [%s] is not implemented' % padding_type)
+
+        self.outermost = outermost
+        self.innermost = innermost
+        self.nz = nz
+        input_nc = input_nc + nz
+        downconv += [nn.Conv2d(input_nc, inner_nc,
+                               kernel_size=4, stride=2, padding=p)]
+        # downsample is different from upsample
+        downrelu = nn.LeakyReLU(0.2, True)
+        uprelu = nl_layer()
+        attn_layer = get_self_attention_layer(input_nc)
+
+        if outermost:
+            upconv = upsampleLayer(
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
+            down = downconv
+            up = [uprelu] + upconv + [nn.Tanh()]
+        elif innermost:
+            upconv = upsampleLayer(
+                inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
+            down = [downrelu] + downconv
+            up = [uprelu] + upconv
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+        else:
+            upconv = upsampleLayer(
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
+            down = [downrelu] + downconv
+            if norm_layer is not None:
+                down += [norm_layer(inner_nc)]
+            up = [uprelu] + upconv
+
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+
+            if use_attention:
+                up += [attn_layer]
+
+            if use_dropout:
+                up += [nn.Dropout(0.5)]
+        self.down = nn.Sequential(*down)
+        self.submodule = submodule
+        self.up = nn.Sequential(*up)
+
+    def forward(self, x, z):
+        # print(x.size())
+        if self.nz > 0:
+            z_img = z.view(z.size(0), z.size(1), 1, 1).expand(
+                z.size(0), z.size(1), x.size(2), x.size(3))
+            x_and_z = torch.cat([x, z_img], 1)
+        else:
+            x_and_z = x
+
+        if self.outermost:
+            x1 = self.down(x_and_z)
+            x2 = self.submodule(x1, z)
+            return self.up(x2)
+        elif self.innermost:
+            x1 = self.up(self.down(x_and_z))
+            return torch.cat([x1, x], 1)
+        else:
+            x1 = self.down(x_and_z)
+            x2 = self.submodule(x1, z)
+            return torch.cat([self.up(x2), x], 1)
 
 
 class BasicBlockUp(nn.Module):
@@ -678,89 +761,6 @@ class E_ResNet(nn.Module):
         else:
             return output
         return output
-
-
-class UnetBlock_with_z(nn.Module):
-    def __init__(self, input_nc, outer_nc, inner_nc, nz=0,
-                 submodule=None, outermost=False, innermost=False,
-                 norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
-                 upsample='basic', padding_type='zero'):
-        super(UnetBlock_with_z, self).__init__()
-        p = 0
-        downconv = []
-        if padding_type == 'reflect':
-            downconv += [nn.ReflectionPad2d(1)]
-        elif padding_type == 'replicate':
-            downconv += [nn.ReplicationPad2d(1)]
-        elif padding_type == 'zero':
-            p = 1
-        else:
-            raise NotImplementedError(
-                'padding [%s] is not implemented' % padding_type)
-
-        self.outermost = outermost
-        self.innermost = innermost
-        self.nz = nz
-        input_nc = input_nc + nz
-        downconv += [nn.Conv2d(input_nc, inner_nc,
-                               kernel_size=4, stride=2, padding=p)]
-        # downsample is different from upsample
-        downrelu = nn.LeakyReLU(0.2, True)
-        uprelu = nl_layer()
-        attn_layer = get_self_attention_layer(input_nc)
-
-        if outermost:
-            upconv = upsampleLayer(
-                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
-            down = downconv
-            up = [uprelu] + upconv + [nn.Tanh()]
-        elif innermost:
-            upconv = upsampleLayer(
-                inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
-            down = [downrelu] + downconv
-            up = [uprelu] + upconv
-            if norm_layer is not None:
-                up += [norm_layer(outer_nc)]
-        else:
-            upconv = upsampleLayer(
-                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
-            down = [downrelu] + downconv
-            if norm_layer is not None:
-                down += [norm_layer(inner_nc)]
-            up = [uprelu] + upconv
-
-            if norm_layer is not None:
-                up += [norm_layer(outer_nc)]
-
-            if use_attention:
-                up += attn_layer
-
-            if use_dropout:
-                up += [nn.Dropout(0.5)]
-        self.down = nn.Sequential(*down)
-        self.submodule = submodule
-        self.up = nn.Sequential(*up)
-
-    def forward(self, x, z):
-        # print(x.size())
-        if self.nz > 0:
-            z_img = z.view(z.size(0), z.size(1), 1, 1).expand(
-                z.size(0), z.size(1), x.size(2), x.size(3))
-            x_and_z = torch.cat([x, z_img], 1)
-        else:
-            x_and_z = x
-
-        if self.outermost:
-            x1 = self.down(x_and_z)
-            x2 = self.submodule(x1, z)
-            return self.up(x2)
-        elif self.innermost:
-            x1 = self.up(self.down(x_and_z))
-            return torch.cat([x1, x], 1)
-        else:
-            x1 = self.down(x_and_z)
-            x2 = self.submodule(x1, z)
-            return torch.cat([self.up(x2), x], 1)
 
 
 # Defines the Unet generator.
