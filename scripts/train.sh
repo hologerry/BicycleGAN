@@ -33,6 +33,7 @@ NEF=64
 NET_G='unet_64'
 NET_D='basic_64_multi'
 NET_E='resnet_64'
+USE_ATTENTION=''
 
 # dataset parameters
 case ${CLASS} in
@@ -86,6 +87,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   DATASET_MODE='multi_aligned'
+  USE_ATTENTION='--use_attention'
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -109,6 +111,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --fineSize ${FINE_SIZE} \
   --resize_or_crop ${RESIZE_OR_CROP} \
   ${NO_FLIP} \
+  ${USE_ATTENTION} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \

@@ -87,6 +87,11 @@ def get_non_linearity(layer_type='relu'):
     return nl_layer
 
 
+def get_self_attention_layer(in_dim):
+    self_attn_layer = Self_Attention(in_dim)
+    return self_attn_layer
+
+
 def define_G(input_nc, output_nc, nz, ngf, netG='unet_128',
              norm='batch', nl='relu', use_dropout=False, use_attention=False,
              init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
@@ -99,22 +104,22 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128',
 
     if netG == 'unet_64' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                               use_dropout=use_dropout, upsample=upsample)
+                               use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
     elif netG == 'unet_128' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 7, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                               use_dropout=use_dropout, upsample=upsample)
+                               use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
     elif netG == 'unet_256' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 8, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                               use_dropout=use_dropout, upsample=upsample)
+                               use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
     elif netG == 'unet_64' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                             use_dropout=use_dropout, upsample=upsample)
+                             use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
     elif netG == 'unet_128' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 7, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                             use_dropout=use_dropout, upsample=upsample)
+                             use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
     elif netG == 'unet_256' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 8, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                             use_dropout=use_dropout, upsample=upsample)
+                             use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
     else:
         raise NotImplementedError(
             'Generator model name [%s] is not recognized' % net)
@@ -520,7 +525,7 @@ class Self_Attention(nn.Module):
         m_batchsize, C, width, height = x.size()
         # print('query_conv size', self.query_conv(x).size())
         proj_query = self.query_conv(x).view(m_batchsize, -1, width * height).permute(0, 2, 1)  # B X C X (N)
-        proj_key = self.key_conv(x).view(m_batchsize, -1, width * height)  # B X C x (W*H)
+        proj_key = self.key_conv(x).view(m_batchsize, -1, width * height)  # B X C X (W*H)
         energy = torch.bmm(proj_query, proj_key)  # transpose check
         attention = self.softmax(energy)  # B X (N) X (N)
         proj_value = self.value_conv(x).view(m_batchsize, -1, width * height)  # B X C X N
@@ -538,7 +543,8 @@ class Self_Attention(nn.Module):
 class UnetBlock(nn.Module):
     def __init__(self, input_nc, outer_nc, inner_nc,
                  submodule=None, outermost=False, innermost=False,
-                 norm_layer=None, nl_layer=None, use_dropout=False, upsample='basic', padding_type='zero'):
+                 norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
+                 upsample='basic', padding_type='zero'):
         super(UnetBlock, self).__init__()
         self.outermost = outermost
         p = 0
@@ -559,6 +565,7 @@ class UnetBlock(nn.Module):
         downnorm = norm_layer(inner_nc) if norm_layer is not None else None
         uprelu = nl_layer()
         upnorm = norm_layer(outer_nc) if norm_layer is not None else None
+        attn_layer = get_self_attention_layer(input_nc)
 
         if outermost:
             upconv = upsampleLayer(
@@ -583,6 +590,9 @@ class UnetBlock(nn.Module):
             up = [uprelu] + upconv
             if upnorm is not None:
                 up += [upnorm]
+
+            if use_attention:
+                up += attn_layer
 
             if use_dropout:
                 model = down + [submodule] + up + [nn.Dropout(0.5)]
@@ -673,7 +683,8 @@ class E_ResNet(nn.Module):
 class UnetBlock_with_z(nn.Module):
     def __init__(self, input_nc, outer_nc, inner_nc, nz=0,
                  submodule=None, outermost=False, innermost=False,
-                 norm_layer=None, nl_layer=None, use_dropout=False, upsample='basic', padding_type='zero'):
+                 norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
+                 upsample='basic', padding_type='zero'):
         super(UnetBlock_with_z, self).__init__()
         p = 0
         downconv = []
@@ -696,6 +707,7 @@ class UnetBlock_with_z(nn.Module):
         # downsample is different from upsample
         downrelu = nn.LeakyReLU(0.2, True)
         uprelu = nl_layer()
+        attn_layer = get_self_attention_layer(input_nc)
 
         if outermost:
             upconv = upsampleLayer(
@@ -719,6 +731,9 @@ class UnetBlock_with_z(nn.Module):
 
             if norm_layer is not None:
                 up += [norm_layer(outer_nc)]
+
+            if use_attention:
+                up += attn_layer
 
             if use_dropout:
                 up += [nn.Dropout(0.5)]
@@ -760,18 +775,19 @@ class G_Unet_add_input(nn.Module):
         self.nz = nz
         max_nchn = 8  # max channel factor
         # construct unet structure
-        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
+        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, use_attention=use_attention,
                                innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         for i in range(num_downs - 5):
             unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, unet_block,
-                                   norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout, upsample=upsample)
-        unet_block = UnetBlock(ngf*4, ngf*4, ngf*max_nchn, unet_block,
+                                   norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
+                                   use_attention=use_attention, upsample=upsample)
+        unet_block = UnetBlock(ngf*4, ngf*4, ngf*max_nchn, unet_block, use_attention=use_attention,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block,
+        unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block, use_attention=use_attention,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block,
+        unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block, use_attention=use_attention,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
+        unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block, use_attention=use_attention,
                                outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
 
         self.model = unet_block
@@ -798,22 +814,22 @@ class G_Unet_add_all(nn.Module):
         super(G_Unet_add_all, self).__init__()
         self.nz = nz
         # construct unet structure
-        unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, None, innermost=True,
+        unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, None, innermost=True, use_attention=use_attention,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, unet_block,
+        unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block,
                                       norm_layer=norm_layer, nl_layer=nl_layer,
-                                      use_dropout=use_dropout, upsample=upsample)
+                                      use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
         for i in range(num_downs - 6):
-            unet_block = UnetBlock_with_z(ngf * 8, ngf * 8, ngf * 8, nz, unet_block,
+            unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block,
                                           norm_layer=norm_layer, nl_layer=nl_layer,
-                                          use_dropout=use_dropout, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf * 4, ngf * 4, ngf * 8, nz, unet_block,
+                                          use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+        unet_block = UnetBlock_with_z(ngf*4, ngf*4, ngf*8, nz, unet_block, use_attention=use_attention,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf * 2, ngf * 2, ngf * 4, nz, unet_block,
+        unet_block = UnetBlock_with_z(ngf*2, ngf*2, ngf*4, nz, unet_block, use_attention=use_attention,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(
-            ngf, ngf, ngf * 2, nz, unet_block, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block,
+        unet_block = UnetBlock_with_z(ngf, ngf, ngf * 2, nz, unet_block, norm_layer=norm_layer,
+                                      use_attention=use_attention, nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block, use_attention=use_attention,
                                       outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         self.model = unet_block
 
