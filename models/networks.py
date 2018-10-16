@@ -534,7 +534,7 @@ class Self_Attention(nn.Module):
         out = out.view(m_batchsize, C, width, height)
 
         out = self.gamma*out + x
-        return out, attention
+        return out
 
 
 # Defines the submodule with skip connection.
@@ -673,30 +673,23 @@ class UnetBlock_with_z(nn.Module):
         self.up = nn.Sequential(*up)
 
     def forward(self, x, z):
-        print("--- UnetBlock_with_z x size", x.size())
         if self.nz > 0:
             z_img = z.view(z.size(0), z.size(1), 1, 1).expand(
                 z.size(0), z.size(1), x.size(2), x.size(3))
-            print("--- UnetBlock_with_z z_img size", z_img.size())
             x_and_z = torch.cat([x, z_img], 1)
         else:
             x_and_z = x
 
         if self.outermost:
             x1 = self.down(x_and_z)
-            print("--- UnetBlock_with_z outermost x1 size", x1.size())
             x2 = self.submodule(x1, z)
-            print("--- UnetBlock_with_z outermost x2 size", x2.size())
             return self.up(x2)
         elif self.innermost:
             x1 = self.up(self.down(x_and_z))
-            print("--- UnetBlock_with_z innermost x1 size", x1.size())
             return torch.cat([x1, x], 1)
         else:
             x1 = self.down(x_and_z)
-            print("--- UnetBlock_with_z mid x1 size", x1.size())
             x2 = self.submodule(x1, z)
-            print("--- UnetBlock_with_z mid x2 size", x2.dim())
             return torch.cat([self.up(x2), x], 1)
 
 
