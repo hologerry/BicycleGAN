@@ -14,7 +14,6 @@ if __name__ == '__main__':
 
     model = create_model(opt)
     model.setup(opt)
-    print(model)
     visualizer = Visualizer(opt)
     total_steps = 0
 

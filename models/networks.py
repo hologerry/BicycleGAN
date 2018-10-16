@@ -571,7 +571,10 @@ class UnetBlock(nn.Module):
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
             down = downconv
-            up = [uprelu] + upconv + [nn.Tanh()]
+            up = [uprelu]
+            if use_attention:
+                up += [attn_layer]
+            up += upconv + [nn.Tanh()]
             model = down + [submodule] + up
         elif innermost:
             upconv = upsampleLayer(
@@ -590,9 +593,6 @@ class UnetBlock(nn.Module):
             up = [uprelu] + upconv
             if upnorm is not None:
                 up += [upnorm]
-
-            if use_attention:
-                up += [attn_layer]
 
             if use_dropout:
                 model = down + [submodule] + up + [nn.Dropout(0.5)]
@@ -641,7 +641,10 @@ class UnetBlock_with_z(nn.Module):
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
             down = downconv
-            up = [uprelu] + upconv + [nn.Tanh()]
+            up = [uprelu]
+            if use_attention:
+                up += [attn_layer]
+            up += upconv + [nn.Tanh()]
         elif innermost:
             upconv = upsampleLayer(
                 inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
@@ -659,9 +662,6 @@ class UnetBlock_with_z(nn.Module):
 
             if norm_layer is not None:
                 up += [norm_layer(outer_nc)]
-
-            if use_attention:
-                up += [attn_layer]
 
             if use_dropout:
                 up += [nn.Dropout(0.5)]
