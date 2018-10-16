@@ -565,7 +565,7 @@ class UnetBlock(nn.Module):
         downnorm = norm_layer(inner_nc) if norm_layer is not None else None
         uprelu = nl_layer()
         upnorm = norm_layer(outer_nc) if norm_layer is not None else None
-        attn_layer = get_self_attention_layer(input_nc)
+        attn_layer = get_self_attention_layer(outer_nc)
 
         if outermost:
             upconv = upsampleLayer(
@@ -636,7 +636,7 @@ class UnetBlock_with_z(nn.Module):
         # downsample is different from upsample
         downrelu = nn.LeakyReLU(0.2, True)
         uprelu = nl_layer()
-        attn_layer = get_self_attention_layer(input_nc)
+        attn_layer = get_self_attention_layer(outer_nc)
 
         if outermost:
             upconv = upsampleLayer(
