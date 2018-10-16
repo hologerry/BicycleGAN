@@ -47,7 +47,7 @@ class BaseOptions():
                             default='AtoB', help='AtoB or BtoA')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=1,
+        parser.add_argument('--num_threads', default=8,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
@@ -80,6 +80,8 @@ class BaseOptions():
                             default='basic', help='basic | bilinear')
         parser.add_argument('--nl', type=str, default='relu',
                             help='non-linearity activation: relu | lrelu | elu')
+        parser.add_argument('--use_attention', action='store_true',
+                            help='if use self attention in G')
 
         # extra parameters
         parser.add_argument('--where_add', type=str, default='all',

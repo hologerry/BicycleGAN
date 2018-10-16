@@ -26,9 +26,11 @@ class BiCycleGANModel(BaseModel):
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
         use_E = opt.isTrain or not opt.no_encode
         use_vae = True
+        use_attention = opt.use_attention
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, netG=opt.netG,
-                                      norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
+                                      norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout,
+                                      use_attention=use_attention, init_type=opt.init_type,
                                       gpu_ids=self.gpu_ids, where_add=self.opt.where_add, upsample=opt.upsample)
         D_output_nc = opt.input_nc + opt.output_nc if opt.conditional_D else opt.output_nc
         use_sigmoid = opt.gan_mode == 'dcgan'

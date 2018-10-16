@@ -87,9 +87,9 @@ def get_non_linearity(layer_type='relu'):
     return nl_layer
 
 
-def define_G(input_nc, output_nc, nz, ngf,
-             netG='unet_128', norm='batch', nl='relu',
-             use_dropout=False, init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
+def define_G(input_nc, output_nc, nz, ngf, netG='unet_128',
+             norm='batch', nl='relu', use_dropout=False, use_attention=False,
+             init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
     net = None
     norm_layer = get_norm_layer(layer_type=norm)
     nl_layer = get_non_linearity(layer_type=nl)
@@ -492,6 +492,46 @@ def convMeanpool(inplanes, outplanes):
     return nn.Sequential(*sequence)
 
 
+# Self Attention module from self-attention gan
+class Self_Attention(nn.Module):
+    """ Self attention Layer"""
+
+    def __init__(self, in_dim, activation):
+        super(Self_Attention, self).__init__()
+        self.chanel_in = in_dim
+        self.activation = activation
+
+        self.query_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.key_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.value_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1)
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
+        """
+            inputs :
+                x : input feature maps( B X C X W X H)
+            returns :
+                out : self attention value + input feature
+                attention: B X N X N (N is Width*Height)
+        """
+        # print('attention size', x.size())
+        m_batchsize, C, width, height = x.size()
+        # print('query_conv size', self.query_conv(x).size())
+        proj_query = self.query_conv(x).view(m_batchsize, -1, width * height).permute(0, 2, 1)  # B X C X (N)
+        proj_key = self.key_conv(x).view(m_batchsize, -1, width * height)  # B X C x (W*H)
+        energy = torch.bmm(proj_query, proj_key)  # transpose check
+        attention = self.softmax(energy)  # B X (N) X (N)
+        proj_value = self.value_conv(x).view(m_batchsize, -1, width * height)  # B X C X N
+
+        out = torch.bmm(proj_value, attention.permute(0, 2, 1))
+        out = out.view(m_batchsize, C, width, height)
+
+        out = self.gamma*out + x
+        return out, attention
+
+
 # Defines the submodule with skip connection.
 # X -------------------identity---------------------- X
 #   |-- downsampling -- |submodule| -- upsampling --|
@@ -715,21 +755,21 @@ class UnetBlock_with_z(nn.Module):
 class G_Unet_add_input(nn.Module):
     def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
-                 upsample='basic'):
+                 use_attention=False, upsample='basic'):
         super(G_Unet_add_input, self).__init__()
         self.nz = nz
-        max_nchn = 8
+        max_nchn = 8  # max channel factor
         # construct unet structure
-        unet_block = UnetBlock(ngf * max_nchn, ngf * max_nchn, ngf * max_nchn,
+        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
                                innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         for i in range(num_downs - 5):
-            unet_block = UnetBlock(ngf * max_nchn, ngf * max_nchn, ngf * max_nchn, unet_block,
+            unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, unet_block,
                                    norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout, upsample=upsample)
-        unet_block = UnetBlock(ngf * 4, ngf * 4, ngf * max_nchn, unet_block,
+        unet_block = UnetBlock(ngf*4, ngf*4, ngf*max_nchn, unet_block,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf * 2, ngf * 2, ngf * 4, unet_block,
+        unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf, ngf, ngf * 2, unet_block,
+        unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
                                outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
@@ -753,7 +793,8 @@ class G_Unet_add_input(nn.Module):
 # at the bottleneck
 class G_Unet_add_all(nn.Module):
     def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
-                 norm_layer=None, nl_layer=None, use_dropout=False, upsample='basic'):
+                 norm_layer=None, nl_layer=None, use_dropout=False,
+                 use_attention=False, upsample='basic'):
         super(G_Unet_add_all, self).__init__()
         self.nz = nz
         # construct unet structure
