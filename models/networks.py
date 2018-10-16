@@ -501,7 +501,7 @@ def convMeanpool(inplanes, outplanes):
 class Self_Attention(nn.Module):
     """ Self attention Layer"""
 
-    def __init__(self, in_dim, activation):
+    def __init__(self, in_dim, activation=None):
         super(Self_Attention, self).__init__()
         self.chanel_in = in_dim
         self.activation = activation
