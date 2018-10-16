@@ -682,19 +682,19 @@ class UnetBlock_with_z(nn.Module):
 
         if self.outermost:
             x1 = self.down(x_and_z)
-            print("--- UnetBlock_with_z x1 size", x1.size())
+            print("--- UnetBlock_with_z outermost x1 size", x1.size())
             x2 = self.submodule(x1, z)
-            print("--- UnetBlock_with_z x2 size", x2.size())
+            print("--- UnetBlock_with_z outermost x2 size", x2.size())
             return self.up(x2)
         elif self.innermost:
             x1 = self.up(self.down(x_and_z))
-            print("--- UnetBlock_with_z x1 size", x1.size())
+            print("--- UnetBlock_with_z innermost x1 size", x1.size())
             return torch.cat([x1, x], 1)
         else:
             x1 = self.down(x_and_z)
-            print("--- UnetBlock_with_z x1 size", x1.size())
+            print("--- UnetBlock_with_z mid x1 size", x1.size())
             x2 = self.submodule(x1, z)
-            print("--- UnetBlock_with_z x2 size", x2.size())
+            print("--- UnetBlock_with_z mid x2 size", x2.size())
             return torch.cat([self.up(x2), x], 1)
 
 
