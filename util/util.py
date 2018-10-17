@@ -85,7 +85,7 @@ def interp_z(z0, z1, num_frames, interp_mode='linear'):
 
 def save_image(image_numpy, image_path):
     image_pil = Image.fromarray(image_numpy)
-    image_pil.save(image_path, 'JPEG', quality=100)
+    image_pil.save(image_path)
 
 
 def print_numpy(x, val=True, shp=False):
