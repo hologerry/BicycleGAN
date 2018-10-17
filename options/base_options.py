@@ -47,7 +47,7 @@ class BaseOptions():
                             default='AtoB', help='AtoB or BtoA')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=8,
+        parser.add_argument('--num_threads', default=16,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')

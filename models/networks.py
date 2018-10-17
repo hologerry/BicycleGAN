@@ -255,7 +255,7 @@ class D_NLayersMulti(nn.Module):
         padw = 1
         if use_spectral_norm:
             sequence = [SpectralNorm(nn.Conv2d(input_nc, ndf, kernel_size=kw,
-                                     stride=2, padding=padw), nn.LeakyReLU(0.2, True))]
+                                     stride=2, padding=padw)), nn.LeakyReLU(0.2, True)]
         else:
             sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
                                   stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
@@ -519,15 +519,22 @@ class GANLoss(nn.Module):
         return loss, all_losses
 
 
-def upsampleLayer(inplanes, outplanes, upsample='basic', padding_type='zero'):
+def upsampleLayer(inplanes, outplanes, upsample='basic', padding_type='zero', use_spectral_norm=False):
     # padding_type = 'zero'
     if upsample == 'basic':
-        upconv = [nn.ConvTranspose2d(
-            inplanes, outplanes, kernel_size=4, stride=2, padding=1)]
+        if use_spectral_norm:
+            upconv = [SpectralNorm(nn.ConvTranspose2d(
+                      inplanes, outplanes, kernel_size=4, stride=2, padding=1))]
+        else:
+            upconv = [nn.ConvTranspose2d(
+                      inplanes, outplanes, kernel_size=4, stride=2, padding=1)]
     elif upsample == 'bilinear':
         upconv = [nn.Upsample(scale_factor=2, mode='bilinear'),
-                  nn.ReflectionPad2d(1),
-                  nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0)]
+                  nn.ReflectionPad2d(1)]
+        if use_spectral_norm:
+            upconv += [SpectralNorm(nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0))]
+        else:
+            upconv += [nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0)]
     else:
         raise NotImplementedError(
             'upsample layer [%s] not implemented' % upsample)
@@ -702,18 +709,16 @@ class UnetBlock(nn.Module):
 
         if outermost:
             upconv = upsampleLayer(
-                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
-            if use_spectral_norm:
-                upconv = SpectralNorm(upconv)
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
 
             down = downconv
             up = [uprelu] + upconv + [nn.Tanh()]
             model = down + [submodule] + up
         elif innermost:
             upconv = upsampleLayer(
-                inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
-            if use_spectral_norm:
-                upconv = SpectralNorm(upconv)
+                inner_nc, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
 
             down = [downrelu] + downconv
             up = [uprelu] + upconv
@@ -722,9 +727,8 @@ class UnetBlock(nn.Module):
             model = down + up
         else:
             upconv = upsampleLayer(
-                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
-            if use_spectral_norm:
-                upconv = SpectralNorm(upconv)
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
 
             down = [downrelu] + downconv
             if downnorm is not None:
@@ -783,25 +787,22 @@ class UnetBlock_with_z(nn.Module):
 
         if outermost:
             upconv = upsampleLayer(
-                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
-            if use_spectral_norm:
-                upconv = SpectralNorm(upconv)
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
             down = downconv
             up = [uprelu] + upconv + [nn.Tanh()]
         elif innermost:
             upconv = upsampleLayer(
-                inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
-            if use_spectral_norm:
-                upconv = SpectralNorm(upconv)
+                inner_nc, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
             down = [downrelu] + downconv
             up = [uprelu] + upconv
             if norm_layer is not None:
                 up += [norm_layer(outer_nc)]
         else:
             upconv = upsampleLayer(
-                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
-            if use_spectral_norm:
-                upconv = SpectralNorm(upconv)
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
             down = [downrelu] + downconv
             if norm_layer is not None:
                 down += [norm_layer(inner_nc)]
@@ -886,28 +887,28 @@ class BasicBlock(nn.Module):
 class G_Unet_add_input(nn.Module):
     def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
-                 use_attention=False, use_spctral_norm=False, upsample='basic'):
+                 use_attention=False, use_spectral_norm=False, upsample='basic'):
         super(G_Unet_add_input, self).__init__()
         self.nz = nz
         max_nchn = 8  # max channel factor
         # construct unet structure
-        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, use_spctral_norm=use_spctral_norm,
+        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, use_spectral_norm=use_spectral_norm,
                                innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         for i in range(num_downs - 5):
             unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, unet_block,
                                    norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
-                                   use_spctral_norm=use_spctral_norm, upsample=upsample)
+                                   use_spectral_norm=use_spectral_norm, upsample=upsample)
         unet_block = UnetBlock(ngf*4, ngf*4, ngf*max_nchn, unet_block, use_attention=use_attention,
-                               use_spctral_norm=use_spctral_norm, norm_layer=norm_layer,
+                               use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block, use_attention=use_attention,
-                               use_spctral_norm=use_spctral_norm, norm_layer=norm_layer,
+                               use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block, use_attention=use_attention,
-                               use_spctral_norm=use_spctral_norm, norm_layer=norm_layer,
+                               use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
-                               use_spctral_norm=use_spctral_norm, outermost=True, norm_layer=norm_layer,
+                               use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
 
         self.model = unet_block
@@ -935,25 +936,25 @@ class G_Unet_add_all(nn.Module):
         self.nz = nz
         # construct unet structure
         unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, None, innermost=True,
-                                      use_spctral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                      use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                       nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block,
-                                      use_spctral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                      use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                       nl_layer=nl_layer, use_dropout=use_dropout, upsample=upsample)
         for i in range(num_downs - 6):
-            unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block, use_spctral_norm=use_spectral_norm,
+            unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block, use_spectral_norm=use_spectral_norm,
                                           norm_layer=norm_layer, nl_layer=nl_layer,
                                           use_dropout=use_dropout, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*4, ngf*4, ngf*8, nz, unet_block, use_attention=use_attention,
-                                      use_spctral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                      use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                       nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*2, ngf*2, ngf*4, nz, unet_block, use_attention=use_attention,
-                                      use_spctral_norm=use_spectral_norm,
+                                      use_spectral_norm=use_spectral_norm,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf, ngf, ngf*2, nz, unet_block, use_attention=use_attention,
-                                      use_spctral_norm=use_spectral_norm,
+                                      use_spectral_norm=use_spectral_norm,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block, use_spctral_norm=use_spectral_norm,
+        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block, use_spectral_norm=use_spectral_norm,
                                       outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         self.model = unet_block
 

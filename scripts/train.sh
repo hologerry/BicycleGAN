@@ -74,7 +74,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
-  BATCH_SIZE=8
+  BATCH_SIZE=16
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -134,4 +134,4 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --netD2 ${NET_D2} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
-  --lambda_l1 ${LAMBDA_L1}
+  --lambda_L1 ${LAMBDA_L1}
