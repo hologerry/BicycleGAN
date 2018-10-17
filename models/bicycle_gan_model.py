@@ -27,23 +27,26 @@ class BiCycleGANModel(BaseModel):
         use_E = opt.isTrain or not opt.no_encode
         use_vae = True
         use_attention = opt.use_attention
+        use_spectral_norm_G = opt.use_spectral_norm_G
+        use_spectral_norm_D = opt.use_spectral_norm_D
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout,
-                                      use_attention=use_attention, init_type=opt.init_type,
-                                      gpu_ids=self.gpu_ids, where_add=self.opt.where_add, upsample=opt.upsample)
+                                      use_attention=use_attention, use_spectral_norm=use_spectral_norm_G,
+                                      init_type=opt.init_type, gpu_ids=self.gpu_ids,
+                                      where_add=self.opt.where_add, upsample=opt.upsample)
         D_output_nc = opt.input_nc + opt.output_nc if opt.conditional_D else opt.output_nc
         use_sigmoid = opt.gan_mode == 'dcgan'
         if use_D:
             self.model_names += ['D']
             self.netD = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD, norm=opt.norm, nl=opt.nl,
                                           use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds,
-                                          gpu_ids=self.gpu_ids)
+                                          use_spectral_norm=use_spectral_norm_D, gpu_ids=self.gpu_ids)
         if use_D2:
             self.model_names += ['D2']
             self.netD2 = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD2, norm=opt.norm, nl=opt.nl,
                                            use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds,
-                                           gpu_ids=self.gpu_ids)
+                                           use_spectral_norm=use_spectral_norm_D, gpu_ids=self.gpu_ids)
         if use_E:
             self.model_names += ['E']
             self.netE = networks.define_E(opt.input_nc*opt.nencode, opt.nz, opt.nef, netE=opt.netE, norm=opt.norm,
@@ -80,7 +83,8 @@ class BiCycleGANModel(BaseModel):
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = input['A' if AtoB else 'B'].to(self.device)
         self.real_B = input['B' if AtoB else 'A'].to(self.device)
-        self.real_C = input['C'].to(self.device)
+        if self.opt.dataset_mode == 'multi_aligned':
+            self.real_C = input['C'].to(self.device)
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):

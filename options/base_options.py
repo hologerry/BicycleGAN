@@ -82,6 +82,10 @@ class BaseOptions():
                             help='non-linearity activation: relu | lrelu | elu')
         parser.add_argument('--use_attention', action='store_true',
                             help='if use self attention in G')
+        parser.add_argument('--use_spectral_norm_G', action='store_true',
+                            help='if use spectral normalization in G')
+        parser.add_argument('--use_spectral_norm_D', action='store_true',
+                            help='if use spectral normalization in D')
 
         # extra parameters
         parser.add_argument('--where_add', type=str, default='all',

@@ -1,7 +1,9 @@
+import functools
+
 import torch
 import torch.nn as nn
 from torch.nn import init
-import functools
+from torch.nn import Parameter
 from torch.optim import lr_scheduler
 
 ###############################################################################
@@ -92,7 +94,7 @@ def get_self_attention_layer(in_dim):
     return self_attn_layer
 
 
-def define_G(input_nc, output_nc, nz, ngf, netG='unet_128',
+def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=False,
              norm='batch', nl='relu', use_dropout=False, use_attention=False,
              init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
     net = None
@@ -104,22 +106,28 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128',
 
     if netG == 'unet_64' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                               use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+                               use_dropout=use_dropout, use_attention=use_attention,
+                               use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_128' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 7, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                               use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+                               use_dropout=use_dropout, use_attention=use_attention,
+                               use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_256' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 8, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                               use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+                               use_dropout=use_dropout, use_attention=use_attention,
+                               use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_64' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                             use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+                             use_dropout=use_dropout, use_attention=use_attention,
+                             use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_128' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 7, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                             use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+                             use_dropout=use_dropout, use_attention=use_attention,
+                             use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_256' and where_add == 'all':
         net = G_Unet_add_all(input_nc, output_nc, nz, 8, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
-                             use_dropout=use_dropout, use_attention=use_attention, upsample=upsample)
+                             use_dropout=use_dropout, use_attention=use_attention,
+                             use_spectral_norm=use_spectral_norm, upsample=upsample)
     else:
         raise NotImplementedError(
             'Generator model name [%s] is not recognized' % net)
@@ -128,7 +136,7 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128',
 
 
 def define_D(input_nc, ndf, netD,
-             norm='batch', nl='lrelu',
+             norm='batch', nl='lrelu', use_spectral_norm=False,
              use_sigmoid=False, init_type='xavier', num_Ds=1, gpu_ids=[]):
     net = None
     norm_layer = get_norm_layer(layer_type=norm)
@@ -137,22 +145,22 @@ def define_D(input_nc, ndf, netD,
 
     if netD == 'basic_64':
         net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
-                        nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_128':
         net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
-                        nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_256':
         net = D_NLayers(input_nc, ndf, n_layers=3, norm_layer=norm_layer,
-                        nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_64_multi':
         net = D_NLayersMulti(input_nc=input_nc, ndf=ndf, n_layers=1, norm_layer=norm_layer,
-                             use_sigmoid=use_sigmoid, num_D=num_Ds)
+                             use_spectral_norm=use_spectral_norm, use_sigmoid=use_sigmoid, num_D=num_Ds)
     elif netD == 'basic_128_multi':
         net = D_NLayersMulti(input_nc=input_nc, ndf=ndf, n_layers=2, norm_layer=norm_layer,
-                             use_sigmoid=use_sigmoid, num_D=num_Ds)
+                             use_spectral_norm=use_spectral_norm, use_sigmoid=use_sigmoid, num_D=num_Ds)
     elif netD == 'basic_256_multi':
         net = D_NLayersMulti(input_nc=input_nc, ndf=ndf, n_layers=3, norm_layer=norm_layer,
-                             use_sigmoid=use_sigmoid, num_D=num_Ds)
+                             use_spectral_norm=use_spectral_norm, use_sigmoid=use_sigmoid, num_D=num_Ds)
     else:
         raise NotImplementedError(
             'Discriminator model name [%s] is not recognized' % net)
@@ -219,58 +227,73 @@ class ListModule(object):
 
 
 class D_NLayersMulti(nn.Module):
-    def __init__(self, input_nc, ndf=64, n_layers=3,
+    def __init__(self, input_nc, ndf=64, n_layers=3, use_spectral_norm=False,
                  norm_layer=nn.BatchNorm2d, use_sigmoid=False, num_D=1):
         super(D_NLayersMulti, self).__init__()
         # st()
         self.num_D = num_D
         if num_D == 1:
             layers = self.get_layers(
-                input_nc, ndf, n_layers, norm_layer, use_sigmoid)
+                input_nc, ndf, n_layers, norm_layer, use_sigmoid, use_spectral_norm)
             self.model = nn.Sequential(*layers)
         else:
             self.model = ListModule(self, 'model')
             layers = self.get_layers(
-                input_nc, ndf, n_layers, norm_layer, use_sigmoid)
+                input_nc, ndf, n_layers, norm_layer, use_sigmoid, use_spectral_norm)
             self.model.append(nn.Sequential(*layers))
             self.down = nn.AvgPool2d(3, stride=2, padding=[
                                      1, 1], count_include_pad=False)
             for i in range(num_D - 1):
                 ndf_i = int(round(ndf / (2**(i + 1))))
                 layers = self.get_layers(
-                    input_nc, ndf_i, n_layers, norm_layer, use_sigmoid)
+                    input_nc, ndf_i, n_layers, norm_layer, use_sigmoid, use_spectral_norm)
                 self.model.append(nn.Sequential(*layers))
 
-    def get_layers(self, input_nc, ndf=64, n_layers=3,
-                   norm_layer=nn.BatchNorm2d, use_sigmoid=False):
+    def get_layers(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d,
+                   use_sigmoid=False, use_spectral_norm=False):
         kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
-                              stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
+        if use_spectral_norm:
+            sequence = [SpectralNorm(nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                                     stride=2, padding=padw), nn.LeakyReLU(0.2, True))]
+        else:
+            sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                                  stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
 
         nf_mult = 1
         nf_mult_prev = 1
         for n in range(1, n_layers):
             nf_mult_prev = nf_mult
             nf_mult = min(2**n, 8)
+            if use_spectral_norm:
+                sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                          kernel_size=kw, stride=2, padding=padw))]
+            else:
+                sequence += [nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                       kernel_size=kw, stride=2, padding=padw)]
             sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
-                          kernel_size=kw, stride=2, padding=padw),
                 norm_layer(ndf * nf_mult),
                 nn.LeakyReLU(0.2, True)
             ]
 
         nf_mult_prev = nf_mult
         nf_mult = min(2**n_layers, 8)
+        if use_spectral_norm:
+            sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                      kernel_size=kw, stride=1, padding=padw))]
+        else:
+            sequence += [nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                   kernel_size=kw, stride=1, padding=padw)]
         sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
-                      kernel_size=kw, stride=1, padding=padw),
             norm_layer(ndf * nf_mult),
             nn.LeakyReLU(0.2, True)
         ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1,
-                               kernel_size=kw, stride=1, padding=padw)]
+        if use_spectral_norm:
+            sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult, 1,
+                                      kernel_size=kw, stride=1, padding=padw))]
+        else:
+            sequence += [nn.Conv2d(ndf * nf_mult, 1,
+                                   kernel_size=kw, stride=1, padding=padw)]
 
         if use_sigmoid:
             sequence += [nn.Sigmoid()]
@@ -324,25 +347,31 @@ class G_NLayers(nn.Module):
 
 # Defines the conv discriminator with the specified arguments.
 class D_NLayers(nn.Module):
-    def __init__(self, input_nc=3, ndf=64, n_layers=3,
+    def __init__(self, input_nc=3, ndf=64, n_layers=3, use_spectral_norm=False,
                  norm_layer=None, nl_layer=None, use_sigmoid=False):
         super(D_NLayers, self).__init__()
 
         kw, padw, use_bias = 4, 1, True
         # st()
-        sequence = [
-            nn.Conv2d(input_nc, ndf, kernel_size=kw,
-                      stride=2, padding=padw, bias=use_bias),
-            nl_layer()
-        ]
+        if use_spectral_norm:
+            sequence = [SpectralNorm(nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                                     stride=2, padding=padw, bias=use_bias))]
+        else:
+            sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                                  stride=2, padding=padw, bias=use_bias)]
+        sequence += [nl_layer()]
 
         nf_mult = 1
         nf_mult_prev = 1
         for n in range(1, n_layers):
             nf_mult_prev = nf_mult
             nf_mult = min(2**n, 8)
-            sequence += [nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
-                                   kernel_size=kw, stride=2, padding=padw, bias=use_bias)]
+            if use_spectral_norm:
+                sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                          kernel_size=kw, stride=2, padding=padw, bias=use_bias))]
+            else:
+                sequence += [nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                       kernel_size=kw, stride=2, padding=padw, bias=use_bias)]
             if norm_layer is not None:
                 sequence += [norm_layer(ndf * nf_mult)]
             sequence += [nl_layer()]
@@ -355,8 +384,12 @@ class D_NLayers(nn.Module):
         if norm_layer is not None:
             sequence += [norm_layer(ndf * nf_mult)]
         sequence += [nl_layer()]
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=4,
-                               stride=1, padding=0, bias=use_bias)]
+        if use_spectral_norm:
+            sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult, 1, kernel_size=4,
+                                      stride=1, padding=0, bias=use_bias))]
+        else:
+            sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=4,
+                                   stride=1, padding=0, bias=use_bias)]
 
         if use_sigmoid:
             sequence += [nn.Sigmoid()]
@@ -402,6 +435,39 @@ class E_NLayers(nn.Module):
         if self.vaeLike:
             outputVar = self.fcVar(conv_flat)
             return output, outputVar
+        return output
+
+
+class E_ResNet(nn.Module):
+    def __init__(self, input_nc=3, output_nc=1, nef=64, n_blocks=4,
+                 norm_layer=None, nl_layer=None, vaeLike=False):
+        super(E_ResNet, self).__init__()
+        self.vaeLike = vaeLike
+        max_nef = 4
+        conv_layers = [
+            nn.Conv2d(input_nc, nef, kernel_size=4, stride=2, padding=1, bias=True)]
+        for n in range(1, n_blocks):
+            input_nef = nef * min(max_nef, n)
+            output_nef = nef * min(max_nef, n + 1)
+            conv_layers += [BasicBlock(input_nef,
+                                       output_nef, norm_layer, nl_layer)]
+        conv_layers += [nl_layer(), nn.AvgPool2d(8)]
+        if vaeLike:
+            self.fc = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
+            self.fcVar = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
+        else:
+            self.fc = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
+        self.conv = nn.Sequential(*conv_layers)
+
+    def forward(self, x):
+        x_conv = self.conv(x)
+        conv_flat = x_conv.view(x.size(0), -1)
+        output = self.fc(conv_flat)
+        if self.vaeLike:
+            outputVar = self.fcVar(conv_flat)
+            return output, outputVar
+        else:
+            return output
         return output
 
 
@@ -497,6 +563,66 @@ def convMeanpool(inplanes, outplanes):
     return nn.Sequential(*sequence)
 
 
+def l2normalize(v, eps=1e-12):
+    return v / (v.norm() + eps)
+
+
+class SpectralNorm(nn.Module):
+    def __init__(self, module, name='weight', power_iterations=1):
+        super(SpectralNorm, self).__init__()
+        self.module = module
+        self.name = name
+        self.power_iterations = power_iterations
+        if not self._made_params():
+            self._make_params()
+
+    def _update_u_v(self):
+        u = getattr(self.module, self.name + "_u")
+        v = getattr(self.module, self.name + "_v")
+        w = getattr(self.module, self.name + "_bar")
+
+        height = w.data.shape[0]
+        for _ in range(self.power_iterations):
+            v.data = l2normalize(
+                torch.mv(torch.t(w.view(height, -1).data), u.data))
+            u.data = l2normalize(torch.mv(w.view(height, -1).data, v.data))
+
+        # sigma = torch.dot(u.data, torch.mv(w.view(height,-1).data, v.data))
+        sigma = u.dot(w.view(height, -1).mv(v))
+        setattr(self.module, self.name, w / sigma.expand_as(w))
+
+    def _made_params(self):
+        try:
+            getattr(self.module, self.name + "_u")
+            getattr(self.module, self.name + "_v")
+            getattr(self.module, self.name + "_bar")
+            return True
+        except AttributeError:
+            return False
+
+    def _make_params(self):
+        w = getattr(self.module, self.name)
+
+        height = w.data.shape[0]
+        width = w.view(height, -1).data.shape[1]
+
+        u = Parameter(w.data.new(height).normal_(0, 1), requires_grad=False)
+        v = Parameter(w.data.new(width).normal_(0, 1), requires_grad=False)
+        u.data = l2normalize(u.data)
+        v.data = l2normalize(v.data)
+        w_bar = Parameter(w.data)
+
+        del self.module._parameters[self.name]
+
+        self.module.register_parameter(self.name + "_u", u)
+        self.module.register_parameter(self.name + "_v", v)
+        self.module.register_parameter(self.name + "_bar", w_bar)
+
+    def forward(self, *args):
+        self._update_u_v()
+        return self.module.forward(*args)
+
+
 # Self Attention module from self-attention gan
 class Self_Attention(nn.Module):
     """ Self attention Layer"""
@@ -506,9 +632,12 @@ class Self_Attention(nn.Module):
         self.chanel_in = in_dim
         self.activation = activation
 
-        self.query_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
-        self.key_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
-        self.value_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1)
+        self.query_conv = nn.Conv2d(
+            in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.key_conv = nn.Conv2d(
+            in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.value_conv = nn.Conv2d(
+            in_channels=in_dim, out_channels=in_dim, kernel_size=1)
         self.gamma = nn.Parameter(torch.zeros(1))
 
         self.softmax = nn.Softmax(dim=-1)
@@ -524,11 +653,14 @@ class Self_Attention(nn.Module):
         # print('attention size', x.size())
         m_batchsize, C, width, height = x.size()
         # print('query_conv size', self.query_conv(x).size())
-        proj_query = self.query_conv(x).view(m_batchsize, -1, width * height).permute(0, 2, 1)  # B X C X (N)
-        proj_key = self.key_conv(x).view(m_batchsize, -1, width * height)  # B X C X (W*H)
+        proj_query = self.query_conv(x).view(
+            m_batchsize, -1, width * height).permute(0, 2, 1)  # B X C X (N)
+        proj_key = self.key_conv(x).view(
+            m_batchsize, -1, width * height)  # B X C X (W*H)
         energy = torch.bmm(proj_query, proj_key)  # transpose check
         attention = self.softmax(energy)  # B X (N) X (N)
-        proj_value = self.value_conv(x).view(m_batchsize, -1, width * height)  # B X C X N
+        proj_value = self.value_conv(x).view(
+            m_batchsize, -1, width * height)  # B X C X N
 
         out = torch.bmm(proj_value, attention.permute(0, 2, 1))
         out = out.view(m_batchsize, C, width, height)
@@ -542,7 +674,7 @@ class Self_Attention(nn.Module):
 #   |-- downsampling -- |submodule| -- upsampling --|
 class UnetBlock(nn.Module):
     def __init__(self, input_nc, outer_nc, inner_nc,
-                 submodule=None, outermost=False, innermost=False,
+                 submodule=None, outermost=False, innermost=False, use_spectral_norm=False,
                  norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
                  upsample='basic', padding_type='zero'):
         super(UnetBlock, self).__init__()
@@ -571,12 +703,18 @@ class UnetBlock(nn.Module):
         if outermost:
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
+            if use_spectral_norm:
+                upconv = SpectralNorm(upconv)
+
             down = downconv
             up = [uprelu] + upconv + [nn.Tanh()]
             model = down + [submodule] + up
         elif innermost:
             upconv = upsampleLayer(
                 inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
+            if use_spectral_norm:
+                upconv = SpectralNorm(upconv)
+
             down = [downrelu] + downconv
             up = [uprelu] + upconv
             if upnorm is not None:
@@ -585,6 +723,9 @@ class UnetBlock(nn.Module):
         else:
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
+            if use_spectral_norm:
+                upconv = SpectralNorm(upconv)
+
             down = [downrelu] + downconv
             if downnorm is not None:
                 down += [downnorm]
@@ -612,7 +753,7 @@ class UnetBlock(nn.Module):
 
 class UnetBlock_with_z(nn.Module):
     def __init__(self, input_nc, outer_nc, inner_nc, nz=0,
-                 submodule=None, outermost=False, innermost=False,
+                 submodule=None, outermost=False, innermost=False, use_spectral_norm=False,
                  norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
                  upsample='basic', padding_type='zero'):
         super(UnetBlock_with_z, self).__init__()
@@ -643,11 +784,15 @@ class UnetBlock_with_z(nn.Module):
         if outermost:
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
+            if use_spectral_norm:
+                upconv = SpectralNorm(upconv)
             down = downconv
             up = [uprelu] + upconv + [nn.Tanh()]
         elif innermost:
             upconv = upsampleLayer(
                 inner_nc, outer_nc, upsample=upsample, padding_type=padding_type)
+            if use_spectral_norm:
+                upconv = SpectralNorm(upconv)
             down = [downrelu] + downconv
             up = [uprelu] + upconv
             if norm_layer is not None:
@@ -655,6 +800,8 @@ class UnetBlock_with_z(nn.Module):
         else:
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type)
+            if use_spectral_norm:
+                upconv = SpectralNorm(upconv)
             down = [downrelu] + downconv
             if norm_layer is not None:
                 down += [norm_layer(inner_nc)]
@@ -732,39 +879,6 @@ class BasicBlock(nn.Module):
         return out
 
 
-class E_ResNet(nn.Module):
-    def __init__(self, input_nc=3, output_nc=1, nef=64, n_blocks=4,
-                 norm_layer=None, nl_layer=None, vaeLike=False):
-        super(E_ResNet, self).__init__()
-        self.vaeLike = vaeLike
-        max_nef = 4
-        conv_layers = [
-            nn.Conv2d(input_nc, nef, kernel_size=4, stride=2, padding=1, bias=True)]
-        for n in range(1, n_blocks):
-            input_nef = nef * min(max_nef, n)
-            output_nef = nef * min(max_nef, n + 1)
-            conv_layers += [BasicBlock(input_nef,
-                                       output_nef, norm_layer, nl_layer)]
-        conv_layers += [nl_layer(), nn.AvgPool2d(8)]
-        if vaeLike:
-            self.fc = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
-            self.fcVar = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
-        else:
-            self.fc = nn.Sequential(*[nn.Linear(output_nef, output_nc)])
-        self.conv = nn.Sequential(*conv_layers)
-
-    def forward(self, x):
-        x_conv = self.conv(x)
-        conv_flat = x_conv.view(x.size(0), -1)
-        output = self.fc(conv_flat)
-        if self.vaeLike:
-            outputVar = self.fcVar(conv_flat)
-            return output, outputVar
-        else:
-            return output
-        return output
-
-
 # Defines the Unet generator.
 # |num_downs|: number of downsamplings in UNet. For example,
 # if |num_downs| == 7, image of size 128x128 will become of size 1x1
@@ -772,25 +886,29 @@ class E_ResNet(nn.Module):
 class G_Unet_add_input(nn.Module):
     def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
-                 use_attention=False, upsample='basic'):
+                 use_attention=False, use_spctral_norm=False, upsample='basic'):
         super(G_Unet_add_input, self).__init__()
         self.nz = nz
         max_nchn = 8  # max channel factor
         # construct unet structure
-        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
+        unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, use_spctral_norm=use_spctral_norm,
                                innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         for i in range(num_downs - 5):
             unet_block = UnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, unet_block,
                                    norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
-                                   upsample=upsample)
+                                   use_spctral_norm=use_spctral_norm, upsample=upsample)
         unet_block = UnetBlock(ngf*4, ngf*4, ngf*max_nchn, unet_block, use_attention=use_attention,
-                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                               use_spctral_norm=use_spctral_norm, norm_layer=norm_layer,
+                               nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block, use_attention=use_attention,
-                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                               use_spctral_norm=use_spctral_norm, norm_layer=norm_layer,
+                               nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block, use_attention=use_attention,
-                               norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                               use_spctral_norm=use_spctral_norm, norm_layer=norm_layer,
+                               nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
-                               outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                               use_spctral_norm=use_spctral_norm, outermost=True, norm_layer=norm_layer,
+                               nl_layer=nl_layer, upsample=upsample)
 
         self.model = unet_block
 
@@ -812,26 +930,30 @@ class G_Unet_add_input(nn.Module):
 class G_Unet_add_all(nn.Module):
     def __init__(self, input_nc, output_nc, nz, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
-                 use_attention=False, upsample='basic'):
+                 use_attention=False, use_spectral_norm=False, upsample='basic'):
         super(G_Unet_add_all, self).__init__()
         self.nz = nz
         # construct unet structure
         unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, None, innermost=True,
-                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                                      use_spctral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                      nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block,
-                                      norm_layer=norm_layer, nl_layer=nl_layer,
-                                      use_dropout=use_dropout, upsample=upsample)
+                                      use_spctral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                      nl_layer=nl_layer, use_dropout=use_dropout, upsample=upsample)
         for i in range(num_downs - 6):
-            unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block,
+            unet_block = UnetBlock_with_z(ngf*8, ngf*8, ngf*8, nz, unet_block, use_spctral_norm=use_spectral_norm,
                                           norm_layer=norm_layer, nl_layer=nl_layer,
                                           use_dropout=use_dropout, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*4, ngf*4, ngf*8, nz, unet_block, use_attention=use_attention,
-                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                                      use_spctral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                      nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*2, ngf*2, ngf*4, nz, unet_block, use_attention=use_attention,
+                                      use_spctral_norm=use_spectral_norm,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf, ngf, ngf*2, nz, unet_block, use_attention=use_attention,
+                                      use_spctral_norm=use_spectral_norm,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block,
+        unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block, use_spctral_norm=use_spectral_norm,
                                       outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         self.model = unet_block
 

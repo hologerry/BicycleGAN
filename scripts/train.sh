@@ -8,7 +8,7 @@ DISPLAY_ID=$((GPU_ID*10+1))
 # DISPLAY_ID=0
 PORT=8097
 
-NZ=8
+NZ=16
 
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
@@ -34,6 +34,9 @@ NET_G='unet_64'
 NET_D='basic_64_multi'
 NET_E='resnet_64'
 USE_ATTENTION=''
+USE_SPECTRAL_NORM_G=''
+USE_SPECTRAL_NORM_D=''
+LAMBDA_L1=10.0
 
 # dataset parameters
 case ${CLASS} in
@@ -86,8 +89,11 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
+  LAMBDA_L1=50.0
   DATASET_MODE='multi_aligned'
   USE_ATTENTION='--use_attention'
+  USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
+  USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -112,6 +118,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --resize_or_crop ${RESIZE_OR_CROP} \
   ${NO_FLIP} \
   ${USE_ATTENTION} \
+  ${USE_SPECTRAL_NORM_G} \
+  ${USE_SPECTRAL_NORM_D} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \
@@ -125,4 +133,5 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --netD ${NET_D} \
   --netD2 ${NET_D2} \
   --use_dropout \
-  --dataset_mode ${DATASET_MODE}
+  --dataset_mode ${DATASET_MODE} \
+  --lambda_l1 ${LAMBDA_L1}

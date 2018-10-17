@@ -20,3 +20,6 @@ BicycleGAN with minor improvements
 
 ### v2.0
 BicycleGAN with self attention
+
+### v2.1
+BicycleGAN with spectral normalization
