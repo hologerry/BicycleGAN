@@ -785,9 +785,9 @@ class G_Unet_add_input(nn.Module):
                                    upsample=upsample)
         unet_block = UnetBlock(ngf*4, ngf*4, ngf*max_nchn, unet_block, use_attention=use_attention,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block,
+        unet_block = UnetBlock(ngf*2, ngf*2, ngf*4, unet_block, use_attention=use_attention,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block,
+        unet_block = UnetBlock(ngf, ngf, ngf*2, unet_block, use_attention=use_attention,
                                norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock(input_nc + nz, output_nc, ngf, unet_block,
                                outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
@@ -827,10 +827,10 @@ class G_Unet_add_all(nn.Module):
                                           use_dropout=use_dropout, upsample=upsample)
         unet_block = UnetBlock_with_z(ngf*4, ngf*4, ngf*8, nz, unet_block, use_attention=use_attention,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf*2, ngf*2, ngf*4, nz, unet_block,
+        unet_block = UnetBlock_with_z(ngf*2, ngf*2, ngf*4, nz, unet_block, use_attention=use_attention,
                                       norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
-        unet_block = UnetBlock_with_z(ngf, ngf, ngf * 2, nz, unet_block, norm_layer=norm_layer,
-                                      nl_layer=nl_layer, upsample=upsample)
+        unet_block = UnetBlock_with_z(ngf, ngf, ngf*2, nz, unet_block, use_attention=use_attention,
+                                      norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         unet_block = UnetBlock_with_z(input_nc, output_nc, ngf, nz, unet_block,
                                       outermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         self.model = unet_block
