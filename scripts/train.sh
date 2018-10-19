@@ -73,7 +73,9 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
+'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2'))
+  # Deprecated !!!
+  DIRECTION='AtoB'
   BATCH_SIZE=16
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -90,10 +92,31 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=50.0
-  DATASET_MODE='multi_aligned'
+  DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
   USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
+  ;;
+  'base_gray_color')
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=16
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=60
+  NITER_DECAY=60
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='unet_64'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=50.0
+  DATASET_MODE='multi_fusion'
+  USE_ATTENTION='--use_attention'
   ;;
 *)
   echo 'WRONG category: '${CLASS}

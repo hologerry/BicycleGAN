@@ -54,18 +54,23 @@ def transform_pair(opt, A, B, C=None):
         w_offset = random.randint(0, max(0, opt.loadSize - opt.fineSize - 1))
         h_offset = random.randint(0, max(0, opt.loadSize - opt.fineSize - 1))
 
-        A = A[:, h_offset:h_offset + opt.fineSize, w_offset:w_offset + opt.fineSize]
-        B = B[:, h_offset:h_offset + opt.fineSize, w_offset:w_offset + opt.fineSize]
+        A = A[:, h_offset:h_offset + opt.fineSize,
+              w_offset:w_offset + opt.fineSize]
+        B = B[:, h_offset:h_offset + opt.fineSize,
+              w_offset:w_offset + opt.fineSize]
         A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
         B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
         new_C = []
         if C is not None:
             assert(isinstance(C, list))
             for one_C in C:
-                one_C = one_C.resize((opt.loadSize, opt.loadSize), Image.BICUBIC)
+                one_C = one_C.resize(
+                    (opt.loadSize, opt.loadSize), Image.BICUBIC)
                 one_C = transforms.ToTensor()(one_C)
-                one_C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(one_C)
-                one_C = one_C[:, h_offset:h_offset + opt.fineSize, w_offset:w_offset + opt.fineSize]
+                one_C = transforms.Normalize(
+                    (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(one_C)
+                one_C = one_C[:, h_offset:h_offset +
+                              opt.fineSize, w_offset:w_offset + opt.fineSize]
                 new_C.append(one_C)
             C = torch.cat(new_C)
     elif opt.resize_or_crop == 'none':
@@ -75,10 +80,12 @@ def transform_pair(opt, A, B, C=None):
         B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
         if C is not None:
             assert(isinstance(C, list))
-            C = list(map(lambda c: transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), C))
+            C = list(map(lambda c: transforms.Normalize(
+                (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), C))
             C = torch.cat(C)
     else:
-        raise ValueError("For paired data, only support resize_and_crop or none --resise_or_crop mode")
+        raise ValueError(
+            "For paired data, only support resize_and_crop or none --resise_or_crop mode")
 
     if (not opt.no_flip) and random.random() < 0.5:
         idx = [i for i in range(A.size(2) - 1, -1, -1)]
@@ -92,6 +99,24 @@ def transform_pair(opt, A, B, C=None):
         return A, B, C
     else:
         return A, B
+
+
+def transform_quad(opt, A, C, Shapes, Colors):
+    if not opt.resise_or_crop == 'none':
+        raise ValueError(
+            "Only support none mode for resize_or_crop on base_gray_color dataset")
+    assert(isinstance(Shapes, list))
+    assert(isinstance(Colors, list))
+    A = transforms.ToTensor()(A)
+    C = transforms.ToTensor()(C)
+    A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
+    C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
+    Shapes = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Shapes = torch.cat(Shapes)
+    Colors = list(map(lambda c: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+    Colors = torch.cat(Colors)
 
 
 def __scale_width(img, target_width):

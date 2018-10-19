@@ -23,3 +23,10 @@ BicycleGAN with self attention
 
 ### v2.1
 BicycleGAN with spectral normalization
+
+
+## v3
+BicycleGAN with major improvements
+
+### 3.0
+Two encoder, one for character shape, another for character colors

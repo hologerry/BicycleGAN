@@ -19,22 +19,35 @@ class BiCycleGANModel(BaseModel):
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = ['G_GAN', 'D', 'G_GAN2', 'D2', 'G_L1', 'z_L1', 'kl']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        self.visual_names = ['real_A', 'real_B', 'fake_B_random', 'fake_B_encoded']
+        # It is up to the direction AtoB or BtoC or AtoC
+        self.visual_names = ['real_A', 'real_B', 'real_C',
+                             'fake_B_random', 'fake_B_encoded', 'fake_C_random', 'fake_C_encoded']
+
+        # get the direction AtoB or BtoC or AtoC
+        self.direction = opt.direction
+
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
+        # Encoder is used for other datasets or ABC shapes encode
         use_E = opt.isTrain or not opt.no_encode
+        # Encoder2 is used for ABC colors encode
+        use_E2 = opt.dataset_mode == 'multi_fusion' and (opt.direction == 'AtoC' or opt.direction == 'BtoC')
         use_vae = True
+
         use_attention = opt.use_attention
         use_spectral_norm_G = opt.use_spectral_norm_G
         use_spectral_norm_D = opt.use_spectral_norm_D
+
+        self.nzG = opt.nz*2 if opt.direction == 'AtoC' else opt.nz
         self.model_names = ['G']
-        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, netG=opt.netG,
+        self.netG = networks.define_G(opt.input_nc, opt.output_nc, self.nzG, opt.ngf, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout,
                                       use_attention=use_attention, use_spectral_norm=use_spectral_norm_G,
                                       init_type=opt.init_type, gpu_ids=self.gpu_ids,
                                       where_add=self.opt.where_add, upsample=opt.upsample)
+
         D_output_nc = opt.input_nc + opt.output_nc if opt.conditional_D else opt.output_nc
         use_sigmoid = opt.gan_mode == 'dcgan'
         if use_D:
@@ -47,10 +60,15 @@ class BiCycleGANModel(BaseModel):
             self.netD2 = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD2, norm=opt.norm, nl=opt.nl,
                                            use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds,
                                            use_spectral_norm=use_spectral_norm_D, gpu_ids=self.gpu_ids)
+
         if use_E:
             self.model_names += ['E']
             self.netE = networks.define_E(opt.input_nc*opt.nencode, opt.nz, opt.nef, netE=opt.netE, norm=opt.norm,
                                           nl=opt.nl, init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
+        if use_E2:
+            self.model_names += ['E2']
+            self.netE2 = networks.define_E(opt.input_nc*opt.nencode, opt.nz, opt.nef, netE=opt.netE, norm=opt.norm,
+                                           nl=opt.nl, init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(
@@ -66,6 +84,10 @@ class BiCycleGANModel(BaseModel):
                 self.optimizer_E = torch.optim.Adam(
                     self.netE.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 self.optimizers.append(self.optimizer_E)
+            if use_E2:
+                self.optimizer_E2 = torch.optim.Adam(
+                    self.netE2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                self.optimizers.append(self.optimizer_E2)
 
             if use_D:
                 self.optimizer_D = torch.optim.Adam(
@@ -80,12 +102,19 @@ class BiCycleGANModel(BaseModel):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
 
     def set_input(self, input):
-        AtoB = self.opt.direction == 'AtoB'
-        self.real_A = input['A' if AtoB else 'B'].to(self.device)
-        self.real_B = input['B' if AtoB else 'A'].to(self.device)
-        if self.opt.dataset_mode == 'multi_aligned':
+        if self.opt.dataset_mode == 'multi_fusion':
+            self.real_A = input['A'].to(self.device)
+            self.real_B = input['B'].to(self.device)  # B is the gray shape
             self.real_C = input['C'].to(self.device)
-        self.image_paths = input['A_paths' if AtoB else 'B_paths']
+            self.real_Shapes = input['Shapes'].to(self.device)
+            self.real_Colors = input['Colors'].to(self.device)
+            self.image_paths = input['ABC_path']
+        else:
+            # other datasets
+            AtoB = self.opt.direction == 'AtoB'
+            self.real_A = input['A' if AtoB else 'B'].to(self.device)
+            self.real_B = input['B' if AtoB else 'A'].to(self.device)
+            self.image_paths = input['A_path' if AtoB else 'B_path']
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):
         if random_type == 'uni':
@@ -94,53 +123,146 @@ class BiCycleGANModel(BaseModel):
             z = torch.randn(batch_size, nz)
         return z.to(self.device)
 
-    def encode(self, input_image):
-        mu, logvar = self.netE.forward(input_image)
+    def encode(self, input_image, is_E2=False):
+        if is_E2:
+            mu, logvar = self.netE2.forward(input_image)
+        else:
+            mu, logvar = self.netE.forward(input_image)
         std = logvar.mul(0.5).exp_()
         eps = self.get_z_random(std.size(0), std.size(1))
         z = eps.mul(std).add_(mu)
         return z, mu, logvar
 
-    def test(self, z0=None, encode=False):
+    def test(self, z0=None, encode=False, use_E2=False):
         with torch.no_grad():
-            if encode:  # use encoded z
-                z0, _ = self.netE(self.real_C)
-            if z0 is None:
-                z0 = self.get_z_random(self.real_A.size(0), self.opt.nz)
-            self.fake_B = self.netG(self.real_A, z0)
-            return self.real_A, self.fake_B, self.real_B
+            if self.opt.dataset_mode == 'multi_fusion':
+                if encode:  # use encoded z
+                    zshape, _ = self.netE(self.real_Shapes)
+                    zcolor, _ = self.netE2(self.real_Colors)
+                    z0 = torch.cat([zshape, zcolor], 1)
+                if z0 is None:
+                    z0 = self.get_z_random(self.real_A.size(0), self.opt.nz)
+                self.fake_out = self.netG(self.real_A, z0)
+                return self.real_A, self.fake, self.real
+            else:
+                if encode:  # use encoded z
+                    z0, _ = self.netE(self.real_B)
+                if z0 is None:
+                    z0 = self.get_z_random(self.real_A.size(0), self.opt.nz)
+                self.fake_B = self.netG(self.real_A, z0)
+                return self.real_A, self.fake_B, self.real_B
 
     def forward(self):
         # compute encoded or random B on whole batch
         # get encoded z
-        self.z_encoded, self.mu, self.logvar = self.encode(self.real_C)
-        # get random z
-        self.z_random = self.get_z_random(
-            self.real_A.size(0), self.opt.nz)
-        # generate fake_B_encoded
-        self.fake_B_encoded = self.netG(self.real_A, self.z_encoded)
-        # generate fake_B_random
-        self.fake_B_random = self.netG(self.real_A, self.z_random)
+        if self.opt.dataset_mode == 'multi_fusion':
+            if self.opt.direction == 'AtoC':
+                z_encoded_shape, mu_shape, logvar_shape = self.encode(self.real_Shapes)
+                z_encoded_color, mu_color, logvar_color = self.encode(self.real_Colors, is_E2=True)
+                self.z_encoded = torch.cat([z_encoded_shape, z_encoded_color], 1)
+                self.mu = torch.cat([mu_shape, mu_color], 1)
+                self.logvar = torch.cat([logvar_shape, logvar_color], 1)
+                # get random z
+                self.z_random = self.get_z_random(self.real_A.size(0), self.nzG)
+                # generate fake_C_encoded
+                self.fake_C_encoded = self.netG(self.real_A, self.z_encoded)
+                # generate fake_B_random
+                self.fake_C_random = self.netG(self.real_A, self.z_random)
+
+            elif self.opt.direction == 'AtoB':
+                self.z_encoded, self.mu, self.logvar = self.encode(self.real_Shapes)
+                # get random z
+                self.z_random = self.get_z_random(self.real_A.size(0), self.nzG)
+                # generate fake_C_encoded
+                self.fake_B_encoded = self.netG(self.real_A, self.z_encoded)
+                # generate fake_B_random
+                self.fake_B_random = self.netG(self.real_A, self.z_random)
+            elif self.opt.direction == 'BtoC':
+                self.z_encoded, self.mu, self.logvar = self.encode(self.real_Colors, is_E2=True)
+                # get random z
+                self.z_random = self.get_z_random(self.real_B.size(0), self.nzG)
+                # generate fake_C_encoded
+                self.fake_C_encoded = self.netG(self.real_B, self.z_encoded)
+                # generate fake_B_random
+                self.fake_C_random = self.netG(self.real_B, self.z_random)
+        else:
+            self.z_encoded, self.mu, self.logvar = self.encode(self.real_B)
 
         if self.opt.conditional_D:   # tedious conditoinal data
-            self.fake_data_encoded = torch.cat(
-                [self.real_A, self.fake_B_encoded], 1)
-            self.real_data_encoded = torch.cat(
-                [self.real_A, self.real_B_encoded], 1)
-            self.fake_data_random = torch.cat(
-                [self.real_A, self.fake_B_random], 1)
-            self.real_data_random = torch.cat(
-                [self.real_A, self.real_B_random], 1)
+            if self.opt.dataset_mode == 'multi_fusion':
+                if self.opt.direction == 'AtoC':
+                    self.fake_data_encoded = torch.cat(
+                        [self.real_A, self.fake_C_encoded], 1)
+                    self.real_data_encoded = torch.cat(
+                        [self.real_A, self.real_C_encoded], 1)
+                    self.fake_data_random = torch.cat(
+                        [self.real_A, self.fake_C_random], 1)
+                    self.real_data_random = torch.cat(
+                        [self.real_A, self.real_C_random], 1)
+                elif self.opt.direction == 'AtoB':
+                    self.fake_data_encoded = torch.cat(
+                        [self.real_A, self.fake_B_encoded], 1)
+                    self.real_data_encoded = torch.cat(
+                        [self.real_A, self.real_B_encoded], 1)
+                    self.fake_data_random = torch.cat(
+                        [self.real_A, self.fake_B_random], 1)
+                    self.real_data_random = torch.cat(
+                        [self.real_B, self.real_B_random], 1)
+                elif self.opt.direction == 'BtoC':
+                    self.fake_data_encoded = torch.cat(
+                        [self.real_B, self.fake_C_encoded], 1)
+                    self.real_data_encoded = torch.cat(
+                        [self.real_B, self.real_C_encoded], 1)
+                    self.fake_data_random = torch.cat(
+                        [self.real_B, self.fake_C_random], 1)
+                    self.real_data_random = torch.cat(
+                        [self.real_B, self.real_C_random], 1)
+            else:
+                self.fake_data_encoded = torch.cat(
+                    [self.real_A, self.fake_B_encoded], 1)
+                self.real_data_encoded = torch.cat(
+                    [self.real_A, self.real_B_encoded], 1)
+                self.fake_data_random = torch.cat(
+                    [self.real_A, self.fake_B_random], 1)
+                self.real_data_random = torch.cat(
+                    [self.real_A, self.real_B_random], 1)
         else:
-            self.fake_data_encoded = self.fake_B_encoded
-            self.fake_data_random = self.fake_B_random
-            self.real_data_encoded = self.real_B
-            self.real_data_random = self.real_B
+            if self.opt.dataset_mode == 'multi_fusion':
+                if self.opt.direction == 'AtoC' or self.opt.direction == 'BtoC':
+                    self.fake_data_encoded = self.fake_C_encoded
+                    self.fake_data_random = self.fake_C_random
+                    self.real_data_encoded = self.real_C
+                    self.real_data_random = self.real_C
+                elif self.opt.direction == 'AtoB':
+                    self.fake_data_encoded = self.fake_B_encoded
+                    self.fake_data_random = self.fake_B_random
+                    self.real_data_encoded = self.real_B
+                    self.real_data_random = self.real_B
+            else:
+                self.fake_data_encoded = self.fake_B_encoded
+                self.fake_data_random = self.fake_B_random
+                self.real_data_encoded = self.real_B
+                self.real_data_random = self.real_B
 
         # compute z_predict
         if self.opt.lambda_z > 0.0:
-            self.mu2, logvar2 = self.netE(
-                self.fake_B_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
+            if self.opt.dataset_mode == 'multi_fusion':
+                if self.opt.direction == 'AtoC':
+                    mu2_shape, logvar2_shape = self.netE(
+                        self.fake_C_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
+                    mu2_color, logvar2_color = self.netE2(
+                        self.fake_C_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
+                    self.mu2 = torch.cat([mu2_shape, mu2_color], 1)
+                    self.logvar2 = torch.cat([logvar_shape, logvar2_color], 1)
+                elif self.opt.direction == 'AtoB':
+                    self.mu2, logvar2 = self.netE(
+                        self.fake_B_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
+                elif self.opt.direction == 'BtoC':
+                    self.mu2, logvar2 = self.netE2(
+                        self.fake_C_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
+            else:
+                self.mu2, logvar2 = self.netE(
+                    self.fake_B_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
 
     def backward_D(self, netD, real, fake):
         # Fake, stop backprop to the generator by detaching fake_B
@@ -182,8 +304,16 @@ class BiCycleGANModel(BaseModel):
             self.loss_kl = 0
         # 3. reconstruction |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
-            self.loss_G_L1 = self.criterionL1(
-                self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
+            if self.opt.dataset_mode == 'multi_fusion':
+                if self.opt.direction == 'AtoC' or self.opt.direction == 'BtoC':
+                    self.loss_G_L1 = self.criterionL1(
+                        self.fake_C_encoded, self.real_C) * self.opt.lambda_L1
+                elif self.opt.direction == 'AtoB':
+                    self.loss_G_L1 = self.criterionL1(
+                        self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
+            else:
+                self.loss_G_L1 = self.criterionL1(
+                    self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
         else:
             self.loss_G_L1 = 0.0
 

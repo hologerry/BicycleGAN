@@ -25,8 +25,10 @@ class BaseOptions():
                             help='# of input image channels')
         parser.add_argument('--output_nc', type=int, default=3,
                             help='# of output image channels')
-        parser.add_argument('--nencode', type=int, default=4, help='# of image(s) for encoder')
-        parser.add_argument('--nz', type=int, default=8, help='# latent vector')
+        parser.add_argument('--nencode', type=int, default=4,
+                            help='# of image(s) for encoder')
+        parser.add_argument('--nz', type=int, default=8,
+                            help='# latent vector')
         parser.add_argument('--nef', type=int, default=64,
                             help='# of encoder filters in first conv layer')
         parser.add_argument('--ngf', type=int, default=64,
@@ -40,11 +42,12 @@ class BaseOptions():
         parser.add_argument('--resize_or_crop', type=str, default='resize_and_crop',
                             help='resize_and_crop, crop, scale_width, scale_width_and_crop, or none')
         parser.add_argument('--dataset_mode', type=str,
-                            default='aligned', help='multi_aligned,aligned,single')
+                            default='aligned', help='multi_fusion,aligned,single')
         parser.add_argument('--model', type=str, default='bicycle_gan',
                             help='chooses which model to use. bicycle,, ...')
         parser.add_argument('--direction', type=str,
-                            default='AtoB', help='AtoB or BtoA')
+                            default='AtoB', help='AtoB or BtoC or AtoC, A base B gray C color.' +
+                            'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
         parser.add_argument('--num_threads', default=16,

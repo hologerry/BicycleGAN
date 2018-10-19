@@ -8,6 +8,7 @@ from data.image_folder import make_dataset
 
 
 class MultiAlignedDataset(BaseDataset):
+    # Deprecated !!!
     @staticmethod
     def modify_commandline_options(parser, is_train):
         return parser
@@ -58,10 +59,10 @@ class MultiAlignedDataset(BaseDataset):
             B = tmp.unsqueeze(0)
 
         return {'A': A, 'B': B, 'C': C,
-                'A_paths': AB_path, 'B_paths': AB_path, 'C_paths': C_paths}
+                'A_path': AB_path, 'B_path': AB_path, 'C_paths': C_paths}
 
     def __len__(self):
         return len(self.AB_paths)
 
     def name(self):
-        return 'AlignedDataset'
+        return 'MultiAlignedDataset'

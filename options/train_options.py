@@ -37,7 +37,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--niter_decay', type=int, default=100,
                             help='# of iter(epoch) to linearly decay learning rate to zero')
         parser.add_argument('--beta1', type=float,
-                            default=0.5, help='momentum term of adam')
+                            default=0.9, help='momentum term of adam')
         parser.add_argument('--no_html', action='store_true',
                             help='do not save intermediate training results to [opt.checkpoints_dir]/[opt.name]/web/')
         # learning rate
