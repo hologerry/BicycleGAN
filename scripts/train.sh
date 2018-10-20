@@ -99,13 +99,13 @@ case ${CLASS} in
   ;;
 'base_gray_color')
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=4
+  BATCH_SIZE=16
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=60
-  NITER_DECAY=60
+  NITER=30
+  NITER_DECAY=50
   SAVE_EPOCH=10
   NEF=64
   NGF=32
