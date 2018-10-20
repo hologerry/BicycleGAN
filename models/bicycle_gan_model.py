@@ -18,13 +18,19 @@ class BiCycleGANModel(BaseModel):
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = ['G_GAN', 'D', 'G_GAN2', 'D2', 'G_L1', 'z_L1', 'kl']
-        # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        # It is up to the direction AtoB or BtoC or AtoC
-        self.visual_names = ['real_A', 'real_B', 'real_C',
-                             'fake_B_random', 'fake_B_encoded', 'fake_C_random', 'fake_C_encoded']
 
         # get the direction AtoB or BtoC or AtoC
         self.direction = opt.direction
+
+        # specify the images you want to save/display. The program will call base_model.get_current_visuals
+        # It is up to the direction AtoB or BtoC or AtoC
+        if self.opt.dataset_mode == 'multi_fusion':
+            if self.direction == 'AtoC' or self.direction == 'BtoC':
+                self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_C_random', 'fake_C_encoded']
+            else:
+                self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_B_random', 'fake_B_encoded']
+        else:
+            self.visual_names = ['real_A', 'real_B', 'fake_B_random', 'fake_B_encoded']
 
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
@@ -154,7 +160,6 @@ class BiCycleGANModel(BaseModel):
 
     def forward(self):
         # compute encoded or random B on whole batch
-        # get encoded z
         if self.opt.dataset_mode == 'multi_fusion':
             if self.opt.direction == 'AtoC':
                 z_encoded_shape, mu_shape, logvar_shape = self.encode(self.real_Shapes)
@@ -187,6 +192,12 @@ class BiCycleGANModel(BaseModel):
                 self.fake_C_random = self.netG(self.real_B, self.z_random)
         else:
             self.z_encoded, self.mu, self.logvar = self.encode(self.real_B)
+            # get random z
+            self.z_random = self.get_z_random(self.real_B.size(0), self.nzG)
+            # generate fake_C_encoded
+            self.fake_B_encoded = self.netG(self.real_A, self.z_encoded)
+            # generate fake_B_random
+            self.fake_B_random = self.netG(self.real_A, self.z_random)
 
         if self.opt.conditional_D:   # tedious conditoinal data
             if self.opt.dataset_mode == 'multi_fusion':

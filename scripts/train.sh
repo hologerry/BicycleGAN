@@ -73,7 +73,7 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2'))
+'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
   # Deprecated !!!
   DIRECTION='AtoB'
   BATCH_SIZE=16
@@ -97,9 +97,9 @@ case ${CLASS} in
   USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
   USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
   ;;
-  'base_gray_color')
+'base_gray_color')
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=16
+  BATCH_SIZE=4
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
