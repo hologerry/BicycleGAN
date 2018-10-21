@@ -1,5 +1,5 @@
 set -ex
-CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
+# CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
 MODEL='bicycle_gan'
 CLASS=${1}
 GPU_ID=${2}
@@ -99,7 +99,7 @@ case ${CLASS} in
   ;;
 'base_gray_color')
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=16
+  BATCH_SIZE=64
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -114,7 +114,7 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=50.0
+  LAMBDA_L1=10.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   ;;
