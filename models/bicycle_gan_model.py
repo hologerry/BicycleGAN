@@ -80,6 +80,7 @@ class BiCycleGANModel(BaseModel):
             self.criterionGAN = networks.GANLoss(
                 mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+            self.criterionL2 = torch.nn.MSELoss()
             self.criterionZ = torch.nn.L1Loss()
             # initialize optimizers
             self.optimizers = []
@@ -276,7 +277,7 @@ class BiCycleGANModel(BaseModel):
                     self.fake_B_random.repeat(1, self.opt.nencode, 1, 1))  # mu2 is a point estimate
 
     def backward_D(self, netD, real, fake):
-        # Fake, stop backprop to the generator by detaching fake_B
+        # Fake, stop backprop to the generator by detaching fake_out
         pred_fake = netD(fake.detach())
         # real
         pred_real = netD(real)
@@ -328,7 +329,21 @@ class BiCycleGANModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_kl
+        if self.opt.lambda_L2 > 0.0:
+            if self.opt.dataset_mode == 'multi_fusion':
+                if self.opt.direction == 'AtoC' or self.opt.direction == 'BtoC':
+                    self.loss_G_L1 = self.criterionL2(
+                        self.fake_C_encoded, self.real_C) * self.opt.lambda_L1
+                elif self.opt.direction == 'AtoB':
+                    self.loss_G_L1 = self.criterionL2(
+                        self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
+            else:
+                self.loss_G_L1 = self.criterionL2(
+                    self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
+        else:
+            self.loss_G_L2 = 0.0
+
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L2 + self.loss_kl
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):

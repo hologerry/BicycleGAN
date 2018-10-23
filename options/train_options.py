@@ -50,6 +50,8 @@ class TrainOptions(BaseOptions):
         # lambda parameters
         parser.add_argument('--lambda_L1', type=float,
                             default=10.0, help='weight for |B-G(A, E(B))|')
+        parser.add_argument('--lambda_L2', type=float,
+                            default=10.0, help='weight for mse(B-G(A, E(B)))')
         parser.add_argument('--lambda_GAN', type=float,
                             default=1.0, help='weight on D loss. D(G(A, E(B)))')
         parser.add_argument('--lambda_GAN2', type=float, default=1.0,
