@@ -17,7 +17,7 @@ class BiCycleGANModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'D', 'G_GAN2', 'D2', 'G_L1', 'z_L1', 'kl']
+        self.loss_names = ['G_GAN', 'D', 'G_GAN2', 'D2', 'G_L1', 'G_L2', 'z_L1', 'kl']
 
         # get the direction AtoB or BtoC or AtoC
         self.direction = opt.direction
@@ -332,13 +332,13 @@ class BiCycleGANModel(BaseModel):
         if self.opt.lambda_L2 > 0.0:
             if self.opt.dataset_mode == 'multi_fusion':
                 if self.opt.direction == 'AtoC' or self.opt.direction == 'BtoC':
-                    self.loss_G_L1 = self.criterionL2(
+                    self.loss_G_L2 = self.criterionL2(
                         self.fake_C_encoded, self.real_C) * self.opt.lambda_L1
                 elif self.opt.direction == 'AtoB':
-                    self.loss_G_L1 = self.criterionL2(
+                    self.loss_G_L2 = self.criterionL2(
                         self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
             else:
-                self.loss_G_L1 = self.criterionL2(
+                self.loss_G_L2 = self.criterionL2(
                     self.fake_B_encoded, self.real_B) * self.opt.lambda_L1
         else:
             self.loss_G_L2 = 0.0

@@ -12,7 +12,7 @@ NZ=16
 
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
-DATE=`date '+%d_%m_%Y_%H'`
+DATE=`date '+%d_%m_%Y_%H-%M'`
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
@@ -99,7 +99,7 @@ case ${CLASS} in
   ;;
 'base_gray_color')
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=64
+  BATCH_SIZE=16
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -114,7 +114,7 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=10.0
+  LAMBDA_L1=20.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   ;;
