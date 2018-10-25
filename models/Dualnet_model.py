@@ -19,7 +19,7 @@ class DualNetModel(BaseModel):
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = ['G_GAN', 'D', 'G_L1']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        self.visual_names = ['real_A_encoded', 'real_B_encoded', 'fake_B_encoded']
+        self.visual_names = ['real_A_encoded', 'real_B_encoded', 'real_C_encoded', 'fake_B_encoded', 'fake_C_encoded']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
@@ -71,6 +71,7 @@ class DualNetModel(BaseModel):
         self.real_A = input['A' if AtoB else 'B'].to(self.device)
         self.real_B = input['B' if AtoB else 'A'].to(self.device)
         self.real_C = input['C'].to(self.device)
+        self.real_D = input['D'].to(self.device)
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):
@@ -89,8 +90,8 @@ class DualNetModel(BaseModel):
 
     def test(self, z0=None, encode=False):
         with torch.no_grad():
-            self.fake_B = self.netG(self.real_A, self.real_C)
-            return self.real_A, self.fake_B, self.real_B
+            self.fake_B = self.netG(self.real_A, self.real_D)
+            return self.real_A, self.fake_B, self.real_B, self.real_D
 
     def forward(self):
         # get real images
@@ -99,24 +100,26 @@ class DualNetModel(BaseModel):
         self.real_A_encoded = self.real_A[0:self.opt.batch_size]
         self.real_B_encoded = self.real_B[0:self.opt.batch_size]
         # self.real_B_random = self.real_B[half_size:]
-        self.real_C = self.real_C[0:self.opt.batch_size]
+        self.real_C_encoded = self.real_C[0:self.opt.batch_size]
+        self.real_D_encoded = self.real_D[0: self.opt.batch_size]
         # get encoded z
         # self.z_encoded, self.mu, self.logvar = self.encode(self.real_B_encoded)
         # get random z
         # self.z_random = self.get_z_random(self.real_A_encoded.size(0), self.opt.nz)
         # generate fake_B_encoded
-        self.fake_B_encoded = self.netG(self.real_A_encoded, self.real_C)
+        self.fake_C_encoded = self.netG(self.real_A_encoded, self.real_C)
+        self.fake_B_encoded = self.fake_C_encoded[0, ...] * 0.299 + self.fake_C_encoded[1, ...] * 0.587 + self.fake_C_encoded[2, ...] * 0.114
         # generate fake_B_random
         # self.fake_B_random = self.netG(self.real_A_encoded, self.z_random)
         if self.opt.conditional_D:   # tedious conditoinal data
-            self.fake_data_encoded = torch.cat([self.real_A_encoded, self.fake_B_encoded], 1)
-            self.real_data_encoded = torch.cat([self.real_A_encoded, self.real_B_encoded], 1)
+            self.fake_data_encoded = torch.cat([self.real_A_encoded, self.fake_C_encoded], 1)
+            self.real_data_encoded = torch.cat([self.real_A_encoded, self.real_C_encoded], 1)
             #self.fake_data_random = torch.cat([self.real_A_encoded, self.fake_B_random], 1)
             #self.real_data_random = torch.cat([self.real_A[half_size:], self.real_B_random], 1)
         else:
-            self.fake_data_encoded = self.fake_B_encoded
+            self.fake_data_encoded = self.fake_C_encoded
             #self.fake_data_random = self.fake_B_random
-            self.real_data_encoded = self.real_B_encoded
+            self.real_data_encoded = self.real_C_encoded
             #self.real_data_random = self.real_B_random
 
         # compute z_predict
@@ -162,11 +165,12 @@ class DualNetModel(BaseModel):
         '''
         # 3, reconstruction |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
-            self.loss_G_L1 = self.criterionL1(self.fake_B_encoded, self.real_B_encoded) * self.opt.lambda_L1
+            self.loss_G_L1 = self.criterionL1(self.fake_C_encoded, self.real_C_encoded) * self.opt.lambda_L1
+            self.loss_G_L1_B = self.criterionL1(self.fake_B_encoded, self.real_B_encoded) * self.opt.lambda_L1
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1 # + self.loss_kl
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_L1_D # + self.loss_kl
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):
