@@ -930,13 +930,15 @@ class DualnetBlock(nn.Module):
         x1 = self.down1(content)
         x2 = self.down2(style)
         if self.outermost:
-            out = self.submodule(x1, x2)
-            return self.up(out)
+            mid = self.submodule(x1, x2)
+            return self.up(mid)
         elif self.innermost:
-            return self.up(torch.cat([x1, x2], 1))
+            out = self.up(torch.cat([x1, x2],1) )
+            return torch.cat([out, torch.cat([content, style], 1)], 1)
         else:
-            out = self.submodule(x1, x2)
-            return self.up(torch.cat([out, torch.cat([x1, x2], 1)], 1))
+            mid = self.submodule(x1, x2)
+            out = self.up(mid)
+            return torch.cat([out, torch.cat([content, style], 1)], 1)
 
 
 class BasicBlockUp(nn.Module):
@@ -1037,16 +1039,16 @@ class define_DualNet(nn.Module):
             dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, dual_block,
                                    norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
                                    use_spectral_norm=use_spectral_norm, upsample=upsample)
-        dual_block = DualnetBlock(ngf*4, ngf*4, ngf*max_nchn, ngf*max_nchn, dual_block, use_attention=use_attention,
+        dual_block = DualnetBlock(ngf*4, ngf*4, ngf*4, ngf*max_nchn, dual_block, use_attention=use_attention,
                                use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
-        dual_block = DualnetBlock(ngf*2, ngf*2, ngf*4, ngf*4, dual_block, use_attention=use_attention,
+        dual_block = DualnetBlock(ngf*2, ngf*2, ngf*2, ngf*4, dual_block, use_attention=use_attention,
                                use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
-        dual_block = DualnetBlock(ngf, ngf, ngf*2, ngf*2, dual_block, use_attention=use_attention,
+        dual_block = DualnetBlock(ngf, ngf, ngf, ngf*2, dual_block, use_attention=use_attention,
                                use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
-        dual_block = DualnetBlock(input_content, input_style, ngf, output_nc, dual_block,
+        dual_block = DualnetBlock(input_content, input_style, output_nc, ngf, dual_block,
                                use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
                                nl_layer=nl_layer, upsample=upsample)
 

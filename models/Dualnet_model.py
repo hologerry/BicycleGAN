@@ -17,9 +17,9 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'D', 'G_GAN2', 'D2', 'G_L1', 'z_L1', 'kl']
+        self.loss_names = ['G_GAN', 'D', 'G_L1']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        self.visual_names = ['real_A_encoded', 'real_B_encoded', 'fake_B_random', 'fake_B_encoded']
+        self.visual_names = ['real_A_encoded', 'real_B_encoded', 'fake_B_encoded']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
@@ -166,7 +166,7 @@ class DualNetModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 # + self.loss_kl
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1 # + self.loss_kl
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):
@@ -204,7 +204,7 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_z > 0.0:
             self.optimizer_G.zero_grad()
             # self.optimizer_E.zero_grad()
-            self.backward_G_alone()
+            # self.backward_G_alone()
             self.optimizer_G.step()
 
     def optimize_parameters(self):
