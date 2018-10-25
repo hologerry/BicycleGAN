@@ -59,7 +59,7 @@ class MultiAlignedDataset(BaseDataset):
             B = tmp.unsqueeze(0)
 
         return {'A': A, 'B': B, 'C': C,
-                'A_path': AB_path, 'B_path': AB_path, 'C_paths': C_paths}
+                'A_paths': AB_path, 'B_paths': AB_path, 'C_paths': C_paths}
 
     def __len__(self):
         return len(self.AB_paths)

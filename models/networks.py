@@ -1029,7 +1029,6 @@ class define_DualNet(nn.Module):
                  norm_layer=None, nl_layer=None, use_dropout=False,
                  use_attention=False, use_spectral_norm=False, upsample='basic'):
         super(define_DualNet, self).__init__()
-        self.nz = nz
         max_nchn = 8  # max channel factor
         # construct unet structure
         dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, use_spectral_norm=use_spectral_norm,
