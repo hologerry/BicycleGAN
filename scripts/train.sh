@@ -73,7 +73,7 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2')
+'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2' | 'mcgan')
   # Deprecated !!!
   DIRECTION='AtoB'
   BATCH_SIZE=16
@@ -87,7 +87,7 @@ case ${CLASS} in
   NEF=64
   NGF=32
   NDF=32
-  NET_G='unet_64'
+  NET_G='dualnet'
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
