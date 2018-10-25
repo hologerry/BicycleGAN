@@ -92,10 +92,10 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=50.0
-  DATASET_MODE='multi_fusion'
-  USE_ATTENTION='--use_attention'
-  USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
-  USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
+  DATASET_MODE='multi_aligned'
+  # USE_ATTENTION='--use_attention'
+  # USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
+  # USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
   ;;
 'base_gray_color')
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
