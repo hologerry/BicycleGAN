@@ -925,10 +925,10 @@ class DualnetBlock(nn.Module):
         self.submodule = submodule
         self.up = nn.Sequential(*up)
 
-    def forward(self, style, content):
+    def forward(self, content, style):
 
-        x1 = self.down1(style)
-        x2 = self.down2(content)
+        x1 = self.down1(content)
+        x2 = self.down2(style)
         if self.outermost:
             out = self.submodule(x1, x2)
             return self.up(out)
@@ -1052,8 +1052,8 @@ class define_DualNet(nn.Module):
 
         self.model = dual_block
 
-    def forward(self, style, content):
-        return self.model(style, content)
+    def forward(self, content, style):
+        return self.model(content, style)
 
 # Defines the Unet generator.
 # |num_downs|: number of downsamplings in UNet. For example,
