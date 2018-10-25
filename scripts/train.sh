@@ -1,6 +1,6 @@
 set -ex
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
-MODEL='bicycle_gan'
+MODEL='Dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
