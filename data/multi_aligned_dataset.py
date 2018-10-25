@@ -17,7 +17,7 @@ class MultiAlignedDataset(BaseDataset):
         self.opt = opt
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
-        self.ABC_paths = sorted(make_dataset(self.dir_AB))
+        self.ABC_paths = sorted(make_dataset(self.dir_ABC))
         self.alphabets = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
     def __getitem__(self, index):
