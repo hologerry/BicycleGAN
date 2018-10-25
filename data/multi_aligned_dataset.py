@@ -26,8 +26,8 @@ class MultiAlignedDataset(BaseDataset):
         w3, h = ABC.size
         w = int(w3 / 3)
         A = ABC.crop((0, 0, w, h))
-        B = ABC.crop((w+w, 0, w+w+w, h))
-        C = ABC.crop((w, 0, w + w, h))
+        B = ABC.crop((w, 0, w + w, h))
+        C = ABC.crop((w+w, 0, w+w+w, h))
 
         D = []
         D_paths = []
