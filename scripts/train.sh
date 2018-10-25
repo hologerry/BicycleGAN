@@ -12,7 +12,7 @@ NZ=16
 
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
-DATE=`date '+%d_%m_%Y_%H-%M'`
+DATE=`date '+%d_%m_%Y-%H_%M'`
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
@@ -25,6 +25,8 @@ RESIZE_OR_CROP='resize_and_crop'
 INPUT_NC=3
 BATCH_SIZE=16
 DATASET_MODE='aligned'
+WHERE_ADD='all'
+CONDITIONAL_D=''
 
 # Networks module
 NGF=64
@@ -117,6 +119,9 @@ case ${CLASS} in
   LAMBDA_L1=20.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
+  WHERE_ADD='input'
+  CONDITIONAL_D='--conditional_D'
+
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -157,4 +162,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --netD2 ${NET_D2} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
-  --lambda_L1 ${LAMBDA_L1}
+  --lambda_L1 ${LAMBDA_L1} \
+  --where_add ${WHERE_ADD} \
+  --conditional_D ${CONDITIONAL_D}
