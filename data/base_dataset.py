@@ -105,7 +105,7 @@ def transform_fusion(opt, A, B, C, Colors, Shapes=None):
     if not opt.resize_or_crop == 'none':
         raise ValueError(
             "Only support none mode for resize_or_crop on base_gray_color dataset")
-    assert(isinstance(Shapes, list))
+    #assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
     A = transforms.ToTensor()(A)
     B = transforms.ToTensor()(B)

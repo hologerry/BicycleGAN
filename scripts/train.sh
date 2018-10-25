@@ -98,8 +98,8 @@ case ${CLASS} in
   # USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
   ;;
 'base_gray_color')
-  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=16
+  DIRECTION='AtoB' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=64
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -110,12 +110,12 @@ case ${CLASS} in
   NEF=64
   NGF=32
   NDF=32
-  NET_G='unet_64'
+  NET_G='dualnet'
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=20.0
-  DATASET_MODE='multi_fusion'
+  DATASET_MODE='multi_aligned'
   USE_ATTENTION='--use_attention'
   ;;
 *)

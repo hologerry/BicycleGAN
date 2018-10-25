@@ -46,6 +46,7 @@ class MultiAlignedDataset(BaseDataset):
             D_paths.append(ABC_path)
 
         A, B, C, D = transform_fusion(self.opt, A, B, C, D)
+        B = B[0,...] * 0.299 + B[1,...] * 0.587 + B[2,...] * 0.114
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'D': D,
