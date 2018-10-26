@@ -30,3 +30,7 @@ BicycleGAN with major improvements
 
 ### 3.0
 Two encoder, one for character shape, another for character colors
+
+### 3.1
+[ECCV 2018] Macro-Micro Adversarial Network for Human Parsing
+Dual discriminator, one global macro D (low resolution), one local micro D (high resolution)

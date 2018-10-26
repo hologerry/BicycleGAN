@@ -3,6 +3,8 @@
 *.pth
 *.pyc
 *.flake8
+.vscode/
+.idea/
 debug*
 datasets/
 videos/
