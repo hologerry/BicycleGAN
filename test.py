@@ -1,5 +1,4 @@
 import os
-from itertools import islice
 
 from data import CreateDataLoader
 from models import create_model
@@ -32,9 +31,9 @@ if opt.sync:
 # TODO: Update test
 
 # test stage
-for i, data in enumerate(islice(dataset, opt.num_test)):
+for i, data in enumerate(dataset):
     model.set_input(data)
-    print('process input image %3.3d/%3.3d' % (i, opt.num_test))
+    print('process input image %3.3d/%3.3d' % (i, len(dataset)))
     if not opt.sync:
         z_samples = model.get_z_random(opt.n_samples + 1, opt.nz)
     for nn in range(opt.n_samples + 1):

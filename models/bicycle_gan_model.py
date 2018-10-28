@@ -161,7 +161,6 @@ class BiCycleGANModel(BaseModel):
                 return self.real_A, self.fake_B, self.real_B
 
     def forward(self):
-        # TODO: totally remove random
         # compute encoded or random B on whole batch
         if self.opt.dataset_mode == 'multi_fusion':
             if self.opt.direction == 'AtoC':
