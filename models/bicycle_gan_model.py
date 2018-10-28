@@ -26,9 +26,9 @@ class BiCycleGANModel(BaseModel):
         # It is up to the direction AtoB or BtoC or AtoC
         if self.opt.dataset_mode == 'multi_fusion':
             if self.direction == 'AtoC' or self.direction == 'BtoC':
-                self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_C_random', 'fake_C_encoded']
+                self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_C_encoded']
             else:
-                self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_B_random', 'fake_B_encoded']
+                self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_B_encoded']
         else:
             self.visual_names = ['real_A', 'real_B', 'fake_B_random', 'fake_B_encoded']
 
@@ -39,14 +39,15 @@ class BiCycleGANModel(BaseModel):
         # Encoder is used for other datasets or ABC shapes encode
         use_E = opt.isTrain or not opt.no_encode
         # Encoder2 is used for ABC colors encode
-        use_E2 = opt.dataset_mode == 'multi_fusion' and (opt.direction == 'AtoC' or opt.direction == 'BtoC')
+        # use_E2 = opt.dataset_mode == 'multi_fusion' and (opt.direction == 'AtoC' or opt.direction == 'BtoC')
+        use_E2 = False
         use_vae = True
 
         use_attention = opt.use_attention
         use_spectral_norm_G = opt.use_spectral_norm_G
         use_spectral_norm_D = opt.use_spectral_norm_D
 
-        self.nzG = opt.nz*2 if opt.direction == 'AtoC' else opt.nz
+        self.nzG = opt.nz*2 if use_E2 else opt.nz
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, self.nzG, opt.ngf, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout,
