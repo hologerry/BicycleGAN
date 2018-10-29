@@ -1,12 +1,12 @@
 set -ex
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
-MODEL='Dualnet'
+MODEL='bicycle_gan'
 CLASS=${1}
 GPU_ID=${2}
 
 DISPLAY_ID=$((GPU_ID*10+1))
 # DISPLAY_ID=0
-PORT=8097
+PORT=9097
 
 NZ=16
 
@@ -75,33 +75,10 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2' | 'mcgan')
-  # Deprecated !!!
-  DIRECTION='AtoB'
-  BATCH_SIZE=16
-  LOAD_SIZE=64
-  FINE_SIZE=64
-  RESIZE_OR_CROP='none'
-  NO_FLIP='--no_flip'
-  NITER=60
-  NITER_DECAY=60
-  SAVE_EPOCH=10
-  NEF=64
-  NGF=32
-  NDF=32
-  NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
-  NET_E='resnet_64'
-  LAMBDA_L1=50.0
-  DATASET_MODE='multi_aligned'
-  # USE_ATTENTION='--use_attention'
-  # USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
-  # USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
-  ;;
 'base_gray_color')
-  DIRECTION='AtoB' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=64
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=2
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -117,9 +94,9 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=20.0
-  DATASET_MODE='multi_aligned'
+  DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
-  WHERE_ADD='input'
+  WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
 
   ;;
