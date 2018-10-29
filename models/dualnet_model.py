@@ -17,7 +17,7 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'D', 'G_L1']
+        self.loss_names = ['G_GAN', 'D', 'G_L1', 'G_L1_B']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
@@ -29,7 +29,6 @@ class DualNetModel(BaseModel):
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
-        use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
@@ -41,11 +40,6 @@ class DualNetModel(BaseModel):
             self.netD = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD, norm=opt.norm, nl=opt.nl,
                                           use_sigmoid=use_sigmoid, init_type=opt.init_type,
                                           num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
-        if use_D2:
-            self.model_names += ['D2']
-            self.netD2 = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD2, norm=opt.norm, nl=opt.nl,
-                                           use_sigmoid=use_sigmoid, init_type=opt.init_type,
-                                           num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
@@ -58,9 +52,6 @@ class DualNetModel(BaseModel):
             if use_D:
                 self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 self.optimizers.append(self.optimizer_D)
-            if use_D2:
-                self.optimizer_D2 = torch.optim.Adam(self.netD2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-                self.optimizers.append(self.optimizer_D2)
 
     def is_train(self):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
