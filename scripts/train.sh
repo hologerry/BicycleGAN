@@ -1,12 +1,12 @@
 set -ex
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
-MODEL='Dualnet'
+MODEL='bicycle_gan'
 CLASS=${1}
 GPU_ID=${2}
 
 DISPLAY_ID=$((GPU_ID*10+1))
 # DISPLAY_ID=0
-PORT=8097
+PORT=9097
 
 NZ=16
 
@@ -76,8 +76,9 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'base_gray_color')
+  MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=64
+  BATCH_SIZE=2
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'

@@ -101,6 +101,7 @@ class BiCycleGANModel(BaseModel):
                 self.optimizer_D = torch.optim.Adam(
                     self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 self.optimizers.append(self.optimizer_D)
+            # used for random
             if use_D2:
                 self.optimizer_D2 = torch.optim.Adam(
                     self.netD2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
