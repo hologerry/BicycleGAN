@@ -77,10 +77,11 @@ class DualNetModel(BaseModel):
         z = eps.mul(std).add_(mu)
         return z, mu, logvar
 
-    def test(self, z0=None, encode=False):
+    def test(self, encode=True):
+        # for dualnet always use encode
         with torch.no_grad():
-            self.fake_B = self.netG(self.real_A, self.real_Colors)
-            return self.real_A, self.fake_B, self.real_B, self.real_Colors
+            self.fake_C = self.netG(self.real_A, self.real_Colors)
+            return self.real_A, self.fake_C, self.real_C
 
     def forward(self):
         # generate fake_C

@@ -1,6 +1,8 @@
 set -ex
 # models
 RESULTS_DIR='./results/base_gray_color'
+MODEL='dualnet'
+
 
 # dataset
 CLASS='base_gray_color'
@@ -8,6 +10,7 @@ CLASS='base_gray_color'
 DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
 FINE_SIZE=64
+INPUT_NC=3
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 NITER=30
@@ -26,6 +29,8 @@ USE_ATTENTION='--use_attention'
 WHERE_ADD='all'
 CONDITIONAL_D='--conditional_D'
 
+NUM_TEST=100
+
 # misc
 GPU_ID=0   # gpu id
 
@@ -37,8 +42,18 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --checkpoints_dir ./pretrained_models/ \
   --name ${CLASS} \
   --direction ${DIRECTION} \
-  --loadSize ${FINE_SIZE} \
+  --loadSize ${LOAD_SIZE} \
   --fineSize ${FINE_SIZE} \
+  --resize_or_crop ${RESIZE_OR_CROP} \
   --input_nc ${INPUT_NC} \
-  --aspect_ratio ${ASPECT_RATIO} \
+  --model ${MODEL} \
+  --ngf ${NGF} \
+  --ndf ${NDF} \
+  --nef ${NEF} \
+  --netG ${NET_G} \
+  --netE ${NET_E} \
+  --netD ${NET_D} \
+  --netD2 ${NET_D2} \
+  --dataset_mode ${DATASET_MODE} \
+  --num_test ${NUM_TEST} \
   --no_flip
