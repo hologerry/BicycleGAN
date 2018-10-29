@@ -1,6 +1,5 @@
 set -ex
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
-MODEL='bicycle_gan'
 CLASS=${1}
 GPU_ID=${2}
 
@@ -12,8 +11,6 @@ NZ=16
 
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
-DATE=`date '+%d_%m_%Y-%H_%M'`
-NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
 # dataset
@@ -39,6 +36,8 @@ USE_ATTENTION=''
 USE_SPECTRAL_NORM_G=''
 USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
+
+MODEL='bicycle_gan'
 
 # dataset parameters
 case ${CLASS} in
@@ -78,7 +77,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=2
+  BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -106,7 +105,8 @@ case ${CLASS} in
   ;;
 esac
 
-
+DATE=`date '+%d_%m_%Y-%H_%M'`
+NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
