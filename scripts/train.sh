@@ -97,7 +97,30 @@ case ${CLASS} in
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
-
+  ;;
+'base_gray_texture')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=128
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=300
+  NITER_DECAY=500
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=20.0
+  DATASET_MODE='multi_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
   ;;
 *)
   echo 'WRONG category: '${CLASS}

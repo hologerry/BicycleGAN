@@ -7,6 +7,8 @@ MODEL='dualnet'
 # dataset
 CLASS='base_gray_color'
 
+PHASE='test'
+
 DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
 FINE_SIZE=64
@@ -32,7 +34,7 @@ CONDITIONAL_D='--conditional_D'
 NUM_TEST=100
 
 # misc
-GPU_ID=0   # gpu id
+GPU_ID=$1   # gpu id
 
 
 # command
@@ -41,6 +43,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --results_dir ${RESULTS_DIR} \
   --checkpoints_dir ./pretrained_models/ \
   --name ${CLASS} \
+  --phase ${PHASE} \
   --direction ${DIRECTION} \
   --loadSize ${LOAD_SIZE} \
   --fineSize ${FINE_SIZE} \
