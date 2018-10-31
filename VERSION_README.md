@@ -29,7 +29,7 @@ BicycleGAN with spectral normalization
 BicycleGAN with major improvements
 
 ### 3.0
-Two encoder, one for character shape, another for character colors
+Two encoder, DualNet
 
 ### 3.1
 Two patch based discriminator, one for real and fake C， another for real and fake B
