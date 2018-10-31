@@ -93,7 +93,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B = 20.0
+  LAMBDA_L1_B=20.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
