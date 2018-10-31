@@ -92,7 +92,8 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=20.0
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B = 20.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -117,6 +118,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=30.0
+  LAMBDA_L1_B=30.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -163,5 +165,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
+  --lambda_L1_B ${LAMBDA_L1_B} \
   --where_add ${WHERE_ADD} \
   --conditional_D ${CONDITIONAL_D}
