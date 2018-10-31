@@ -106,8 +106,8 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=300
-  NITER_DECAY=500
+  NITER=400
+  NITER_DECAY=600
   SAVE_EPOCH=10
   NEF=64
   NGF=32
@@ -116,7 +116,7 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=20.0
+  LAMBDA_L1=30.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
