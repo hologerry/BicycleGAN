@@ -1,13 +1,13 @@
 set -ex
 # models
-RESULTS_DIR='./results/base_gray_color'
+RESULTS_DIR='./results/base_gray_texture'
 MODEL='dualnet'
 
 
 # dataset
-CLASS='base_gray_color'
+CLASS='base_gray_texture'
 
-PHASE='test'
+PHASE='val'
 
 DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
