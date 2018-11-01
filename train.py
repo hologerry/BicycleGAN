@@ -51,6 +51,10 @@ if __name__ == '__main__':
                 model.save_networks('latest')
 
             iter_data_time = time.time()
+
+            if i == opt.change_lambda:
+                model.change_lambdas()
+
         if epoch % opt.save_epoch_freq == 0:
             print('saving the model at the end of epoch %d, iters %d' %
                   (epoch, total_steps))
