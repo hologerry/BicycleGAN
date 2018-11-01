@@ -6,7 +6,7 @@ GPU_ID=${2}
 
 DISPLAY_ID=$((GPU_ID*10+1))
 # DISPLAY_ID=0
-PORT=8097
+PORT=9097
 
 NZ=16
 
@@ -36,7 +36,6 @@ NET_E='resnet_64'
 USE_ATTENTION=''
 USE_SPECTRAL_NORM_G=''
 USE_SPECTRAL_NORM_D=''
-LAMBDA_L1=10.0
 
 # dataset parameters
 case ${CLASS} in
@@ -156,4 +155,3 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --netD2 ${NET_D2} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
-  --lambda_L1 ${LAMBDA_L1}

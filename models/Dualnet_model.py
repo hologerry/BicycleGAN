@@ -22,7 +22,7 @@ class DualNetModel(BaseModel):
         self.visual_names = ['real_C_encoded', 'fake_C_encoded']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
-        use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
+        use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0
         use_E = opt.isTrain or not opt.no_encode
         use_vae = True
         self.model_names = ['G']
@@ -112,7 +112,12 @@ class DualNetModel(BaseModel):
         # self.z_random = self.get_z_random(self.real_A_encoded.size(0), self.opt.nz)
         # generate fake_B_encoded
         self.fake_C_encoded = self.netG(self.real_A_encoded, self.real_D_encoded)
-        self.fake_B_encoded = self.fake_C_encoded[:,0, ...] * 0.299 + self.fake_C_encoded[:,1, ...] * 0.587 + self.fake_C_encoded[:,2, ...] * 0.114
+        
+        #self.fake_B_encoded = self.fake_C_encoded
+        #self.fake_B_encoded[:,0,...] = self.fake_B_encoded[:,1,...] = self.fake_B_encoded[:,2,...] =  self.fake_C_encoded[:,0, ...] * 0.299 + self.fake_C_encoded[:,1, ...] * 0.587 + self.fake_C_encoded[:,2, ...] * 0.114
+        fake_B = self.fake_C_encoded[:,0, ...] * 0.299 + self.fake_C_encoded[:,1, ...] * 0.587 + self.fake_C_encoded[:,2, ...] * 0.114
+        #fake_B = torch.unsqueeze(fake_B, 1)
+        self.fake_B_encoded = torch.stack([fake_B, fake_B, fake_B], 1)
         # generate fake_B_random
         # self.fake_B_random = self.netG(self.real_A_encoded, self.z_random)
         if self.opt.conditional_D:   # tedious conditoinal data
@@ -184,11 +189,11 @@ class DualNetModel(BaseModel):
         if self.lambda_GAN > 0.0:
             self.optimizer_D.zero_grad()
             self.loss_D, self.losses_D = self.backward_D(self.netD, self.real_data_encoded, self.fake_data_encoded)
-            if self.opt.use_same_D:
-                self.loss_D2, self.losses_D2 = self.backward_D(self.netD, self.real_data_random, self.fake_data_random)
+            #if self.opt.use_same_D:
+            #    self.loss_D2, self.losses_D2 = self.backward_D(self.netD, self.real_data_random, self.fake_data_random)
             self.optimizer_D.step()
 
-        if self.lambda_GAN > 0.0 and not self.opt.use_same_D:
+        if self.lambda_GAN > 0.0:
             self.optimizer_D2.zero_grad()
             self.loss_D2, self.losses_D2 = self.backward_D(self.netD2, self.real_B_encoded, self.fake_B_encoded)
             self.optimizer_D2.step()

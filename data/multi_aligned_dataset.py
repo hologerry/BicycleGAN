@@ -49,7 +49,7 @@ class MultiAlignedDataset(BaseDataset):
         A_paths = []
         if self.opt.nencode > 1:
             A_path = ABC_path[::-1] #reverse
-            shuffle_counts = [i for i in range(1, 1001)]
+            shuffle_counts = [i for i in range(1, 11)]
             random.shuffle(shuffle_counts)
             num_random = shuffle_counts[:self.opt.nencode]
             for num in num_random:
@@ -63,7 +63,9 @@ class MultiAlignedDataset(BaseDataset):
             A_paths.append(ABC_path)
 
         A, B, C, D = transform_fusion(self.opt, A, B, C, D)
-        B = B[0,...] * 0.299 + B[1,...] * 0.587 + B[2,...] * 0.114
+        B[0,...] = B[0,...] * 0.299 + B[1,...] * 0.587 + B[2,...] * 0.114
+        B[1,...] = B[0,...]
+        B[2,...] = B[0,...]
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'D': D,

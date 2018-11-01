@@ -4,7 +4,7 @@ from .base_options import BaseOptions
 class TrainOptions(BaseOptions):
     def initialize(self, parser):
         BaseOptions.initialize(self, parser)
-        parser.add_argument('--display_freq', type=int, default=400,
+        parser.add_argument('--display_freq', type=int, default=1000,
                             help='frequency of showing training results on screen')
         parser.add_argument('--display_ncols', type=int, default=5,
                             help='if positive, display all images in a single visdom web' +

@@ -105,8 +105,8 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=Fa
         where_add = 'input'
 
     if netG == 'dualnet':
-        input_content = input_nc
-        input_style = input_nc * 5
+        input_content = input_nc * 4
+        input_style = input_nc * 4
         net = define_DualNet(input_content, input_style, output_nc, 6, ngf,
                              norm_layer=norm_layer,  nl_layer=nl_layer,
                              use_dropout=use_dropout, use_attention=use_attention,
