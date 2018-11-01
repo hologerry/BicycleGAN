@@ -17,7 +17,7 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'D', 'D2', 'G_L1', 'G_L1_B']
+        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
@@ -140,6 +140,13 @@ class DualNetModel(BaseModel):
     def backward_G(self):
         # 1, G(A) should fool D
         self.loss_G_GAN = self.backward_G_GAN(self.fake_data_C, self.netD, self.opt.lambda_GAN)
+        if self.opt.use_same_D:
+            self.loss_G_GAN2 = self.backward_G_GAN(
+                self.fake_data_B, self.netD, self.opt.lambda_GAN2)
+        else:
+            self.loss_G_GAN2 = self.backward_G_GAN(
+                self.fake_data_B, self.netD2, self.opt.lambda_GAN2)
+
         # 2, reconstruction |fake_C-real_C| |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
             self.loss_G_L1 = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
@@ -147,7 +154,7 @@ class DualNetModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_L1_B
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):
