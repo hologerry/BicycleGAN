@@ -31,3 +31,8 @@ BicycleGAN with major improvements
 ### 3.0
 Two encoder, DualNet
 
+### 3.1
+Two patch based discriminator, one for real and fake C， another for real and fake B
+
+### 3.2
+Inbalanced shape and color training epoch

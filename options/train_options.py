@@ -49,11 +49,13 @@ class TrainOptions(BaseOptions):
                             help='multiply by a gamma every lr_decay_iters iterations')
         # lambda parameters
         parser.add_argument('--lambda_L1', type=float,
-                            default=10.0, help='weight for |B-G(A, E(B))|')
+                            default=10.0, help='(dualnet) model weight for |C-G(A, E(Cs))|')
+        parser.add_argument('--lambda_L1_B', type=float,
+                            default=10.0, help='dualnet model weight for |B-gray(G(A, E(Cs)))|')
         parser.add_argument('--lambda_L2', type=float,
                             default=10.0, help='weight for mse(B-G(A, E(B)))')
         parser.add_argument('--lambda_GAN', type=float,
-                            default=1.0, help='weight on D loss. D(G(A, E(B)))')
+                            default=2.0, help='weight on D loss. D(G(A, E(B)))')
         parser.add_argument('--lambda_GAN2', type=float, default=1.0,
                             help='weight on D2 loss, D(G(A, random_z))')
         parser.add_argument('--lambda_z', type=float, default=0.5,
