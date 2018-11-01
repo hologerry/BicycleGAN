@@ -48,10 +48,13 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_decay_iters', type=int, default=100,
                             help='multiply by a gamma every lr_decay_iters iterations')
         # lambda parameters
+        parser.add_argument('--change_lambda', type=int,
+                            default=40, help='increase GAN, decrease L1,L2')
+
         parser.add_argument('--lambda_L1', type=float,
-                            default=10.0, help='weight for |B-G(A, E(B))|')
+                            default=100.0, help='weight for |B-G(A, E(B))|')
         parser.add_argument('--lambda_L2', type=float,
-                            default=10.0, help='weight for mse(B-G(A, E(B)))')
+                            default=20.0, help='weight for mse(B-G(A, E(B)))')
         parser.add_argument('--lambda_GAN', type=float,
                             default=1.0, help='weight on D loss. D(G(A, E(B)))')
         parser.add_argument('--lambda_GAN2', type=float, default=1.0,
@@ -60,7 +63,7 @@ class TrainOptions(BaseOptions):
                             help='weight for ||E(G(random_z)) - random_z||')
         parser.add_argument('--lambda_kl', type=float,
                             default=0.01, help='weight for KL loss')
-        parser.add_argument('--use_same_D', action='store_true',
+        parser.add_argument('--use_same_D', action='store_false',
                             help='if two Ds share the weights or not')
         self.isTrain = True
         return parser

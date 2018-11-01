@@ -107,10 +107,14 @@ def transform_fusion(opt, A, B, C, Colors, Shapes=None):
             "Only support none mode for resize_or_crop on base_gray_color dataset")
     #assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
-    A = transforms.ToTensor()(A)
+    # A = transforms.ToTensor()(A)
+    A = list(map(lambda a: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(a)), A))
+    A = torch.cat(A)
+
     B = transforms.ToTensor()(B)
     C = transforms.ToTensor()(C)
-    A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
+    # A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
     B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
     C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
     Colors = list(map(lambda c: transforms.Normalize(

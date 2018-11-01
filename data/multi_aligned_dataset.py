@@ -25,7 +25,7 @@ class MultiAlignedDataset(BaseDataset):
         ABC = Image.open(ABC_path).convert('RGB')
         w3, h = ABC.size
         w = int(w3 / 3)
-        A = ABC.crop((0, 0, w, h))
+        # A = ABC.crop((0, 0, w, h))
         B = ABC.crop((w, 0, w + w, h))
         C = ABC.crop((w+w, 0, w+w+w, h))
 
@@ -44,6 +44,23 @@ class MultiAlignedDataset(BaseDataset):
         else:
             D.append(C)
             D_paths.append(ABC_path)
+
+        A = []
+        A_paths = []
+        if self.opt.nencode > 1:
+            A_path = ABC_path[::-1] #reverse
+            shuffle_counts = [i for i in range(1, 1001)]
+            random.shuffle(shuffle_counts)
+            num_random = shuffle_counts[:self.opt.nencode]
+            for num in num_random:
+                num = str(num)
+                a_path = A_path[:8] + num[::-1] + A_path[A_path.find('/'):]
+                a_path = a_path[::-1]
+                A_paths.append(a_path)
+                A.append(Image.open(a_path).convert('RGB').crop((w, 0, w+w, h)))
+        else:
+            A.append(ABC.crop((0, 0, w, h)))
+            A_paths.append(ABC_path)
 
         A, B, C, D = transform_fusion(self.opt, A, B, C, D)
         B = B[0,...] * 0.299 + B[1,...] * 0.587 + B[2,...] * 0.114

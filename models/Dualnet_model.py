@@ -17,9 +17,9 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'D', 'G_L1']
+        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        self.visual_names = ['real_A_encoded', 'real_C_encoded', 'fake_C_encoded']
+        self.visual_names = ['real_C_encoded', 'fake_C_encoded']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
@@ -45,6 +45,11 @@ class DualNetModel(BaseModel):
                                           init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
 
         if opt.isTrain:
+
+            self.lambda_1 = self.opt.lambda_L1
+            self.lambda_2 = self.opt.lambda_L2
+            self.lambda_GAN = self.opt.lambda_GAN
+
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
             self.criterionZ = torch.nn.L1Loss()
@@ -67,9 +72,9 @@ class DualNetModel(BaseModel):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
 
     def set_input(self, input):
-        AtoB = self.opt.direction == 'AtoB'
-        self.real_A = input['A' if AtoB else 'B'].to(self.device)
-        self.real_B = input['B' if AtoB else 'A'].to(self.device)
+        # AtoB = self.opt.direction == 'AtoB'
+        self.real_A = input['A'].to(self.device)
+        self.real_B = input['B'].to(self.device)
         self.real_C = input['C'].to(self.device)
         self.real_D = input['D'].to(self.device)
 
@@ -106,7 +111,7 @@ class DualNetModel(BaseModel):
         # get random z
         # self.z_random = self.get_z_random(self.real_A_encoded.size(0), self.opt.nz)
         # generate fake_B_encoded
-        self.fake_C_encoded = self.netG(self.real_A_encoded, self.real_D)
+        self.fake_C_encoded = self.netG(self.real_A_encoded, self.real_D_encoded)
         self.fake_B_encoded = self.fake_C_encoded[:,0, ...] * 0.299 + self.fake_C_encoded[:,1, ...] * 0.587 + self.fake_C_encoded[:,2, ...] * 0.114
         # generate fake_B_random
         # self.fake_B_random = self.netG(self.real_A_encoded, self.z_random)
@@ -147,7 +152,8 @@ class DualNetModel(BaseModel):
 
     def backward_EG(self):
         # 1, G(A) should fool D
-        self.loss_G_GAN = self.backward_G_GAN(self.fake_data_encoded, self.netD, self.opt.lambda_GAN)
+        self.loss_G_GAN = self.backward_G_GAN(self.fake_data_encoded, self.netD, self.lambda_GAN)
+        self.loss_G_GAN2 = self.backward_G_GAN(self.fake_B_encoded, self.netD2, self.lambda_GAN)
         '''
         if self.opt.use_same_D:
             self.loss_G_GAN2 = self.backward_G_GAN(self.fake_data_random, self.netD, self.opt.lambda_GAN2)
@@ -164,28 +170,28 @@ class DualNetModel(BaseModel):
         '''
         # 3, reconstruction |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
-            self.loss_G_L1 = self.criterionL1(self.fake_C_encoded, self.real_C_encoded) * self.opt.lambda_L1
-            self.loss_G_L1_B = self.criterionL1(self.fake_B_encoded, self.real_B_encoded) * self.opt.lambda_L1
+            self.loss_G_L1 = self.criterionL1(self.fake_C_encoded, self.real_C_encoded) * self.lambda_1
+            self.loss_G_L1_B = self.criterionL1(self.fake_B_encoded, self.real_B_encoded) * self.lambda_2
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_L1_B # + self.loss_kl
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B # + self.loss_kl
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):
         self.set_requires_grad(self.netD, True)
         # update D1
-        if self.opt.lambda_GAN > 0.0:
+        if self.lambda_GAN > 0.0:
             self.optimizer_D.zero_grad()
             self.loss_D, self.losses_D = self.backward_D(self.netD, self.real_data_encoded, self.fake_data_encoded)
-            # if self.opt.use_same_D:
-            #     self.loss_D2, self.losses_D2 = self.backward_D(self.netD, self.real_data_random, self.fake_data_random)
+            if self.opt.use_same_D:
+                self.loss_D2, self.losses_D2 = self.backward_D(self.netD, self.real_data_random, self.fake_data_random)
             self.optimizer_D.step()
 
-        if self.opt.lambda_GAN2 > 0.0 and not self.opt.use_same_D:
+        if self.lambda_GAN > 0.0 and not self.opt.use_same_D:
             self.optimizer_D2.zero_grad()
-            # self.loss_D2, self.losses_D2 = self.backward_D(self.netD2, self.real_data_random, self.fake_data_random)
-            # self.optimizer_D2.step()
+            self.loss_D2, self.losses_D2 = self.backward_D(self.netD2, self.real_B_encoded, self.fake_B_encoded)
+            self.optimizer_D2.step()
 
     def backward_G_alone(self):
         # 3, reconstruction |(E(G(A, z_random)))-z_random|
@@ -204,13 +210,18 @@ class DualNetModel(BaseModel):
         self.optimizer_G.step()
         # self.optimizer_E.step()
         # update G only
-        if self.opt.lambda_z > 0.0:
-            self.optimizer_G.zero_grad()
+        # if self.opt.lambda_z > 0.0:
+            # self.optimizer_G.zero_grad()
             # self.optimizer_E.zero_grad()
             # self.backward_G_alone()
-            self.optimizer_G.step()
+            # self.optimizer_G.step()
 
     def optimize_parameters(self):
         self.forward()
         self.update_G_and_E()
         self.update_D()
+
+    def change_lambdas(self):
+        self.lambda_1 = self.lambda_1 / 10
+        self.lambda_2 = self.lambda_2 / 10
+        self.lambda_GAN = self.lambda_GAN * 100

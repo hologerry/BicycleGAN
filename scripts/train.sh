@@ -114,7 +114,6 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=20.0
   DATASET_MODE='multi_aligned'
   USE_ATTENTION='--use_attention'
   ;;
