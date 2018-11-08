@@ -94,7 +94,7 @@ def get_self_attention_layer(in_dim):
     return self_attn_layer
 
 
-def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=False,
+def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectral_norm=False,
              norm='batch', nl='relu', use_dropout=False, use_attention=False,
              init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
     net = None
@@ -106,7 +106,7 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=Fa
 
     if netG == 'dualnet':
         input_content = input_nc
-        input_style = input_nc * 5
+        input_style = input_nc * nencode
         net = define_DualNet(input_content, input_style, output_nc, 6, ngf,
                              norm_layer=norm_layer,  nl_layer=nl_layer,
                              use_dropout=use_dropout, use_attention=use_attention,

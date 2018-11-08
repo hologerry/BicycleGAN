@@ -7,7 +7,7 @@ MODEL='dualnet'
 # dataset
 CLASS='base_gray_color'
 
-PHASE='test'
+PHASE='val'
 
 DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
@@ -31,7 +31,7 @@ USE_ATTENTION='--use_attention'
 WHERE_ADD='all'
 CONDITIONAL_D='--conditional_D'
 
-NUM_TEST=100
+NUM_TEST=1000
 
 # misc
 GPU_ID=$1   # gpu id

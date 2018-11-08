@@ -32,8 +32,9 @@ class DualNetModel(BaseModel):
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         # D2 for shape
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
+        # use_D2 = False
         self.model_names = ['G']
-        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, netG=opt.netG,
+        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
                                       gpu_ids=self.gpu_ids, where_add=self.opt.where_add, upsample=opt.upsample)
         D_output_nc = opt.input_nc + opt.output_nc if opt.conditional_D else opt.output_nc
