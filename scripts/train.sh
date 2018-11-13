@@ -12,6 +12,9 @@ NZ=16
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
+DATE=`date '+%d_%m_%Y-%H_%M'`
+NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
+
 
 # dataset
 NO_FLIP=''
@@ -98,6 +101,8 @@ case ${CLASS} in
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN=''
+
   ;;
 'base_gray_texture')
   MODEL='dualnet'
@@ -123,6 +128,10 @@ case ${CLASS} in
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  DATE=`date '+%d_%m_%Y-%H'`
+  NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
+
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -130,8 +139,6 @@ case ${CLASS} in
   ;;
 esac
 
-DATE=`date '+%d_%m_%Y-%H_%M'`
-NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
@@ -167,4 +174,5 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_L1 ${LAMBDA_L1} \
   --lambda_L1_B ${LAMBDA_L1_B} \
   --where_add ${WHERE_ADD} \
-  --conditional_D ${CONDITIONAL_D}
+  --conditional_D ${CONDITIONAL_D} \
+  ${CONTINUE_TRAIN}
