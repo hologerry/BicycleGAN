@@ -12,9 +12,6 @@ NZ=16
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
-DATE=`date '+%d_%m_%Y-%H_%M'`
-NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
-
 
 # dataset
 NO_FLIP=''
@@ -129,15 +126,15 @@ case ${CLASS} in
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
-  DATE=`date '+%d_%m_%Y-%H'`
-  NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
-
   ;;
 *)
   echo 'WRONG category: '${CLASS}
   exit
   ;;
 esac
+
+DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training
+NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
 # command
