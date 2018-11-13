@@ -29,7 +29,10 @@ if __name__ == '__main__':
             visualizer.reset()
             total_steps += opt.batch_size
             epoch_iter += opt.batch_size
-            model.set_input(data)
+            blk_epoch = False
+            if opt.black_epoch_freq and epoch % opt.black_epoch_freq == 0:
+                blk_epoch = True
+            model.set_input(data, blk_epoch)
             if not model.is_train():
                 continue
             model.optimize_parameters()

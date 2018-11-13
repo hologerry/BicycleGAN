@@ -70,12 +70,16 @@ class DualNetModel(BaseModel):
     def is_train(self):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
 
-    def set_input(self, input):
+    def set_input(self, input, blk_epoch=False):
         self.real_A = input['A'].to(self.device)  # A is the base font
         self.real_B = input['B'].to(self.device)  # B is the gray shape
         self.real_C = input['C'].to(self.device)  # C is the color font
         self.real_Shapes = input['Shapes'].to(self.device)
-        self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
+        self.real_Colors = input['Colors'].to(self.dezvice)  # Colors is multiple color characters
+        # current epoch is black epoch
+        if blk_epoch:
+            self.real_Colors = self.real_Shapes
+            self.real_C = self.real_B
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):
         if random_type == 'uni':
