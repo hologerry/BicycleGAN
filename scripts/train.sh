@@ -82,8 +82,8 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=30
-  NITER_DECAY=50
+  NITER=50
+  NITER_DECAY=100
   SAVE_EPOCH=10
   NEF=64
   NGF=32
@@ -133,7 +133,7 @@ case ${CLASS} in
   ;;
 esac
 
-DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training
+DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
