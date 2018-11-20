@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.nn import init
 from torch.nn import Parameter
 from torch.optim import lr_scheduler
+import numpy as np
 
 ###############################################################################
 # Functions
@@ -1093,3 +1094,53 @@ class G_Unet_add_all(nn.Module):
 
     def forward(self, x, z):
         return self.model(x, z)
+
+
+class MaskModel(nn.Module):
+    def __init__(self):
+        super(MaskModel, self).__init__()
+        self.weights = np.array([
+            [[-0.04491922, -0.12210311, -0.04491922],
+             [-0.12210311, -0.33191066, -0.12210311],
+             [-0.04491922, -0.12210311, -0.04491922]
+             ],
+            [[-0.04491922, -0.12210311, -0.04491922],
+             [-0.12210311, -0.33191066, -0.12210311],
+             [-0.04491922, -0.12210311, -0.04491922]
+             ],
+            [[-0.04491922, -0.12210311, -0.04491922],
+             [-0.12210311, -0.33191066, -0.12210311],
+             [-0.04491922, -0.12210311, -0.04491922]
+             ]
+        ])
+        self.bias = -3.0
+        self.conv = nn.Conv2d(3, 1, kernel=3, stride=1)
+        torch.nn.init(self.conv.weight, self.weights)
+        torch.nn.init(self.conv.bias, self.bias)
+
+        self.model = nn.Sequential([nn.ReplicationPad2d(1), self.conv])
+        return
+
+    def forward(self, input):
+        return self.model(input)
+
+
+class BoundaryModel(nn.Module):
+    def __init__(self):
+        super(BoundaryModel, self).__init__()
+        self.weights = np.array([
+            [[-0.04491922, -0.12210311, -0.04491922],
+             [-0.12210311, -0.33191066, -0.12210311],
+             [-0.04491922, -0.12210311, -0.04491922]
+             ]
+        ])
+        self.bias = -1.0
+        self.conv = nn.Conv2d(1, 1, kernel=3, stride=1)
+        torch.nn.init(self.conv.weight, self.weights)
+        torch.nn.init(self.conv.bias, self.bias)
+
+        self.model = nn.Sequential([nn.ReplicationPad2d(1), self.conv])
+        return
+
+    def forward(self, input):
+        return self.model(input)

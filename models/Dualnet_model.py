@@ -1,6 +1,7 @@
 import torch
 from .base_model import BaseModel
 from . import networks
+from . import losses
 
 
 class DualNetModel(BaseModel):
@@ -68,6 +69,10 @@ class DualNetModel(BaseModel):
                 self.optimizer_D2 = torch.optim.Adam(self.netD2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 self.optimizers.append(self.optimizer_D2)
 
+            self.MaskModel = networks.MaskModel()
+            self.BoundaryModel = networks.BoundaryModel()
+            self.weightedL1 = losses.WeightedL1_Loss()
+
     def is_train(self):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
 
@@ -131,6 +136,8 @@ class DualNetModel(BaseModel):
             self.real_data_encoded = self.real_C_encoded
             #self.real_data_random = self.real_B_random
 
+
+
         # compute z_predict
         # if self.opt.lambda_z > 0.0:
         #     self.mu2, logvar2 = self.netE(self.fake_B_random)  # mu2 is a point estimate
@@ -180,8 +187,15 @@ class DualNetModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B # + self.loss_kl
+        weight_mask = self.MaskModel(self.real_C_encoded)
+        weight_boundary = self.BoundaryModel(self.real_B_encoded)
+        self.maskLoss = self.weightedL1(weight_mask, self.real_C_encoded, self.fake_C_encoded) * self.lambda_1
+        self.boundaryLoss = self.weightedL1(weight_boundary, self.real_B_encoded, self.fake_B_encoded) * self.lambda_1
+
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B + self.maskLoss + self.boundaryLoss # + self.loss_kl
         self.loss_G.backward(retain_graph=True)
+
+
 
     def update_D(self):
         self.set_requires_grad(self.netD, True)
@@ -230,3 +244,5 @@ class DualNetModel(BaseModel):
         self.lambda_1 = self.lambda_1 / 10
         self.lambda_2 = self.lambda_2 / 10
         self.lambda_GAN = self.lambda_GAN * 100
+
+
