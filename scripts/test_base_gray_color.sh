@@ -7,7 +7,7 @@ MODEL='dualnet'
 # dataset
 CLASS='base_gray_color'
 
-PHASE='val'
+PHASE='test'
 
 DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64

@@ -75,7 +75,7 @@ class DualNetModel(BaseModel):
         self.real_B = input['B'].to(self.device)  # B is the gray shape
         self.real_C = input['C'].to(self.device)  # C is the color font
         self.real_Shapes = input['Shapes'].to(self.device)
-        self.real_Colors = input['Colors'].to(self.dezvice)  # Colors is multiple color characters
+        self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
         # current epoch is black epoch
         if blk_epoch:
             self.real_Colors = self.real_Shapes
