@@ -12,6 +12,10 @@ class CnMultiFusionDataset(BaseDataset):
     def modify_commandline_options(parser, is_train):
         return parser
 
+    def rreplace(self, s, old, new, occurrence):
+        li = s.rsplit(old, occurrence)
+        return new.join(li)
+
     def initialize(self, opt):
         self.opt = opt
         self.root = opt.dataroot
@@ -38,14 +42,14 @@ class CnMultiFusionDataset(BaseDataset):
             random.shuffle(self.chars)
             chars_random = self.chars[:self.opt.nencode]
             for char in chars_random:
-                s_path = ABC_path_c.replace(target_char, str(char))  # /path/to/img/X_XX_XXX.png
+                s_path = self.rreplace(ABC_path_c, target_char, str(char), 1)  # /path/to/img/X_XX_XXX.png
                 Shape_paths.append(s_path)
                 Shapes.append(Image.open(s_path).convert('RGB').crop((w, 0, w+w, h)))
             # for colors
             random.shuffle(self.chars)
             chars_random = self.chars[:self.opt.nencode]
             for char in chars_random:
-                c_path = ABC_path_c.replace(target_char, str(char))  # /path/to/img/X_XX_XXX.png
+                c_path = self.rreplace(ABC_path_c, target_char, str(char), 1)  # /path/to/img/X_XX_XXX.png
                 Color_paths.append(c_path)
                 Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
