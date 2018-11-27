@@ -159,6 +159,34 @@ case ${CLASS} in
   CONTINUE_TRAIN=''
   BLACK_EPOCH=0
   ;;
+  'skeleton_gray_texture')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=128
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=40
+  NITER_DECAY=60
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=20.0
+  DATASET_MODE='cn_multi_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
+  ;;
 *)
   echo 'WRONG category: '${CLASS}
   exit
