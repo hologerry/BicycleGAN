@@ -94,7 +94,7 @@ def get_self_attention_layer(in_dim):
     return self_attn_layer
 
 
-def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=False,
+def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectral_norm=False,
              norm='batch', nl='relu', use_dropout=False, use_attention=False,
              init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
     net = None
@@ -106,11 +106,11 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=Fa
 
     if netG == 'dualnet':
         input_content = input_nc
-        input_style = input_nc * 5
-        net = define_DualNet(input_content, input_style, output_nc, 6, ngf,
-                             norm_layer=norm_layer,  nl_layer=nl_layer,
-                             use_dropout=use_dropout, use_attention=use_attention,
-                             use_spectral_norm=use_spectral_norm, upsample=upsample)
+        input_style = input_nc * nencode
+        net = DualNet(input_content, input_style, output_nc, 6, ngf,
+                      norm_layer=norm_layer,  nl_layer=nl_layer,
+                      use_dropout=use_dropout, use_attention=use_attention,
+                      use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_64' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                                use_dropout=use_dropout, use_attention=use_attention,
@@ -871,10 +871,8 @@ class DualnetBlock(nn.Module):
 
         self.outermost = outermost
         self.innermost = innermost
-        downconv1 += [nn.Conv2d(input_cont, inner_nc,
-                                kernel_size=4, stride=2, padding=p)]
-        downconv2 += [nn.Conv2d(input_style, inner_nc,
-                                kernel_size=4, stride=2, padding=p)]
+        downconv1 += [nn.Conv2d(input_cont, inner_nc, kernel_size=4, stride=2, padding=p)]
+        downconv2 += [nn.Conv2d(input_style, inner_nc, kernel_size=4, stride=2, padding=p)]
 
         # downsample is different from upsample
         downrelu1 = nn.LeakyReLU(0.2, True)
@@ -1024,13 +1022,13 @@ class G_Unet_add_input(nn.Module):
         return self.model(x_with_z)
 
 
-# define DualNet
-class define_DualNet(nn.Module):
+# DualNet Module
+class DualNet(nn.Module):
 
     def __init__(self, input_content, input_style, output_nc, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
                  use_attention=False, use_spectral_norm=False, upsample='basic'):
-        super(define_DualNet, self).__init__()
+        super(DualNet, self).__init__()
         max_nchn = 8  # max channel factor
         # construct unet structure
         dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,

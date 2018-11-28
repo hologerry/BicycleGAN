@@ -25,6 +25,8 @@ class TrainOptions(BaseOptions):
                             help='frequency of saving the latest results')
         parser.add_argument('--save_epoch_freq', type=int, default=5,
                             help='frequency of saving checkpoints at the end of epochs')
+        parser.add_argument('--black_epoch_freq', type=int, default=0,
+                            help='frequency of black epoch')
         parser.add_argument('--continue_train', action='store_true',
                             help='continue training: load the latest model')
         parser.add_argument('--epoch_count', type=int, default=1,
@@ -58,6 +60,8 @@ class TrainOptions(BaseOptions):
                             default=2.0, help='weight on D loss. D(G(A, E(B)))')
         parser.add_argument('--lambda_GAN2', type=float, default=1.0,
                             help='weight on D2 loss, D(G(A, random_z))')
+        parser.add_argument('--lambda_GAN_s2', type=float, default=20.0,
+                            help='weight on ')
         parser.add_argument('--lambda_z', type=float, default=0.5,
                             help='weight for ||E(G(random_z)) - random_z||')
         parser.add_argument('--lambda_kl', type=float,

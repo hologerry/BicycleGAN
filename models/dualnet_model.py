@@ -17,7 +17,7 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'D', 'D2', 'G_L1', 'G_L1_B']
+        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
@@ -32,8 +32,9 @@ class DualNetModel(BaseModel):
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         # D2 for shape
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
+        # use_D2 = False
         self.model_names = ['G']
-        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, netG=opt.netG,
+        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
                                       gpu_ids=self.gpu_ids, where_add=self.opt.where_add, upsample=opt.upsample)
         D_output_nc = opt.input_nc + opt.output_nc if opt.conditional_D else opt.output_nc
@@ -69,12 +70,16 @@ class DualNetModel(BaseModel):
     def is_train(self):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
 
-    def set_input(self, input):
+    def set_input(self, input, blk_epoch=False):
         self.real_A = input['A'].to(self.device)  # A is the base font
         self.real_B = input['B'].to(self.device)  # B is the gray shape
         self.real_C = input['C'].to(self.device)  # C is the color font
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
+        # current epoch is black epoch
+        if blk_epoch:
+            self.real_Colors = self.real_Shapes
+            self.real_C = self.real_B
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):
         if random_type == 'uni':
@@ -140,6 +145,13 @@ class DualNetModel(BaseModel):
     def backward_G(self):
         # 1, G(A) should fool D
         self.loss_G_GAN = self.backward_G_GAN(self.fake_data_C, self.netD, self.opt.lambda_GAN)
+        if self.opt.use_same_D:
+            self.loss_G_GAN2 = self.backward_G_GAN(
+                self.fake_data_B, self.netD, self.opt.lambda_GAN2)
+        else:
+            self.loss_G_GAN2 = self.backward_G_GAN(
+                self.fake_data_B, self.netD2, self.opt.lambda_GAN2)
+
         # 2, reconstruction |fake_C-real_C| |fake_B-real_B|
         if self.opt.lambda_L1 > 0.0:
             self.loss_G_L1 = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
@@ -147,7 +159,7 @@ class DualNetModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_L1_B
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):

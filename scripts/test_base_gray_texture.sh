@@ -26,12 +26,12 @@ NET_D='basic_64_multi'
 NET_D2='basic_64_multi'
 NET_E='resnet_64'
 LAMBDA_L1=20.0
-DATASET_MODE='multi_fusion'
+DATASET_MODE='few_fusion'  # NOTICE  train and test are different because of FEW
 USE_ATTENTION='--use_attention'
 WHERE_ADD='all'
 CONDITIONAL_D='--conditional_D'
 
-NUM_TEST=100
+NUM_TEST=1000
 
 # misc
 GPU_ID=$1   # gpu id

@@ -3,7 +3,7 @@ set -ex
 CLASS=${1}
 GPU_ID=${2}
 
-DISPLAY_ID=$((GPU_ID*10+1))
+DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 PORT=9097
 
@@ -36,6 +36,9 @@ USE_ATTENTION=''
 USE_SPECTRAL_NORM_G=''
 USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
+
+BLACK_EPOCH=0
+DISPLAY_FREQ=500
 
 MODEL='bicycle_gan'
 
@@ -77,13 +80,13 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=128
+  BATCH_SIZE=512
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=30
-  NITER_DECAY=50
+  NITER=50
+  NITER_DECAY=100
   SAVE_EPOCH=10
   NEF=64
   NGF=32
@@ -98,6 +101,8 @@ case ${CLASS} in
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN=''
+  BLACK_EPOCH=0
   ;;
 'base_gray_texture')
   MODEL='dualnet'
@@ -117,12 +122,70 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=30.0
+  LAMBDA_L1=100.0
   LAMBDA_L1_B=30.0
-  DATASET_MODE='multi_fusion'
+  DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
+  ;;
+'skeleton_gray_color')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=512
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=50
+  NITER_DECAY=100
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=20.0
+  DATASET_MODE='cn_multi_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN=''
+  BLACK_EPOCH=0
+  ;;
+  'skeleton_gray_texture')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=128
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=40
+  NITER_DECAY=60
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=20.0
+  DATASET_MODE='cn_multi_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -130,8 +193,9 @@ case ${CLASS} in
   ;;
 esac
 
-DATE=`date '+%d_%m_%Y-%H_%M'`
+DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
+
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
@@ -167,4 +231,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_L1 ${LAMBDA_L1} \
   --lambda_L1_B ${LAMBDA_L1_B} \
   --where_add ${WHERE_ADD} \
-  --conditional_D ${CONDITIONAL_D}
+  --conditional_D ${CONDITIONAL_D} \
+  ${CONTINUE_TRAIN} \
+  --black_epoch_freq ${BLACK_EPOCH} \
+  --display_freq ${DISPLAY_FREQ}
+
