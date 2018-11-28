@@ -24,9 +24,9 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--save_latest_freq', type=int, default=10000,
                             help='frequency of saving the latest results')
         parser.add_argument('--save_epoch_freq', type=int, default=5,
-                            help='frequency of saving check     kipoints at the end of epochs')
+                            help='frequency of saving checkpoints at the end of epochs')
         parser.add_argument('--black_epoch_freq', type=int, default=0,
-                            help='frequency of black epoch ')
+                            help='frequency of black epoch')
         parser.add_argument('--continue_train', action='store_true',
                             help='continue training: load the latest model')
         parser.add_argument('--epoch_count', type=int, default=1,
