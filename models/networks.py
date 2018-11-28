@@ -871,10 +871,8 @@ class DualnetBlock(nn.Module):
 
         self.outermost = outermost
         self.innermost = innermost
-        downconv1 += [nn.Conv2d(input_cont, input_cont, kernel_size=3),
-                      nn.Conv2d(input_cont, inner_nc, kernel_size=4, stride=2, padding=p)]
-        downconv2 += [nn.Conv2d(input_style, input_style, kernel_size=3),
-                      nn.Conv2d(input_style, inner_nc, kernel_size=4, stride=2, padding=p)]
+        downconv1 += [nn.Conv2d(input_cont, inner_nc, kernel_size=4, stride=2, padding=p)]
+        downconv2 += [nn.Conv2d(input_style, inner_nc, kernel_size=4, stride=2, padding=p)]
 
         # downsample is different from upsample
         downrelu1 = nn.LeakyReLU(0.2, True)

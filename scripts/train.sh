@@ -102,7 +102,7 @@ case ${CLASS} in
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN=''
-  BLACK_EPOCH=5
+  BLACK_EPOCH=0
   ;;
 'base_gray_texture')
   MODEL='dualnet'
@@ -129,7 +129,7 @@ case ${CLASS} in
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
-  BLACK_EPOCH=20
+  BLACK_EPOCH=0
   DISPLAY_FREQ=100
   ;;
 'skeleton_gray_color')
