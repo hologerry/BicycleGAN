@@ -892,7 +892,7 @@ class DualnetBlock(nn.Module):
                 use_spectral_norm=use_spectral_norm)
             down1 = downconv1
             down2 = downconv2
-            up = [uprelu] + upconv + [nn.Tanh()]
+            up = [uprelu] + upconv + [nn.Sigmoid()]
         elif innermost:
             upconv = upsampleLayer(
                 inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
@@ -1099,26 +1099,34 @@ class G_Unet_add_all(nn.Module):
 class MaskModel(nn.Module):
     def __init__(self):
         super(MaskModel, self).__init__()
-        self.weights = np.array([
-            [[-0.04491922, -0.12210311, -0.04491922],
-             [-0.12210311, -0.33191066, -0.12210311],
-             [-0.04491922, -0.12210311, -0.04491922]
-             ],
-            [[-0.04491922, -0.12210311, -0.04491922],
-             [-0.12210311, -0.33191066, -0.12210311],
-             [-0.04491922, -0.12210311, -0.04491922]
-             ],
-            [[-0.04491922, -0.12210311, -0.04491922],
-             [-0.12210311, -0.33191066, -0.12210311],
-             [-0.04491922, -0.12210311, -0.04491922]
-             ]
-        ])
-        self.bias = -3.0
-        self.conv = nn.Conv2d(3, 1, kernel=3, stride=1)
-        torch.nn.init(self.conv.weight, self.weights)
-        torch.nn.init(self.conv.bias, self.bias)
+        self.weights = torch.from_numpy(
+          np.array([
+            [
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]],
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]],
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]]
+            ],
+            [
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]],
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]],
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]]
+            ],
+            [
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]],
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]],
+            [[0.04491922, 0.12210311, 0.04491922], [0.12210311, 0.33191066, 0.12210311],[0.04491922, 0.12210311, 0.04491922]]
+            ]
+          ])
+        ).float().cuda()
+        self.bias = torch.tensor([3.0, 3.0, 3.0]).float().cuda()
+        self.conv = nn.Conv2d(3, 3, kernel_size=3)
+        #nn.init.constant(self.conv.weight, self.weights)
+        #nn.init.constant(self.conv.bias, self.bias)
+        self.conv.weight = nn.Parameter(self.weights)
+        self.conv.bias = nn.Parameter(self.bias)
 
-        self.model = nn.Sequential([nn.ReplicationPad2d(1), self.conv])
+
+        self.model = nn.Sequential(nn.ReplicationPad2d(1), self.conv)
         return
 
     def forward(self, input):
@@ -1128,18 +1136,30 @@ class MaskModel(nn.Module):
 class BoundaryModel(nn.Module):
     def __init__(self):
         super(BoundaryModel, self).__init__()
-        self.weights = np.array([
+        self.weights = torch.from_numpy(
+          np.array([[
+            [[-0.04491922, -0.12210311, -0.04491922],
+             [-0.12210311, -0.33191066, -0.12210311],
+             [-0.04491922, -0.12210311, -0.04491922]
+             ],
+            [[-0.04491922, -0.12210311, -0.04491922],
+             [-0.12210311, -0.33191066, -0.12210311],
+             [-0.04491922, -0.12210311, -0.04491922]
+             ],
             [[-0.04491922, -0.12210311, -0.04491922],
              [-0.12210311, -0.33191066, -0.12210311],
              [-0.04491922, -0.12210311, -0.04491922]
              ]
-        ])
-        self.bias = -1.0
-        self.conv = nn.Conv2d(1, 1, kernel=3, stride=1)
-        torch.nn.init(self.conv.weight, self.weights)
-        torch.nn.init(self.conv.bias, self.bias)
+          ]])
+        ).float().cuda()
+        self.bias = torch.tensor([-3.0]).float().cuda()
+        self.conv = nn.Conv2d(3, 1, kernel_size=3)
+        #nn.init.constant(self.conv.weight, self.weights)
+        #nn.init.constant(self.conv.bias, self.bias)
+        self.conv.weight = nn.Parameter(self.weights)
+        self.conv.bias = nn.Parameter(self.bias)
 
-        self.model = nn.Sequential([nn.ReplicationPad2d(1), self.conv])
+        self.model = nn.Sequential(nn.ReplicationPad2d(1), self.conv)
         return
 
     def forward(self, input):

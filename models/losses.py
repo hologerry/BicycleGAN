@@ -10,4 +10,4 @@ class WeightedL1_Loss(nn.Module):
     def forward(self, weight, data1, data2):
         diff = torch.abs(data1 - data2)
         output = torch.mul(weight, diff)
-        return output.sum()
+        return output.sum() / (64.0 * 64.0 * 3)

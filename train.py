@@ -57,9 +57,9 @@ if __name__ == '__main__':
                   (epoch, total_steps))
             model.save_networks('latest')
             model.save_networks(epoch)
-
-        if epoch == opt.change_lambda:
-            model.change_lambdas()
+        
+        #if epoch == opt.change_lambda:
+        #    model.change_lambdas()
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
