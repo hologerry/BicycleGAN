@@ -20,7 +20,7 @@ class DualNetModel(BaseModel):
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B', 'mask']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        self.visual_names = ['real_C_encoded', 'fake_C_encoded', 'weight_mask']
+        self.visual_names = ['real_C_encoded', 'fake_C_encoded']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
         use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0
@@ -187,9 +187,9 @@ class DualNetModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.weight_mask = self.MaskModel(self.real_C_encoded)
+        self.weight_mask = 0.0 #self.MaskModel(self.real_C_encoded)
         #weight_boundary = self.BoundaryModel(self.real_B_encoded)
-        self.loss_mask = self.weightedL1(self.weight_mask, self.real_C_encoded, self.fake_C_encoded) / 10.0
+        self.loss_mask = 0.0 #self.weightedL1(self.weight_mask, self.real_C_encoded, self.fake_C_encoded) / 10.0
         #self.boundaryLoss = self.weightedL1(weight_boundary, self.real_B_encoded, self.fake_B_encoded) * self.lambda_1
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B + self.loss_mask #+ self.boundaryLoss # + self.loss_kl

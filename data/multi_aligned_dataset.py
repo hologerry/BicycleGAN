@@ -49,7 +49,7 @@ class MultiAlignedDataset(BaseDataset):
         A_paths = []
         if self.opt.nencode > 1:
             A_path = ABC_path[::-1] #reverse
-            shuffle_counts = [i for i in range(1, 11)]
+            shuffle_counts = [i for i in range(1, 6000)]
             random.shuffle(shuffle_counts)
             num_random = shuffle_counts[:self.opt.nencode]
             for num in num_random:
@@ -57,7 +57,7 @@ class MultiAlignedDataset(BaseDataset):
                 a_path = A_path[:8] + num[::-1] + A_path[A_path.find('/'):]
                 a_path = a_path[::-1]
                 A_paths.append(a_path)
-                A.append(Image.open(a_path).convert('RGB').crop((w, 0, w+w, h)))
+                A.append(Image.open(a_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
         else:
             A.append(ABC.crop((0, 0, w, h)))
             A_paths.append(ABC_path)
