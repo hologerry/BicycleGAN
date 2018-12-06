@@ -94,7 +94,7 @@ def get_self_attention_layer(in_dim):
     return self_attn_layer
 
 
-def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=False,
+def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectral_norm=False,
              norm='batch', nl='relu', use_dropout=False, use_attention=False,
              init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
     net = None
@@ -106,12 +106,11 @@ def define_G(input_nc, output_nc, nz, ngf, netG='unet_128', use_spectral_norm=Fa
 
     if netG == 'dualnet':
         input_content = input_nc
-        input_style = input_nc * 5
-        net = define_DualNet(input_content, input_style, output_nc, 6, ngf,
-                             norm_layer=norm_layer,  nl_layer=nl_layer,
-                             use_dropout=use_dropout, use_attention=use_attention,
-                             use_spectral_norm=use_spectral_norm, upsample=upsample
-                             )
+        input_style = input_nc * nencode
+        net = DualNet(input_content, input_style, output_nc, 6, ngf,
+                      norm_layer=norm_layer,  nl_layer=nl_layer,
+                      use_dropout=use_dropout, use_attention=use_attention,
+                      use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_64' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                                use_dropout=use_dropout, use_attention=use_attention,
@@ -848,6 +847,7 @@ class UnetBlock_with_z(nn.Module):
             x2 = self.submodule(x1, z)
             return torch.cat([self.up(x2), x], 1)
 
+
 class DualnetBlock(nn.Module):
     def __init__(self, input_cont, input_style, outer_nc, inner_nc,
                  submodule=None, outermost=False, innermost=False, use_spectral_norm=False,
@@ -871,10 +871,8 @@ class DualnetBlock(nn.Module):
 
         self.outermost = outermost
         self.innermost = innermost
-        downconv1 += [nn.Conv2d(input_cont, inner_nc,
-                               kernel_size=4, stride=2, padding=p)]
-        downconv2 += [nn.Conv2d(input_style, inner_nc,
-                                kernel_size=4, stride=2, padding=p)]
+        downconv1 += [nn.Conv2d(input_cont, inner_nc, kernel_size=4, stride=2, padding=p)]
+        downconv2 += [nn.Conv2d(input_style, inner_nc, kernel_size=4, stride=2, padding=p)]
 
         # downsample is different from upsample
         downrelu1 = nn.LeakyReLU(0.2, True)
@@ -925,18 +923,20 @@ class DualnetBlock(nn.Module):
         self.submodule = submodule
         self.up = nn.Sequential(*up)
 
-    def forward(self, style, content):
+    def forward(self, content, style):
 
-        x1 = self.down1(style)
-        x2 = self.down2(content)
+        x1 = self.down1(content)
+        x2 = self.down2(style)
         if self.outermost:
-            out = self.submodule(x1, x2)
-            return self.up(out)
+            mid = self.submodule(x1, x2)
+            return self.up(mid)
         elif self.innermost:
-            return self.up(torch.cat([x1, x2], 1))
+            out = self.up(torch.cat([x1, x2], 1))
+            return torch.cat([out, torch.cat([content, style], 1)], 1)
         else:
-            out = self.submodule(x1, x2)
-            return self.up(torch.cat([out, torch.cat([x1, x2], 1)], 1))
+            mid = self.submodule(x1, x2)
+            out = self.up(mid)
+            return torch.cat([out, torch.cat([content, style], 1)], 1)
 
 
 class BasicBlockUp(nn.Module):
@@ -1022,39 +1022,40 @@ class G_Unet_add_input(nn.Module):
         return self.model(x_with_z)
 
 
-#define DualNet
-class define_DualNet(nn.Module):
+# DualNet Module
+class DualNet(nn.Module):
 
     def __init__(self, input_content, input_style, output_nc, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
                  use_attention=False, use_spectral_norm=False, upsample='basic'):
-        super(define_DualNet, self).__init__()
-        self.nz = nz
+        super(DualNet, self).__init__()
         max_nchn = 8  # max channel factor
         # construct unet structure
-        dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, use_spectral_norm=use_spectral_norm,
-                               innermost=True, norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
+                                  use_spectral_norm=use_spectral_norm, innermost=True,
+                                  norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
         for i in range(num_downs - 5):
             dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, dual_block,
-                                   norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
-                                   use_spectral_norm=use_spectral_norm, upsample=upsample)
-        dual_block = DualnetBlock(ngf*4, ngf*4, ngf*max_nchn, ngf*max_nchn, dual_block, use_attention=use_attention,
-                               use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
-                               nl_layer=nl_layer, upsample=upsample)
-        dual_block = DualnetBlock(ngf*2, ngf*2, ngf*4, ngf*4, dual_block, use_attention=use_attention,
-                               use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
-                               nl_layer=nl_layer, upsample=upsample)
-        dual_block = DualnetBlock(ngf, ngf, ngf*2, ngf*2, dual_block, use_attention=use_attention,
-                               use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
-                               nl_layer=nl_layer, upsample=upsample)
-        dual_block = DualnetBlock(input_content, input_style, ngf, output_nc, dual_block,
-                               use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
-                               nl_layer=nl_layer, upsample=upsample)
+                                      norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
+                                      use_spectral_norm=use_spectral_norm, upsample=upsample)
+        dual_block = DualnetBlock(ngf*4, ngf*4, ngf*4, ngf*max_nchn, dual_block, use_attention=use_attention,
+                                  use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+        dual_block = DualnetBlock(ngf*2, ngf*2, ngf*2, ngf*4, dual_block, use_attention=use_attention,
+                                  use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+        dual_block = DualnetBlock(ngf, ngf, ngf, ngf*2, dual_block, use_attention=use_attention,
+                                  use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+        dual_block = DualnetBlock(input_content, input_style, output_nc, ngf, dual_block,
+                                  use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
 
         self.model = dual_block
 
-    def forward(self, style, content):
-        return self.model(style, content)
+    def forward(self, content, style):
+        return self.model(content, style)
+
 
 # Defines the Unet generator.
 # |num_downs|: number of downsamplings in UNet. For example,

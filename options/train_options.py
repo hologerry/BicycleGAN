@@ -4,7 +4,7 @@ from .base_options import BaseOptions
 class TrainOptions(BaseOptions):
     def initialize(self, parser):
         BaseOptions.initialize(self, parser)
-        parser.add_argument('--display_freq', type=int, default=400,
+        parser.add_argument('--display_freq', type=int, default=500,
                             help='frequency of showing training results on screen')
         parser.add_argument('--display_ncols', type=int, default=5,
                             help='if positive, display all images in a single visdom web' +
@@ -25,6 +25,8 @@ class TrainOptions(BaseOptions):
                             help='frequency of saving the latest results')
         parser.add_argument('--save_epoch_freq', type=int, default=5,
                             help='frequency of saving checkpoints at the end of epochs')
+        parser.add_argument('--black_epoch_freq', type=int, default=0,
+                            help='frequency of black epoch')
         parser.add_argument('--continue_train', action='store_true',
                             help='continue training: load the latest model')
         parser.add_argument('--epoch_count', type=int, default=1,
@@ -49,13 +51,17 @@ class TrainOptions(BaseOptions):
                             help='multiply by a gamma every lr_decay_iters iterations')
         # lambda parameters
         parser.add_argument('--lambda_L1', type=float,
-                            default=10.0, help='weight for |B-G(A, E(B))|')
+                            default=10.0, help='(dualnet) model weight for |C-G(A, E(Cs))|')
+        parser.add_argument('--lambda_L1_B', type=float,
+                            default=10.0, help='dualnet model weight for |B-gray(G(A, E(Cs)))|')
         parser.add_argument('--lambda_L2', type=float,
                             default=10.0, help='weight for mse(B-G(A, E(B)))')
         parser.add_argument('--lambda_GAN', type=float,
-                            default=1.0, help='weight on D loss. D(G(A, E(B)))')
-        parser.add_argument('--lambda_GAN2', type=float, default=1.0,
+                            default=10.0, help='weight on D loss. D(G(A, E(B)))')
+        parser.add_argument('--lambda_GAN2', type=float, default=0.0,
                             help='weight on D2 loss, D(G(A, random_z))')
+        parser.add_argument('--lambda_GAN_s2', type=float, default=20.0,
+                            help='weight on ')
         parser.add_argument('--lambda_z', type=float, default=0.5,
                             help='weight for ||E(G(random_z)) - random_z||')
         parser.add_argument('--lambda_kl', type=float,

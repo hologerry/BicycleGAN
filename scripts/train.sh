@@ -4,16 +4,14 @@ MODEL='Dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
-DISPLAY_ID=$((GPU_ID*10+1))
+DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
-PORT=8097
+PORT=9097
 
 NZ=16
 
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
-DATE=`date '+%d_%m_%Y_%H-%M'`
-NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
 # dataset
@@ -25,6 +23,8 @@ RESIZE_OR_CROP='resize_and_crop'
 INPUT_NC=3
 BATCH_SIZE=16
 DATASET_MODE='aligned'
+WHERE_ADD='all'
+CONDITIONAL_D=''
 
 # Networks module
 NGF=64
@@ -37,6 +37,11 @@ USE_ATTENTION=''
 USE_SPECTRAL_NORM_G=''
 USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
+
+BLACK_EPOCH=0
+DISPLAY_FREQ=500
+
+MODEL='bicycle_gan'
 
 # dataset parameters
 case ${CLASS} in
@@ -73,15 +78,97 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'capitals64' | 'gray2grad0' | 'gray2grad1' | 'gray2grad2' | 'mcgan')
-  # Deprecated !!!
-  DIRECTION='AtoB'
-  BATCH_SIZE=16
+'base_gray_color')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=512
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=60
+  NITER=50
+  NITER_DECAY=100
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=20.0
+  DATASET_MODE='multi_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN=''
+  BLACK_EPOCH=0
+  ;;
+'base_gray_texture')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=128
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=400
+  NITER_DECAY=600
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=30.0
+  DATASET_MODE='few_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
+  ;;
+'skeleton_gray_color')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=512
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=50
+  NITER_DECAY=100
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64_multi'
+  NET_D2='basic_64_multi'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=20.0
+  DATASET_MODE='cn_multi_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN=''
+  BLACK_EPOCH=0
+  ;;
+  'skeleton_gray_texture')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  BATCH_SIZE=128
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=40
   NITER_DECAY=60
   SAVE_EPOCH=10
   NEF=64
@@ -91,32 +178,15 @@ case ${CLASS} in
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
-  LAMBDA_L1=50.0
-  DATASET_MODE='multi_aligned'
-  # USE_ATTENTION='--use_attention'
-  # USE_SPECTRAL_NORM_G='--use_spectral_norm_G'
-  # USE_SPECTRAL_NORM_D='--use_spectral_norm_D'
-  ;;
-'base_gray_color')
-  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=16
-  LOAD_SIZE=64
-  FINE_SIZE=64
-  RESIZE_OR_CROP='none'
-  NO_FLIP='--no_flip'
-  NITER=30
-  NITER_DECAY=50
-  SAVE_EPOCH=10
-  NEF=64
-  NGF=32
-  NDF=32
-  NET_G='unet_64'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
-  NET_E='resnet_64'
-  LAMBDA_L1=20.0
-  DATASET_MODE='multi_fusion'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=20.0
+  DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
   ;;
 *)
   echo 'WRONG category: '${CLASS}
@@ -124,10 +194,12 @@ case ${CLASS} in
   ;;
 esac
 
+DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
+NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 
 # command
-CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
+CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --display_id ${DISPLAY_ID} \
   --dataroot ./datasets/${CLASS} \
   --name ${NAME} \
@@ -157,4 +229,11 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./train.py \
   --netD2 ${NET_D2} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
-  --lambda_L1 ${LAMBDA_L1}
+  --lambda_L1 ${LAMBDA_L1} \
+  --lambda_L1_B ${LAMBDA_L1_B} \
+  --where_add ${WHERE_ADD} \
+  --conditional_D ${CONDITIONAL_D} \
+  ${CONTINUE_TRAIN} \
+  --black_epoch_freq ${BLACK_EPOCH} \
+  --display_freq ${DISPLAY_FREQ}
+

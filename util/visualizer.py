@@ -63,7 +63,7 @@ class Visualizer():
         if self.display_id > 0:  # show images in the browser
             ncols = self.ncols
             if ncols > 0:
-                ncols = max(ncols, len(visuals))
+                ncols = min(ncols, len(visuals))
                 table_css = """<style>
                         table {border-collapse: separate; border-spacing:4px; white-space:nowrap; text-align:center}
                         table td {width: 10px; height: 6px; padding: 2px; outline: 2px solid black}
@@ -108,7 +108,7 @@ class Visualizer():
             self.saved = True
             for label, image in visuals.items():
                 image_numpy = util.tensor2im(image)  # only use the first image of one batch
-                img_path = os.path.join(self.img_dir, 'epoch-%.3d_itr-%.6d_%s.png' % (epoch, total_steps, label))
+                img_path = os.path.join(self.img_dir, 'epoch-%.3d_itr-%.10d_%s.png' % (epoch, total_steps, label))
                 util.save_image(image_numpy, img_path)  # save for image history
                 img_path = os.path.join(self.img_dir, 'epoch-%.3d_%s.png' % (epoch, label))
                 util.save_image(image_numpy, img_path)  # save for html webpage
