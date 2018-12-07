@@ -1,11 +1,12 @@
 set -ex
 # models
-RESULTS_DIR='./results/base_gray_texture'
+DATA_ID=$2
+RESULTS_DIR='./results/base_gray_texture_'${DATA_ID}
 MODEL='dualnet'
 
 
 # dataset
-CLASS='base_gray_texture'
+CLASS='base_gray_texture_'${DATA_ID}
 
 PHASE='val'
 

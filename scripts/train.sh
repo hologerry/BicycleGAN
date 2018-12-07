@@ -105,6 +105,8 @@ case ${CLASS} in
   BLACK_EPOCH=0
   ;;
 'base_gray_texture')
+  DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
+  CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   BATCH_SIZE=128
@@ -112,9 +114,9 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=400
-  NITER_DECAY=600
-  SAVE_EPOCH=10
+  NITER=4000
+  NITER_DECAY=6000
+  SAVE_EPOCH=500
   NEF=64
   NGF=32
   NDF=32
@@ -140,9 +142,9 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=50
-  NITER_DECAY=100
-  SAVE_EPOCH=10
+  NITER=100
+  NITER_DECAY=300
+  SAVE_EPOCH=50
   NEF=64
   NGF=32
   NDF=32
@@ -167,9 +169,9 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=40
-  NITER_DECAY=60
-  SAVE_EPOCH=10
+  NITER=400
+  NITER_DECAY=600
+  SAVE_EPOCH=100
   NEF=64
   NGF=32
   NDF=32
@@ -195,7 +197,6 @@ esac
 
 DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
-
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
