@@ -23,9 +23,9 @@ class DualNetModel(BaseModel):
         self.dirsection = opt.direction
 
         # DualNet model only support AtoC now, BtoC and AtoB need to do
-        # BicycleGAN model s            upports all
+        # BicycleGAN model supports all
         assert(self.dirsection == 'AtoC')
-        self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_C']
+        self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_C', 'real_Colors']
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         # D for color
