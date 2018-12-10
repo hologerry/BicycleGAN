@@ -21,7 +21,9 @@ class CnMultiFusionDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
-        self.chars = list(range(639))
+        self.gb639list = list(range(639))
+        random.shuffle(self.gb639list)
+        self.chars = self.gb639list[:opt.few_size]
 
     def __getitem__(self, index):
         ABC_path = self.ABC_paths[index]
