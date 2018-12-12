@@ -999,9 +999,11 @@ class Dualnet3Block(nn.Module):
             down1 = downconv1
             down2 = downconv2
             up = [uprelu] + upconv
-            up_out = [nl_layer()] + upconv_out + [nn.Tanh()]
-            self.up_out = nn.Sequential(*up_out) 
             up_B = [uprelu2] + upconv_B + [nn.Tanh()]
+
+            uprelu3 = nl_layer()
+            up_out = [uprelu3] + upconv_out + [nn.Tanh()]
+            self.up_out = nn.Sequential(*up_out) 
 
             if use_attention:
                 up += [attn_layer]
