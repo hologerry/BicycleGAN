@@ -9,7 +9,6 @@ PORT=9097
 
 NZ=16
 
-
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
 
@@ -80,7 +79,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=512
+  BATCH_SIZE=4
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -96,6 +95,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
+  LAMBDA_CX=1.0
   LAMBDA_L1_B=20.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
@@ -125,6 +125,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
+  LAMBDA_CX=1.0
   LAMBDA_L1_B=30.0
   DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
@@ -153,6 +154,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
+  LAMBDA_CX=1.0
   LAMBDA_L1_B=20.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
@@ -180,6 +182,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
+  LAMBDA_CX=1.0
   LAMBDA_L1_B=20.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
@@ -230,6 +233,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
+  --lambda_CX ${LAMBDA_CX} \
   --lambda_L1_B ${LAMBDA_L1_B} \
   --where_add ${WHERE_ADD} \
   --conditional_D ${CONDITIONAL_D} \

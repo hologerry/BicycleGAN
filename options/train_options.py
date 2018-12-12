@@ -54,6 +54,8 @@ class TrainOptions(BaseOptions):
                             default=10.0, help='(dualnet) model weight for |C-G(A, E(Cs))|')
         parser.add_argument('--lambda_L1_B', type=float,
                             default=10.0, help='dualnet model weight for |B-gray(G(A, E(Cs)))|')
+        parser.add_argument('--lambda_CX', type=float, default=5.0,
+                            help='weight for contextual loss')
         parser.add_argument('--lambda_L2', type=float,
                             default=10.0, help='weight for mse(B-G(A, E(B)))')
         parser.add_argument('--lambda_GAN', type=float,

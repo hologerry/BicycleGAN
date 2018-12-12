@@ -52,7 +52,7 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=64,
+        parser.add_argument('--num_threads', default=1,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
@@ -67,6 +67,8 @@ class BaseOptions():
                             help='if specified, do not flip the images for data argumentation')
 
         # models
+        parser.add_argument('--vgg', type=str, default='./models/vgg19-dcbb9e9d.pth',
+                            help='path to vgg pre-trained model')
         parser.add_argument('--num_Ds', type=int, default=2,
                             help='number of Discrminators')
         parser.add_argument('--gan_mode', type=str,
