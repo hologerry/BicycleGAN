@@ -81,7 +81,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet3'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=512
+  BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'

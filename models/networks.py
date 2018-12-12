@@ -1021,9 +1021,9 @@ class Dualnet3Block(nn.Module):
             down2 = [downrelu2] + downconv2
             up = [uprelu] + upconv
             up_B = [uprelu] + upconv_B
-            if norm_layer is not None:
-                up += [norm_layer(outer_nc)]
-                up_B += [norm_layer(outer_nc)]
+            #if norm_layer is not None:
+            #    up += [norm_layer(outer_nc)]
+            #    up_B += [norm_layer(outer_nc)]
         else:
             upconv = upsampleLayer(
                 inner_nc * 4, outer_nc, upsample=upsample, padding_type=padding_type,
@@ -1043,9 +1043,9 @@ class Dualnet3Block(nn.Module):
                 up += [attn_layer]
                 up_B += [attn_layer]
 
-            if norm_layer is not None:
-                up += [norm_layer(outer_nc)]
-                up_B += [norm_layer(outer_nc)]
+            #if norm_layer is not None:
+            #    up += [norm_layer(outer_nc)]
+            #    up_B += [norm_layer(outer_nc)]
 
             if use_dropout:
                 up += [nn.Dropout(0.5)]
