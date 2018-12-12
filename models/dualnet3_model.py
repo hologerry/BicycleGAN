@@ -137,6 +137,7 @@ class DualNet3Model(BaseModel):
 
     def update_D(self):
         self.set_requires_grad(self.netD, True)
+        self.set_requires_grad(self.netD2, True)
         # update D
         if self.opt.lambda_GAN > 0.0:
             self.optimizer_D.zero_grad()
