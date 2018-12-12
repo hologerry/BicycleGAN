@@ -36,7 +36,7 @@ if __name__ == '__main__':
             if not model.is_train():
                 continue
 
-            if opt.stage1_epoch != 0 && epoch < opt.stage1_epoch:
+            if opt.stage1_epoch != 0 and epoch < opt.stage1_epoch:
                 model.optimize_parameters_1()
             else:
                 model.optimize_parameters()

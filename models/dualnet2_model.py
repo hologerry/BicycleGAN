@@ -198,12 +198,21 @@ class DualNet2Model(BaseModel):
             self.loss_D, self.losses_D = self.backward_D(self.netD, self.real_data_B, self.fake_data_B)
             self.optimizer_D.step()
 
+        if self.opt.lambda_GAN2 > 0.0:
+            #self.optimizer_D2.zero_grad()
+            self.loss_D2, self.losses_D2 = self.backward_D(self.netD2, self.real_data_C, self.fake_data_C)
+            #self.optimizer_D2.step()
+
     def update_G1(self):
         # update dual net G
         self.set_requires_grad(self.netD, False)
         self.optimizer_G.zero_grad()
         self.backward_G()
         self.optimizer_G.step()
+        #self.optimizer_G2.zero_grad()
+        self.backward_G2()
+        #self.optimizer_G2.step()
+
 
     def optimize_parameters_1(self):
         self.forward()

@@ -79,7 +79,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'base_gray_color')
-  MODEL='dualnet2'
+  MODEL='dualnet3'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   BATCH_SIZE=512
   LOAD_SIZE=64
@@ -92,7 +92,7 @@ case ${CLASS} in
   NEF=64
   NGF=32
   NDF=32
-  NET_G='dualnet'
+  NET_G='dualnet3'
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
