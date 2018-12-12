@@ -79,7 +79,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'base_gray_color')
-  MODEL='dualnet'
+  MODEL='dualnet2'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   BATCH_SIZE=512
   LOAD_SIZE=64
