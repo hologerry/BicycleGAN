@@ -3,9 +3,9 @@ from .base_model import BaseModel
 from . import networks
 
 
-class DualNetModel2(BaseModel):
+class DualNet2Model(BaseModel):
     def name(self):
-        return 'DualNetModel'
+        return 'DualNet2Model'
 
     @staticmethod
     def modify_commandline_options(parser, is_train=True):
