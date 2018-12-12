@@ -978,6 +978,8 @@ class Dualnet3Block(nn.Module):
         downrelu1 = nn.LeakyReLU(0.2, True)
         downrelu2 = nn.LeakyReLU(0.2, True)
         uprelu = nl_layer()
+        uprelu2 = nl_layer()
+
 
         attn_layer = None
         if use_attention:
@@ -997,9 +999,9 @@ class Dualnet3Block(nn.Module):
             down1 = downconv1
             down2 = downconv2
             up = [uprelu] + upconv
-            up_out = [uprelu] + upconv_out + [nn.Tanh()]
+            up_out = [nl_layer()] + upconv_out + [nn.Tanh()]
             self.up_out = nn.Sequential(*up_out) 
-            up_B = [uprelu] + upconv_B + [nn.Tanh()]
+            up_B = [uprelu2] + upconv_B + [nn.Tanh()]
 
             if use_attention:
                 up += [attn_layer]
@@ -1020,10 +1022,10 @@ class Dualnet3Block(nn.Module):
             down1 = [downrelu1] + downconv1
             down2 = [downrelu2] + downconv2
             up = [uprelu] + upconv
-            up_B = [uprelu] + upconv_B
-            #if norm_layer is not None:
-            #    up += [norm_layer(outer_nc)]
-            #    up_B += [norm_layer(outer_nc)]
+            up_B = [uprelu2] + upconv_B
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+                up_B += [norm_layer(outer_nc)]
         else:
             upconv = upsampleLayer(
                 inner_nc * 4, outer_nc, upsample=upsample, padding_type=padding_type,
@@ -1037,11 +1039,12 @@ class Dualnet3Block(nn.Module):
                 down1 += [norm_layer(inner_nc)]
                 down2 += [norm_layer(inner_nc)]
             up = [uprelu] + upconv
-            up_B = [uprelu] + upconv_B
+            up_B = [uprelu2] + upconv_B
 
             if use_attention:
                 up += [attn_layer]
-                up_B += [attn_layer]
+                attn_layer2 = get_self_attention_layer(outer_nc)
+                up_B += [attn_layer2]
 
             #if norm_layer is not None:
             #    up += [norm_layer(outer_nc)]
@@ -1064,8 +1067,8 @@ class Dualnet3Block(nn.Module):
         if self.outermost:
             mid_C, mid_B = self.submodule(x1, x2)
             fake_B = self.up_B(mid_B)
-            mid_C = self.up(mid_C)
-            fake_C = self.up_out(torch.cat([mid_C, fake_B], 1))
+            mid_C2 = self.up(mid_C)
+            fake_C = self.up_out(torch.cat([mid_C2, fake_B], 1))
             return fake_C, fake_B
         elif self.innermost:
             mid = torch.cat([x1, x2], 1)
@@ -1215,7 +1218,7 @@ class DualNet3(nn.Module):
             dual_block = Dualnet3Block(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, dual_block,
                                       norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
                                       use_spectral_norm=use_spectral_norm, upsample=upsample)
-        dual_block = Dualnet3Block(ngf*4, ngf*4, ngf*4, ngf*8, dual_block, use_attention=use_attention,
+        dual_block = Dualnet3Block(ngf*4, ngf*4, ngf*4, ngf*max_nchn, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                   nl_layer=nl_layer, upsample=upsample)
         dual_block = Dualnet3Block(ngf*2, ngf*2, ngf*2, ngf*4, dual_block, use_attention=use_attention,
