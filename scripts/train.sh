@@ -6,7 +6,7 @@ GPU_ID=${2}
 
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
-PORT=9097
+PORT=10002
 
 NZ=16
 
@@ -136,14 +136,14 @@ case ${CLASS} in
 'skeleton_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=512
+  BATCH_SIZE=256
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=50
-  NITER_DECAY=100
-  SAVE_EPOCH=10
+  NITER=10
+  NITER_DECAY=10
+  SAVE_EPOCH=2
   NEF=64
   NGF=32
   NDF=32
