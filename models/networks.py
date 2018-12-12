@@ -1073,9 +1073,10 @@ class Dualnet3Block(nn.Module):
             fake_C = self.up_out(torch.cat([mid_C2, fake_B], 1))
             return fake_C, fake_B
         elif self.innermost:
-            mid = torch.cat([x1, x2], 1)
-            fake_C = self.up(mid)
-            fake_B = self.up_B(mid)
+            mid_C = torch.cat([x1, x2], 1)
+            mid_B = torch.cat([x1, x2], 1)
+            fake_C = self.up(mid_C)
+            fake_B = self.up_B(mid_B)
             tmp1 = torch.cat([content, style], 1)
             return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
         else:
