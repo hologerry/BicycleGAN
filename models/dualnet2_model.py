@@ -3,7 +3,7 @@ from .base_model import BaseModel
 from . import networks
 
 
-class DualNetModel(BaseModel):
+class DualNetModel2(BaseModel):
     def name(self):
         return 'DualNetModel'
 
