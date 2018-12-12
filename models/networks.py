@@ -1215,13 +1215,13 @@ class DualNet3(nn.Module):
             dual_block = Dualnet3Block(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, dual_block,
                                       norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
                                       use_spectral_norm=use_spectral_norm, upsample=upsample)
-        dual_block = Dualnet3Block(ngf*4, ngf*4, ngf*4, ngf*max_nchn, dual_block, use_attention=use_attention,
+        dual_block = Dualnet3Block(ngf*4, ngf*4, ngf*4, ngf*4, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                   nl_layer=nl_layer, upsample=upsample)
-        dual_block = Dualnet3Block(ngf*2, ngf*2, ngf*2, ngf*4, dual_block, use_attention=use_attention,
+        dual_block = Dualnet3Block(ngf*2, ngf*2, ngf*2, ngf*2, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                   nl_layer=nl_layer, upsample=upsample)
-        dual_block = Dualnet3Block(ngf, ngf, ngf, ngf*2, dual_block, use_attention=use_attention,
+        dual_block = Dualnet3Block(ngf, ngf, ngf, ngf, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                   nl_layer=nl_layer, upsample=upsample)
         dual_block = Dualnet3Block(input_content, input_style, output_nc, ngf, dual_block,
