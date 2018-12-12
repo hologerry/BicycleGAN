@@ -535,22 +535,22 @@ class GANLoss(nn.Module):
         return loss, all_losses
 
 
-def upsampleLayer(inplanes, outplanes, kernel_size=3, upsample='basic', padding_type='zero', use_spectral_norm=False):
+def upsampleLayer(inplanes, outplanes, upsample='basic', padding_type='zero', use_spectral_norm=False):
     # padding_type = 'zero'
     if upsample == 'basic':
         if use_spectral_norm:
             upconv = [SpectralNorm(nn.ConvTranspose2d(
-                      inplanes, outplanes, kernel_size=kernel_size, stride=2, padding=1))]
+                      inplanes, outplanes, kernel_size=4, stride=2, padding=1))]
         else:
             upconv = [nn.ConvTranspose2d(
-                      inplanes, outplanes, kernel_size=kernel_size, stride=2, padding=1)]
+                      inplanes, outplanes, kernel_size=4, stride=2, padding=1)]
     elif upsample == 'bilinear':
         upconv = [nn.Upsample(scale_factor=2, mode='bilinear'),
                   nn.ReflectionPad2d(1)]
         if use_spectral_norm:
-            upconv += [SpectralNorm(nn.Conv2d(inplanes, outplanes, kernel_size=kernel_size, stride=1, padding=0))]
+            upconv += [SpectralNorm(nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0))]
         else:
-            upconv += [nn.Conv2d(inplanes, outplanes, kernel_size=kernel_size, stride=1, padding=0)]
+            upconv += [nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0)]
     else:
         raise NotImplementedError(
             'upsample layer [%s] not implemented' % upsample)
