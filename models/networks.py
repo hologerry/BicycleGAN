@@ -111,6 +111,15 @@ def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectra
                       norm_layer=norm_layer,  nl_layer=nl_layer,
                       use_dropout=use_dropout, use_attention=use_attention,
                       use_spectral_norm=use_spectral_norm, upsample=upsample)
+
+    elif netG == 'dualnet3':
+        input_content = input_nc
+        input_style = input_nc * nencode
+        net = DualNet3(input_content, input_style, output_nc, 6, ngf,
+                      norm_layer=norm_layer,  nl_layer=nl_layer,
+                      use_dropout=use_dropout, use_attention=use_attention,
+                      use_spectral_norm=use_spectral_norm, upsample=upsample)
+
     elif netG == 'unet_64' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                                use_dropout=use_dropout, use_attention=use_attention,
@@ -526,22 +535,22 @@ class GANLoss(nn.Module):
         return loss, all_losses
 
 
-def upsampleLayer(inplanes, outplanes, upsample='basic', padding_type='zero', use_spectral_norm=False):
+def upsampleLayer(inplanes, outplanes, kernel_size=3, upsample='basic', padding_type='zero', use_spectral_norm=False):
     # padding_type = 'zero'
     if upsample == 'basic':
         if use_spectral_norm:
             upconv = [SpectralNorm(nn.ConvTranspose2d(
-                      inplanes, outplanes, kernel_size=4, stride=2, padding=1))]
+                      inplanes, outplanes, kernel_size=kernel_size, stride=2, padding=1))]
         else:
             upconv = [nn.ConvTranspose2d(
-                      inplanes, outplanes, kernel_size=4, stride=2, padding=1)]
+                      inplanes, outplanes, kernel_size=kernel_size, stride=2, padding=1)]
     elif upsample == 'bilinear':
         upconv = [nn.Upsample(scale_factor=2, mode='bilinear'),
                   nn.ReflectionPad2d(1)]
         if use_spectral_norm:
-            upconv += [SpectralNorm(nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0))]
+            upconv += [SpectralNorm(nn.Conv2d(inplanes, outplanes, kernel_size=kernel_size, stride=1, padding=0))]
         else:
-            upconv += [nn.Conv2d(inplanes, outplanes, kernel_size=3, stride=1, padding=0)]
+            upconv += [nn.Conv2d(inplanes, outplanes, kernel_size=kernel_size, stride=1, padding=0)]
     else:
         raise NotImplementedError(
             'upsample layer [%s] not implemented' % upsample)
@@ -939,6 +948,140 @@ class DualnetBlock(nn.Module):
             return torch.cat([out, torch.cat([content, style], 1)], 1)
 
 
+class Dualnet3Block(nn.Module):
+    def __init__(self, input_cont, input_style, outer_nc, inner_nc,
+                 submodule=None, outermost=False, innermost=False, use_spectral_norm=False,
+                 norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
+                 upsample='basic', padding_type='zero'):
+        super(DualnetBlock, self).__init__()
+        p = 0
+        downconv1 = []
+        downconv2 = []
+        if padding_type == 'reflect':
+            downconv1 += [nn.ReflectionPad2d(1)]
+            downconv2 += [nn.ReflectionPad2d(1)]
+        elif padding_type == 'replicate':
+            downconv1 += [nn.ReplicationPad2d(1)]
+            downconv2 += [nn.ReplicationPad2d(1)]
+        elif padding_type == 'zero':
+            p = 1
+        else:
+            raise NotImplementedError(
+                'padding [%s] is not implemented' % padding_type)
+
+        self.outermost = outermost
+        self.innermost = innermost
+        downconv1 += [nn.Conv2d(input_cont, inner_nc, kernel_size=4, stride=2, padding=p)]
+        downconv2 += [nn.Conv2d(input_style, inner_nc, kernel_size=4, stride=2, padding=p)]
+
+        # downsample is different from upsample
+        downrelu1 = nn.LeakyReLU(0.2, True)
+        downrelu2 = nn.LeakyReLU(0.2, True)
+        uprelu = nl_layer()
+
+        attn_layer = None
+        if use_attention:
+            attn_layer = get_self_attention_layer(outer_nc)
+
+        if outermost:
+            upconv = upsampleLayer(
+                inner_nc * 4, inner_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
+
+            upconv_out = upsampleLayer(
+                inner_nc + outer_nc, outer_nc, kernel_size=1, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
+
+            upconv_B = upsampleLayer(
+                inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
+
+            down1 = downconv1
+            down2 = downconv2
+            up = [uprelu] + upconv
+            up_out = [uprelu] + upconv_out + [nn.Tanh()]
+            self.up_out = nn.Sequential(*up_out) 
+            up_B = [uprelu] + upconv_B + [nn.Tanh()]
+
+            if use_attention:
+                up += [attn_layer]
+
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+
+            if use_dropout:
+                up += [nn.Dropout(0.5)]
+
+        elif innermost:
+            upconv = upsampleLayer(
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)            
+            upconv_B = upsampleLayer(
+                inner_nc * 2, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
+            down1 = [downrelu1] + downconv1
+            down2 = [downrelu2] + downconv2
+            up = [uprelu] + upconv
+            up_B = [uprelu] + upconv_B
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+                up_B += [norm_layer(outer_nc)]
+        else:
+            upconv = upsampleLayer(
+                inner_nc * 4, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
+            upconv_B = upsampleLayer(
+                inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
+                use_spectral_norm=use_spectral_norm)
+            down1 = [downrelu1] + downconv1
+            down2 = [downrelu2] + downconv2
+            if norm_layer is not None:
+                down1 += [norm_layer(inner_nc)]
+                down2 += [norm_layer(inner_nc)]
+            up = [uprelu] + upconv
+            up_B = [uprelu] + upconv_B
+
+            if use_attention:
+                up += [attn_layer]
+                up_B += [attn_layer]
+
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+                up_B += [norm_layer(outer_nc)]
+
+            if use_dropout:
+                up += [nn.Dropout(0.5)]
+                up_B += [nn.Dropout(0.5)]
+
+        self.down1 = nn.Sequential(*down1)
+        self.down2 = nn.Sequential(*down2)
+        self.submodule = submodule
+        self.up = nn.Sequential(*up)
+        self.up_B = nn.Sequential(*up_B)
+
+    def forward(self, content, style):
+
+        x1 = self.down1(content)
+        x2 = self.down2(style)
+        if self.outermost:
+            mid_C, mid_B = self.submodule(x1, x2)
+            fake_B = self.up_B(mid_B)
+            mid_C = self.up(mid_C)
+            fake_C = self.up_out(torch.cat([mid_C, fake_B], 1))
+            return fake_C, fake_B
+        elif self.innermost:
+            mid = torch.cat([x1, x2], 1)
+            fake_C = self.up(mid)
+            fake_B = self.up_B(mid)
+            tmp1 = torch.cat([content, style], 1)
+            return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
+        else:
+            mid, mid_B = self.submodule(x1, x2)
+            fake_C = self.up(mid)
+            fake_B = self.up_B(mid_B)
+            tmp1 = torch.cat([content, style], 1)
+            return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
+
 class BasicBlockUp(nn.Module):
     def __init__(self, inplanes, outplanes, norm_layer=None, nl_layer=None):
         super(BasicBlockUp, self).__init__()
@@ -1048,6 +1191,42 @@ class DualNet(nn.Module):
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
                                   nl_layer=nl_layer, upsample=upsample)
         dual_block = DualnetBlock(input_content, input_style, output_nc, ngf, dual_block,
+                                  use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+
+        self.model = dual_block
+
+    def forward(self, content, style):
+        return self.model(content, style)
+
+
+
+# DualNet3 Module
+class DualNet3(nn.Module):
+
+    def __init__(self, input_content, input_style, output_nc, num_downs, ngf=64,
+                 norm_layer=None, nl_layer=None, use_dropout=False,
+                 use_attention=False, use_spectral_norm=False, upsample='basic'):
+        super(DualNet, self).__init__()
+        max_nchn = 8  # max channel factor
+        # construct unet structure
+        dual_block = Dualnet3Block(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
+                                  use_spectral_norm=use_spectral_norm, innermost=True,
+                                  norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+        for i in range(num_downs - 5):
+            dual_block = Dualnet3Block(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, dual_block,
+                                      norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
+                                      use_spectral_norm=use_spectral_norm, upsample=upsample)
+        dual_block = Dualnet3Block(ngf*4, ngf*4, ngf*4, ngf*max_nchn, dual_block, use_attention=use_attention,
+                                  use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+        dual_block = Dualnet3Block(ngf*2, ngf*2, ngf*2, ngf*4, dual_block, use_attention=use_attention,
+                                  use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+        dual_block = Dualnet3Block(ngf, ngf, ngf, ngf*2, dual_block, use_attention=use_attention,
+                                  use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
+                                  nl_layer=nl_layer, upsample=upsample)
+        dual_block = Dualnet3Block(input_content, input_style, output_nc, ngf, dual_block,
                                   use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
                                   nl_layer=nl_layer, upsample=upsample)
 

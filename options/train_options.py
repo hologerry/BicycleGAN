@@ -63,7 +63,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--use_same_D', action='store_true',
                             help='if two Ds share the weights or not')
 
-        parser.add_argument('--stage1_epoch', type=int, default=30,
+        parser.add_argument('--stage1_epoch', type=int, default=0,
                             help='train stage1 only')
         self.isTrain = True
         return parser
