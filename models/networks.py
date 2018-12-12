@@ -953,7 +953,7 @@ class Dualnet3Block(nn.Module):
                  submodule=None, outermost=False, innermost=False, use_spectral_norm=False,
                  norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
                  upsample='basic', padding_type='zero'):
-        super(DualnetBlock, self).__init__()
+        super(Dualnet3Block, self).__init__()
         p = 0
         downconv1 = []
         downconv2 = []
@@ -988,9 +988,7 @@ class Dualnet3Block(nn.Module):
                 inner_nc * 4, inner_nc, upsample=upsample, padding_type=padding_type,
                 use_spectral_norm=use_spectral_norm)
 
-            upconv_out = upsampleLayer(
-                inner_nc + outer_nc, outer_nc, kernel_size=1, upsample=upsample, padding_type=padding_type,
-                use_spectral_norm=use_spectral_norm)
+            upconv_out = nn.Conv2d(input_nc + outer_nc, outer_nc, kernel_size=3, stride=1, padding=p)
 
             upconv_B = upsampleLayer(
                 inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
@@ -1207,7 +1205,7 @@ class DualNet3(nn.Module):
     def __init__(self, input_content, input_style, output_nc, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
                  use_attention=False, use_spectral_norm=False, upsample='basic'):
-        super(DualNet, self).__init__()
+        super(DualNet3, self).__init__()
         max_nchn = 8  # max channel factor
         # construct unet structure
         dual_block = Dualnet3Block(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
