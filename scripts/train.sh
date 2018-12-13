@@ -8,6 +8,7 @@ DISPLAY_ID=`date '+%H%M'`
 PORT=9097
 
 NZ=16
+NENCODE=4
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
@@ -79,7 +80,8 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=4
+  NENCODE=4
+  BATCH_SIZE=512
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -95,8 +97,8 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_CX=1.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_CX=20.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -109,13 +111,14 @@ case ${CLASS} in
   CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
   BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=4000
-  NITER_DECAY=6000
+  NITER=1000
+  NITER_DECAY=4000
   SAVE_EPOCH=500
   NEF=64
   NGF=32
@@ -125,8 +128,8 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_CX=1.0
-  LAMBDA_L1_B=30.0
+  LAMBDA_CX=20.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -138,7 +141,9 @@ case ${CLASS} in
 'skeleton_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=512
+  NENCODE=10
+  FEW_SET=30
+  BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -154,8 +159,8 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_CX=1.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_CX=20.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -166,6 +171,8 @@ case ${CLASS} in
   'skeleton_gray_texture')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=10
+  FEW_SET=30
   BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -182,8 +189,8 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_CX=1.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_CX=20.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -218,6 +225,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   ${USE_ATTENTION} \
   ${USE_SPECTRAL_NORM_G} \
   ${USE_SPECTRAL_NORM_D} \
+  --nencode ${NENCODE} \
+  --few_set ${FEW_SET} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \

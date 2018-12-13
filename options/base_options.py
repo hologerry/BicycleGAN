@@ -25,7 +25,7 @@ class BaseOptions():
                             help='# of input image channels')
         parser.add_argument('--output_nc', type=int, default=3,
                             help='# of output image channels')
-        parser.add_argument('--nencode', type=int, default=10,
+        parser.add_argument('--nencode', type=int, default=4,
                             help='# of image(s) for encoder, must smaller or equal than few_size')
         parser.add_argument('--few_size', type=int, default=10,
                             help='complete set size for few shot')
@@ -52,7 +52,7 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=1,
+        parser.add_argument('--num_threads', default=64,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
