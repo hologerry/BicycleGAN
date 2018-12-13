@@ -14,6 +14,7 @@ DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
 FINE_SIZE=64
 INPUT_NC=3
+NENCODE=4
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 NITER=30
@@ -43,6 +44,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --dataroot ./datasets/${CLASS} \
   --results_dir ${RESULTS_DIR} \
   --checkpoints_dir ./pretrained_models/ \
+  --nencode ${NENCODE} \
   --name ${CLASS} \
   --phase ${PHASE} \
   --direction ${DIRECTION} \

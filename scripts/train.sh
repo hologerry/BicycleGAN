@@ -142,7 +142,7 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=10
-  FEW_SET=30
+  FEW_SIZE=30
   BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -172,7 +172,7 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=10
-  FEW_SET=30
+  FEW_SIZE=30
   BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -226,7 +226,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   ${USE_SPECTRAL_NORM_G} \
   ${USE_SPECTRAL_NORM_D} \
   --nencode ${NENCODE} \
-  --few_set ${FEW_SET} \
+  --few_size ${FEW_SIZE} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \
