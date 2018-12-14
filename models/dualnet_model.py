@@ -31,9 +31,9 @@ class DualNetModel(BaseModel):
         # The program will call base_model.save_networks and base_model.load_networks
         # D for color
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
-        # D2 for shape
+        # D_B for shape
         use_D_B = opt.isTrain and opt.lambda_GAN_B > 0.0
-        # use_D2 = False
+        # use_D_B = False
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
@@ -47,7 +47,7 @@ class DualNetModel(BaseModel):
                                           num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
         if use_D_B:
             self.model_names += ['D_B']
-            self.netD_B = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD2, norm=opt.norm, nl=opt.nl,
+            self.netD_B = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_B, norm=opt.norm, nl=opt.nl,
                                             use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds,
                                             gpu_ids=self.gpu_ids)
 
@@ -177,7 +177,7 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_GAN_B > 0.0:
             self.optimizer_D_B.zero_grad()
             self.loss_D_B, self.losses_D_B = self.backward_D(self.netD_B, self.real_data_B, self.fake_data_B)
-            self.optimizer_D2.step()
+            self.optimizer_D_B.step()
 
     def update_G(self):
         # update dual net G

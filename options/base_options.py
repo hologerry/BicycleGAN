@@ -76,7 +76,7 @@ class BaseOptions():
                             default='lsgan', help='dcgan|lsgan')
         parser.add_argument('--netD', type=str, default='basic_256_multi',
                             help='selects model to use for netD')
-        parser.add_argument('--netD2', type=str, default='basic_256_multi',
+        parser.add_argument('--netD_B', type=str, default='basic_256_multi',
                             help='selects model to use for netD')
         parser.add_argument('--netG', type=str, default='unet_256',
                             help='selects model to use for netG')
