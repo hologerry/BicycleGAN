@@ -35,7 +35,11 @@ if __name__ == '__main__':
             model.set_input(data, blk_epoch)
             if not model.is_train():
                 continue
-            model.optimize_parameters()
+
+            if opt.stage1_epoch != 0 && epoch < opt.stage1_epoch:
+                model.optimize_parameters_1()
+            else:
+                model.optimize_parameters()
 
             if total_steps % opt.display_freq == 0:
                 save_result = total_steps % opt.update_html_freq == 0

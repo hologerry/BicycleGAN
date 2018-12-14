@@ -1,11 +1,13 @@
 set -ex
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
+MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
-PORT=9999
+
+PORT=9097
 
 NZ=16
 NENCODE=4
@@ -79,7 +81,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'base_gray_color')
-  MODEL='dualnet'
+  MODEL='dualnet2'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
   BATCH_SIZE=128
@@ -151,9 +153,9 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=100
-  NITER_DECAY=100
-  SAVE_EPOCH=50
+  NITER=10
+  NITER_DECAY=10
+  SAVE_EPOCH=2
   NEF=64
   NGF=32
   NDF=32

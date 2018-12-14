@@ -58,7 +58,7 @@ class BaseOptions():
                             default='./checkpoints', help='models are saved here')
         parser.add_argument('--serial_batches', action='store_true',
                             help='if true, takes images in order to make batches, otherwise takes them randomly')
-        parser.add_argument('--use_dropout', action='store_true',
+        parser.add_argument('--use_dropout', action='store_false',
                             help='use dropout for the generator')
         parser.add_argument('--max_dataset_size', type=int, default=float("inf"),
                             help='Maximum number of samples allowed per dataset.' +
