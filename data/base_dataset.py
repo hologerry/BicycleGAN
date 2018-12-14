@@ -101,11 +101,11 @@ def transform_pair(opt, A, B, C=None):
         return A, B
 
 
-def transform_fusion(opt, A, B, C, Colors, Shapes=None):
+def transform_fusion(opt, A, B, C, Shapes, Colors):
     if not opt.resize_or_crop == 'none':
         raise ValueError(
             "Only support none mode for resize_or_crop on base_gray_color dataset")
-    # assert(isinstance(Shapes, list))
+    assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
     A = transforms.ToTensor()(A)
     B = transforms.ToTensor()(B)
@@ -113,17 +113,15 @@ def transform_fusion(opt, A, B, C, Colors, Shapes=None):
     A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
     B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
     C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
+
+    Shapes = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Shapes = torch.cat(Shapes)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
     Colors = torch.cat(Colors)
-    if Shapes is not None:
-        Shapes = list(map(lambda s: transforms.Normalize(
-            (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
-        Shapes = torch.cat(Shapes)
 
-        return A, B, C, Colors, Shapes
-    else:
-        return A, B, C, Colors
+    return A, B, C, Shapes, Colors
 
 
 def __scale_width(img, target_width):

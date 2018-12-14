@@ -1,6 +1,7 @@
 import torch
 from .base_model import BaseModel
 from . import networks
+from .vgg import VGG19
 
 
 class DualNetModel(BaseModel):
@@ -17,13 +18,13 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B']
+        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B', 'G_CX', 'G_MSE']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
 
         # DualNet model only support AtoC now, BtoC and AtoB need to do
-        # BicycleGAN model s            upports all
+        # BicycleGAN model supports all
         assert(self.dirsection == 'AtoC')
         self.visual_names = ['real_A', 'real_B', 'real_C', 'fake_C']
         # specify the models you want to save to the disk.
@@ -53,7 +54,16 @@ class DualNetModel(BaseModel):
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+            self.criterionMSE = torch.nn.MSELoss()
             self.criterionZ = torch.nn.L1Loss()
+
+            # Contextual Loss
+            self.criterionCX = networks.CXLoss(sigma=0.5).to(self.device)
+            self.vgg19 = VGG19().to(self.device)
+            self.vgg19.load_model(self.opt.vgg)
+            self.vgg19.eval()
+            self.vgg_layers = ['conv3_2', 'conv4_2']
+
             # initialize optimizers
             self.optimizers = []
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -104,6 +114,10 @@ class DualNetModel(BaseModel):
     def forward(self):
         # generate fake_C
         self.fake_C = self.netG(self.real_A, self.real_Colors)
+        # vgg
+        self.vgg_facke_C = self.vgg19(self.fake_C)
+        self.vgg_real_C = self.vgg19(self.real_C)
+
         # fake_C rgb  ->  fake_B gray
         self.fake_B_one = self.fake_C[:, 0, ...] * 0.299 \
             + self.fake_C[:, 1, ...] * 0.587 + self.fake_C[:, 2, ...] * 0.114
@@ -156,10 +170,20 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_L1 > 0.0:
             self.loss_G_L1 = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
             self.loss_G_L1_B = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
+
+            self.loss_G_CX = 0.0
+            for l in self.vgg_layers:
+                self.loss_G_CX += self.criterionCX(self.vgg_real_C[l], self.vgg_facke_C[l]) * self.opt.lambda_CX
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B
+        if self.opt.lambda_L2 > 0.0:
+            self.loss_G_MSE = self.criterionMSE(self.fake_C, self.real_C) * self.opt.lambda_L2
+        else:
+            self.loss_G_MSE = 0.0
+
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B \
+            + self.loss_G_CX + self.loss_G_MSE
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):

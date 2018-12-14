@@ -29,12 +29,14 @@ webpage = html.HTML(web_dir, 'Training = %s, Phase = %s, Class =%s' % (opt.name,
 # test stage
 for i, data in enumerate(islice(dataset, opt.num_test)):
     model.set_input(data)
+    ABC_path = data['ABC_path'][0]
+    file_name = ABC_path.split('/')[-1].split('.')[0]
     print('process input image %3.3d/%3.3d' % (i, opt.num_test))
     real_in, fake_out, real_out = model.test()
     images = [real_in, real_out, fake_out]
-    names = ['input', 'ground truth', 'encoded']
+    names = ['input', 'ground_truth', 'encoded']
 
-    img_path = 'input_%3.3d' % i
+    img_path = file_name
     save_images(webpage, images, names, img_path, aspect_ratio=opt.aspect_ratio, width=opt.fineSize)
 
 webpage.save()

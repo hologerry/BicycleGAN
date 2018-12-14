@@ -21,7 +21,17 @@ class CnMultiFusionDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
-        self.chars = list(range(639))
+        # self.chars = list(range(639))
+        # guarantee consistent for test
+        # so just shuffle 639 once
+        self.shuffled_gb639list = [79, 279, 633, 632, 508, 378, 283, 462, 574, 251,
+                                   267, 102, 181, 100, 415, 94, 261, 330, 501, 434,
+                                   418, 160, 119, 207, 44, 493, 290, 590, 73, 613,
+                                   244, 618, 516, 40, 442, 48, 218, 61, 585, 411,
+                                   518, 174, 543, 324, 424, 312, 302, 466, 541, 379,
+                                   111, 557, 256, 564, 338, 129, 118, 214, 395, 11]
+        assert(opt.few_size <= 60)
+        self.chars = self.shuffled_gb639list[:opt.few_size]
 
     def __getitem__(self, index):
         ABC_path = self.ABC_paths[index]
@@ -49,16 +59,19 @@ class CnMultiFusionDataset(BaseDataset):
             random.shuffle(self.chars)
             chars_random = self.chars[:self.opt.nencode]
             for char in chars_random:
-                c_path = self.rreplace(ABC_path_c, target_char, str(char), 1)  # /path/to/img/X_XX_XXX.png
+                c_path = self.rreplace(ABC_path_c, target_char, str(
+                    char), 1)  # /path/to/img/X_XX_XXX.png
                 Color_paths.append(c_path)
-                Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
+                Colors.append(Image.open(c_path).convert(
+                    'RGB').crop((w+w, 0, w+w+w, h)))
 
         else:
             Shapes.append(B)
             Shape_paths.append(ABC_path)
             Colors.append(C)
             Color_paths.append(ABC_path)
-        A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
+        A, B, C, Shapes, Colors = transform_fusion(
+            self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'Shapes': Shapes, 'Colors': Colors,

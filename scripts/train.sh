@@ -1,15 +1,17 @@
 set -ex
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
-MODEL='Dualnet'
+MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
-PORT=10002
+
+PORT=9097
 
 NZ=16
-
+NENCODE=4
+FEW_SIZE=10
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
@@ -81,7 +83,8 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet2'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=512
+  NENCODE=4
+  BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -97,7 +100,9 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_CX=25.0
+  LAMBDA_L2=100.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -106,16 +111,19 @@ case ${CLASS} in
   BLACK_EPOCH=0
   ;;
 'base_gray_texture')
+  DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
+  CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
   BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=400
-  NITER_DECAY=600
-  SAVE_EPOCH=10
+  NITER=1000
+  NITER_DECAY=4000
+  SAVE_EPOCH=500
   NEF=64
   NGF=32
   NDF=32
@@ -124,7 +132,9 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=30.0
+  LAMBDA_CX=25.0
+  LAMBDA_L2=100.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -136,7 +146,9 @@ case ${CLASS} in
 'skeleton_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=256
+  NENCODE=10
+  FEW_SIZE=30
+  BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -152,7 +164,9 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=0.0
+  LAMBDA_CX=25.0
+  LAMBDA_L2=100.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -163,6 +177,8 @@ case ${CLASS} in
   'skeleton_gray_texture')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=10
+  FEW_SIZE=30
   BATCH_SIZE=128
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -179,7 +195,9 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_CX=25.0
+  LAMBDA_L2=100.0
+  LAMBDA_L1_B=10.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -196,7 +214,6 @@ esac
 
 DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
-
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
@@ -215,6 +232,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   ${USE_ATTENTION} \
   ${USE_SPECTRAL_NORM_G} \
   ${USE_SPECTRAL_NORM_D} \
+  --nencode ${NENCODE} \
+  --few_size ${FEW_SIZE} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \
@@ -230,6 +249,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
+  --lambda_CX ${LAMBDA_CX} \
+  --lambda_L2 ${LAMBDA_L2} \
   --lambda_L1_B ${LAMBDA_L1_B} \
   --where_add ${WHERE_ADD} \
   --conditional_D ${CONDITIONAL_D} \

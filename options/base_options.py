@@ -26,7 +26,9 @@ class BaseOptions():
         parser.add_argument('--output_nc', type=int, default=3,
                             help='# of output image channels')
         parser.add_argument('--nencode', type=int, default=4,
-                            help='# of image(s) for encoder')
+                            help='# of image(s) for encoder, must smaller or equal than few_size')
+        parser.add_argument('--few_size', type=int, default=10,
+                            help='complete set size for few shot')
         parser.add_argument('--nz', type=int, default=8,
                             help='# latent vector')
         parser.add_argument('--nef', type=int, default=64,
@@ -65,6 +67,8 @@ class BaseOptions():
                             help='if specified, do not flip the images for data argumentation')
 
         # models
+        parser.add_argument('--vgg', type=str, default='./models/vgg19-dcbb9e9d.pth',
+                            help='path to vgg pre-trained model')
         parser.add_argument('--num_Ds', type=int, default=2,
                             help='number of Discrminators')
         parser.add_argument('--gan_mode', type=str,
