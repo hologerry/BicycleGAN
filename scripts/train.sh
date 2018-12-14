@@ -100,7 +100,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=0.0
+  LAMBDA_L1_B=50.0
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
@@ -133,7 +133,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=10.0
+  LAMBDA_L1_B=20.0
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
@@ -166,7 +166,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_L1_B=50.0
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
@@ -198,7 +198,7 @@ case ${CLASS} in
   NET_D2='basic_64_multi'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=10.0
+  LAMBDA_L1_B=20.0
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
