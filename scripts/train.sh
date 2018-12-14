@@ -249,7 +249,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --netG ${NET_G} \
   --netE ${NET_E} \
   --netD ${NET_D} \
-  --netD2 ${NET_D2} \
+  --netD_B ${NET_D2} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \

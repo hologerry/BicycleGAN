@@ -58,7 +58,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --netG ${NET_G} \
   --netE ${NET_E} \
   --netD ${NET_D} \
-  --netD2 ${NET_D2} \
+  --netD_B ${NET_D2} \
   --dataset_mode ${DATASET_MODE} \
   --num_test ${NUM_TEST} \
   --no_flip
