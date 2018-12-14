@@ -32,7 +32,7 @@ USE_ATTENTION='--use_attention'
 WHERE_ADD='all'
 CONDITIONAL_D='--conditional_D'
 
-NUM_TEST=1000
+NUM_TEST=3000
 
 # misc
 GPU_ID=$1   # gpu id

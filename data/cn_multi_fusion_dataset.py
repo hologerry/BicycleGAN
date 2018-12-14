@@ -23,6 +23,7 @@ class CnMultiFusionDataset(BaseDataset):
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
         # self.chars = list(range(639))
         # guarantee consistent for test
+        # so just shuffle 639 once
         self.shuffled_gb639list = [79, 279, 633, 632, 508, 378, 283, 462, 574, 251,
                                    267, 102, 181, 100, 415, 94, 261, 330, 501, 434,
                                    418, 160, 119, 207, 44, 493, 290, 590, 73, 613,

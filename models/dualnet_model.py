@@ -18,7 +18,7 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B', 'G_CX']
+        self.loss_names = ['G_GAN', 'G_GAN2', 'D', 'D2', 'G_L1', 'G_L1_B', 'G_CX', 'G_MSE']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
@@ -54,6 +54,7 @@ class DualNetModel(BaseModel):
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+            self.criterionMSE = torch.nn.MSELoss()
             self.criterionZ = torch.nn.L1Loss()
 
             # Contextual Loss
@@ -176,7 +177,13 @@ class DualNetModel(BaseModel):
         else:
             self.loss_G_L1 = 0.0
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B + self.loss_G_CX
+        if self.opt.lambda_L2 > 0.0:
+            self.loss_G_MSE = self.criterionMSE(self.fake_C, self.real_C) * self.opt.lambda_L2
+        else:
+            self.loss_G_MSE = 0.0
+
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN2 + self.loss_G_L1 + self.loss_G_L1_B \
+            + self.loss_G_CX + self.loss_G_MSE
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):
