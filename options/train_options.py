@@ -50,22 +50,20 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_decay_iters', type=int, default=100,
                             help='multiply by a gamma every lr_decay_iters iterations')
         # lambda parameters
-        parser.add_argument('--lambda_L1', type=float,
-                            default=10.0, help='(dualnet) model weight for |C-G(A, E(Cs))|')
-        parser.add_argument('--lambda_L1_B', type=float,
-                            default=10.0, help='dualnet model weight for |B-gray(G(A, E(Cs)))|')
+        parser.add_argument('--lambda_L1', type=float, default=10.0,
+                            help='(dualnet) model weight for |C-G(A, E(Cs))|')
+        parser.add_argument('--lambda_L1_B', type=float, default=10.0,
+                            help='dualnet model weight for |B-gray(G(A, E(Cs)))|')
         parser.add_argument('--lambda_CX', type=float, default=5.0,
                             help='weight for contextual loss')
-        parser.add_argument('--lambda_L2', type=float,
-                            default=0.0, help='weight for mse(B-G(A, E(B)))')
-        parser.add_argument('--lambda_GAN', type=float,
-                            default=1.0, help='weight on D loss. D(G(A, E(B)))')
-        parser.add_argument('--lambda_GAN2', type=float, 
-                            default=1.0, help='weight on D2 loss, D(G(A, random_z))')
-        parser.add_argument('--use_same_D', action='store_true',
-                            help='if two Ds share the weights or not')
+        parser.add_argument('--lambda_CX_B', type=float, default=5.0,
+                            help='weight for contextual loss on B')
+        parser.add_argument('--lambda_L2', type=float, default=0.0,
+                            help='weight for mse(B-G(A, E(B)))')
+        parser.add_argument('--lambda_GAN', type=float, default=1.0,
+                            help='weight on D loss. D(G(C, E(C)))')
+        parser.add_argument('--lambda_GAN_B', type=float, default=1.0,
+                            help='weight on D (for B) loss, D(G(B, E(B)))')
 
-        parser.add_argument('--stage1_epoch', type=int, default=0,
-                            help='train stage1 only')
         self.isTrain = True
         return parser
