@@ -258,7 +258,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
   --where_add ${WHERE_ADD} \
-  --conditional_D ${CONDITIONAL_D} \
+  ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \
   --black_epoch_freq ${BLACK_EPOCH} \
   --display_freq ${DISPLAY_FREQ}
