@@ -26,7 +26,7 @@ class DualNetModel(BaseModel):
         # DualNet model only support AtoC now, BtoC and AtoB need to do
         # BicycleGAN model supports all
         assert(self.dirsection == 'AtoC')
-        self.visual_names = ['real_A', 'real_B', 'fake_B', 'real_C', 'fake_C']
+        self.visual_names = ['real_A', 'real_B', 'fake_B', 'real_C', 'fake_C', 'masked_fake']
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         # D for color
@@ -135,11 +135,12 @@ class DualNetModel(BaseModel):
         score_map = netD(fake_data.detach())
         # r means region
         if self.opt.mask_operation:
-            masked_fake_data, real_data_r, fake_data_r, real_r, fake_r = self.proposal(score_map,
-                                                                                       real_data, fake_data, real, fake)
+            masked_fake_data, masked_fake, real_data_r, fake_data_r, real_r, fake_r \
+                = self.proposal(score_map, real_data, fake_data, real, fake)
         else:
             real_data_r, fake_data_r, real_r, fake_r = self.proposal(score_map, real_data, fake_data, real, fake)
 
+        self.masked_fake = masked_fake
         # print("masked fake data size", masked_fake_data.size())
         pred_fake = netR(masked_fake_data.detach())
         pred_real = netR(real_data)

@@ -808,7 +808,7 @@ class Proposal(nn.Module):
         self.region_h = opt.region_height
         self.stride = 1
         # using 5 layers PatchGAN
-        self.receptive_field = 20
+        self.receptive_field = 32
         self.roi_align = RoIAlign(self.region_h, self.region_w, transform_fpcoor=True)
         # use mask operation or not
         self.mask_op = opt.mask_operation
@@ -841,13 +841,18 @@ class Proposal(nn.Module):
         ax_transform = ax_tmp[:, :2] * _img_stride + self.receptive_field
         return ax_transform.int()
 
-    def _mask_operation(self, real_data, fake_data, ax):
+    def _mask_operation(self, real_data, fake_data, real, fake, ax):
         mask = torch.zeros(real_data.size(0), real_data.size(1), real_data.size(2), real_data.size(3)).cuda()
         for i in range(real_data.size(0)):
             x, y = ax[i, :]
             mask[i, :, x:x + self.receptive_field, y:y + self.receptive_field] = 1
         masked_fake_data = fake_data * mask + real_data * (1 - mask)
-        return masked_fake_data
+        mask = torch.zeros(real.size(0), real.size(1), real.size(2), real.size(3)).cuda()
+        for i in range(real.size(0)):
+            x, y = ax[i, :]
+            mask[i, :, x:x + self.receptive_field, y:y + self.receptive_field] = 1
+        masked_fake = fake * mask + real * (1 - mask)
+        return masked_fake_data, masked_fake
 
     def forward(self, score_map, real_data, fake_data, real, fake):
         # print("score_map size", score_map.size())
@@ -876,7 +881,8 @@ class Proposal(nn.Module):
         real_r = torch.cat(real_r, dim=0)
         fake_r = torch.cat(fake_r, dim=0)
         if self.mask_op:
-            return self._mask_operation(real_data, fake_data, ax), real_data_r, fake_data_r, real_r, fake_r
+            masked_fake_data, masked_fake = self._mask_operation(real_data, fake_data, real, fake, ax)
+            return masked_fake_data, masked_fake, real_data_r, fake_data_r, real_r, fake_r
         else:
             return real_data_r, fake_data_r, real_r, fake_r
 
