@@ -84,7 +84,7 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
-  BATCH_SIZE=128
+  BATCH_SIZE=2
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -96,8 +96,9 @@ case ${CLASS} in
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=50.0
@@ -129,13 +130,14 @@ case ${CLASS} in
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=20.0
-  LAMBDA_CX=25.0
-  LAMBDA_CX_B=15.0
+  LAMBDA_CX=45.0
+  LAMBDA_CX_B=35.0
   LAMBDA_L2=100.0
   DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
@@ -162,8 +164,9 @@ case ${CLASS} in
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=50.0
@@ -194,8 +197,9 @@ case ${CLASS} in
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=20.0
@@ -250,6 +254,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --netE ${NET_E} \
   --netD ${NET_D} \
   --netD_B ${NET_D2} \
+  --netR ${NET_R} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \

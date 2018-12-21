@@ -32,7 +32,7 @@ for i, data in enumerate(islice(dataset, opt.num_test)):
     ABC_path = data['ABC_path'][0]
     file_name = ABC_path.split('/')[-1].split('.')[0]
     print('process input image %3.3d/%3.3d' % (i, opt.num_test))
-    real_in, fake_out, real_out = model.test()
+    real_in, fake_out_B, real_out_B, fake_out, real_out = model.test()
     images = [real_in, real_out, fake_out]
     names = ['input', 'ground_truth', 'encoded']
 

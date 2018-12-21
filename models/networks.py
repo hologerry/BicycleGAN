@@ -2,9 +2,10 @@ import functools
 
 import torch
 import torch.nn as nn
-from torch.nn import init
-from torch.nn import Parameter
 import torch.nn.functional as F
+
+from roi_align.roi_align import RoIAlign
+from torch.nn import Parameter, init
 from torch.optim import lr_scheduler
 
 ###############################################################################
@@ -91,7 +92,7 @@ def get_non_linearity(layer_type='relu'):
 
 
 def get_self_attention_layer(in_dim):
-    self_attn_layer = Self_Attention(in_dim)
+    self_attn_layer = SelfAttention(in_dim)
     return self_attn_layer
 
 
@@ -176,6 +177,28 @@ def define_D(input_nc, ndf, netD,
     return init_net(net, init_type, gpu_ids)
 
 
+def define_R(input_nc, ndf, netR, norm='instance', nl='lrelu', use_spectral_norm=False,
+             use_sigmoid=False, init_type='xavier', gpu_ids=[]):
+    net = None
+    norm_layer = get_norm_layer(layer_type=norm)
+    nl = 'lrelu'
+    nl_layer = get_non_linearity(layer_type=nl)
+
+    if netR == 'basic_64':
+        net = R_NLayers(input_nc, ndf, n_layers=4, norm_layer=norm_layer,
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+    elif netR == 'basic_128':
+        net = R_NLayers(input_nc, ndf, n_layers=5, norm_layer=norm_layer,
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+    elif netR == 'basic_256':
+        net = R_NLayers(input_nc, ndf, n_layers=6, norm_layer=norm_layer,
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+    else:
+        raise NotImplementedError(
+            'Reviser model name [%s] is not recognized' % net)
+    return init_net(net, init_type, gpu_ids)
+
+
 def define_E(input_nc, output_nc, nef, netE,
              norm='batch', nl='lrelu',
              init_type='xavier', gpu_ids=[], vaeLike=False):
@@ -250,8 +273,8 @@ class D_NLayersMulti(nn.Module):
             layers = self.get_layers(
                 input_nc, ndf, n_layers, norm_layer, use_sigmoid, use_spectral_norm)
             self.model.append(nn.Sequential(*layers))
-            self.down = nn.AvgPool2d(3, stride=2, padding=[
-                                     1, 1], count_include_pad=False)
+
+            self.down = nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)
             for i in range(num_D - 1):
                 ndf_i = int(round(ndf / (2**(i + 1))))
                 layers = self.get_layers(
@@ -394,10 +417,65 @@ class D_NLayers(nn.Module):
             sequence += [norm_layer(ndf * nf_mult)]
         sequence += [nl_layer()]
         if use_spectral_norm:
-            sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult, 1, kernel_size=4,
+            sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw,
                                       stride=1, padding=0, bias=use_bias))]
         else:
-            sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=4,
+            sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw,
+                                   stride=1, padding=0, bias=use_bias)]
+
+        if use_sigmoid:
+            sequence += [nn.Sigmoid()]
+
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input):
+        output = self.model(input)
+        return output
+
+
+class R_NLayers(nn.Module):
+    def __init__(self, input_nc=3, ndf=64, n_layers=3, use_spectral_norm=False,
+                 norm_layer=None, nl_layer=None, use_sigmoid=False):
+        super(R_NLayers, self).__init__()
+
+        kw, padw, use_bias = 3, 1, True
+        # st()
+        if use_spectral_norm:
+            sequence = [SpectralNorm(nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                                     stride=2, padding=padw, bias=use_bias))]
+        else:
+            sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw,
+                                  stride=2, padding=padw, bias=use_bias)]
+        sequence += [nl_layer()]
+
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, n_layers):
+            nf_mult_prev = nf_mult
+            nf_mult = min(2**n, 8)
+            if use_spectral_norm:
+                sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                          kernel_size=kw, stride=2, padding=padw, bias=use_bias))]
+            else:
+                sequence += [nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                                       kernel_size=kw, stride=2, padding=padw, bias=use_bias)]
+            if norm_layer is not None:
+                sequence += [norm_layer(ndf * nf_mult)]
+            sequence += [nl_layer()]
+
+        nf_mult_prev = nf_mult
+        nf_mult = min(2**n_layers, 8)
+        sequence += [
+            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+                      kernel_size=kw, stride=1, padding=padw, bias=use_bias)]
+        if norm_layer is not None:
+            sequence += [norm_layer(ndf * nf_mult)]
+        sequence += [nl_layer()]
+        if use_spectral_norm:
+            sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw,
+                                      stride=1, padding=0, bias=use_bias))]
+        else:
+            sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw,
                                    stride=1, padding=0, bias=use_bias)]
 
         if use_sigmoid:
@@ -511,6 +589,7 @@ class CXLoss(nn.Module):
 
     def calc_relative_distances(self, raw_dist, axis=1):
         epsilon = 1e-5
+        # [0] means get the value, torch min will return the index as well
         div = torch.min(raw_dist, dim=axis, keepdim=True)[0]
         relative_dist = raw_dist / (div + epsilon)
         return relative_dist
@@ -719,12 +798,94 @@ class SpectralNorm(nn.Module):
         return self.module.forward(*args)
 
 
+# Proposel module return a masked fake (masked with distriminative region) from DRPAN paper
+class Proposal(nn.Module):
+    def __init__(self, opt):
+        super(Proposal, self).__init__()
+        self.window_w = opt.window_width
+        self.window_h = opt.window_height
+        self.region_w = opt.region_width
+        self.region_h = opt.region_height
+        self.stride = 1
+        # using 5 layers PatchGAN
+        self.receptive_field = 20
+        self.roi_align = RoIAlign(self.region_h, self.region_w, transform_fpcoor=True)
+        # use mask operation or not
+        self.mask_op = opt.mask_operation
+
+    def _localize(self, score_map, input):
+        """
+        width range: (feature_width - w_width) / stride + 1
+        :param score_map: produced by Patch Discriminator
+        :param input: real data  N6HW
+        :return: location coordinates x, y
+        """
+        batch_size = score_map.size(0)
+        ax_tmp = torch.zeros(batch_size, 3, dtype=torch.int)  # x, y, score
+        proposal_height = (score_map.size(2) - self.window_h) // self.stride + 1
+        proposal_width = (score_map.size(3) - self.window_w) // self.stride + 1
+
+        print("proposal height", proposal_height)
+        print("region width", self.region_w)
+
+        for n in range(batch_size):
+            for i in range(proposal_width):
+                for j in range(proposal_height):
+                    _x, _y = i * self.stride, j * self.stride
+                    region_score = score_map[n, :, _x:_x + self.stride, _y:_y + self.stride].mean()
+                    if ax_tmp[n][2] < region_score.item():
+                        ax_tmp[n] = torch.tensor([_x, _y, region_score])
+
+        _img_stride = (input.size(2) - self.receptive_field) // score_map.size(2)
+        ax_transform = ax_tmp[:, :2] * _img_stride + self.receptive_field
+        return ax_transform
+
+    def _mask_operation(self, real, fake, ax):
+        mask = torch.zeros(real.size(0), real.size(1), real.size(2), real.size(3)).cuda()
+        for i in range(real.size(0)):
+            x, y = ax[i, :]
+            mask[i, :, x:x + self.receptive_field, y:y + self.receptive_field] = 1
+        masked_fake_data = fake * mask + real * (1 - mask)
+        return masked_fake_data
+
+    def forward(self, score_map, real_data, fake_data, real, fake):
+        print("score_map size", score_map.size())
+        print("real size", real.size())
+        ax = self._localize(score_map, real_data)
+        # r means the discriminative region
+        # without r means the image size
+        # data means 6 channels
+        real_data_r, fake_data_r, real_r, fake_r = [], [], [], []
+        N = real.size(0)
+        for i in range(N):
+            x, y = ax[i, :]
+            # Takes all the image
+            # NOTICE the y, x order of roi_align
+            boxes = torch.tensor([[y, x, y + self.region_h, x + self.region_w]], dtype=torch.float32).cuda()
+            box_index = torch.tensor([0], dtype=torch.int32).cuda()
+            fake_r.append(self.roi_align(fake[i].view(-1, real.size(1), real.size(2), real.size(3)), boxes, box_index))
+            real_r.append(self.roi_align(real[i].view(-1, real.size(1), real.size(2), real.size(3)), boxes, box_index))
+            fake_data_r.append(self.roi_align(fake_data[i].view(-1, real.size(1), real.size(2), real.size(3)),
+                                              boxes, box_index))
+            real_data_r.append(self.roi_align(real_data[i].view(-1, real.size(1), real.size(2), real.size(3)),
+                                              boxes, box_index))
+
+        real_data_r = torch.cat(real_data_r, dim=0)
+        fake_data_r = torch.cat(fake_data_r, dim=0)
+        real_r = torch.cat(real_r, dim=0)
+        fake_r = torch.cat(fake_r, dim=0)
+        if self.mask_op:
+            return self._mask_operation(real_data, fake_data, ax), real_data_r, fake_data_r, real_r, fake_r
+        else:
+            return real_data_r, fake_data_r, real_r, fake_r
+
+
 # Self Attention module from self-attention gan
-class Self_Attention(nn.Module):
+class SelfAttention(nn.Module):
     """ Self attention Layer"""
 
     def __init__(self, in_dim, activation=None):
-        super(Self_Attention, self).__init__()
+        super(SelfAttention, self).__init__()
         self.chanel_in = in_dim
         self.activation = activation
 
