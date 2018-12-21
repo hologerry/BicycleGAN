@@ -821,36 +821,37 @@ class Proposal(nn.Module):
         :return: location coordinates x, y
         """
         batch_size = score_map.size(0)
-        ax_tmp = torch.zeros(batch_size, 3, dtype=torch.int)  # x, y, score
+        ax_tmp = torch.ones(batch_size, 3)  # x, y, score
         proposal_height = (score_map.size(2) - self.window_h) // self.stride + 1
         proposal_width = (score_map.size(3) - self.window_w) // self.stride + 1
 
-        print("proposal height", proposal_height)
-        print("region width", self.region_w)
+        # print("proposal height", proposal_height)
+        # print("region width", self.region_w)
 
+        # proposal means the score map region, to find the smallest value (most fake region)
         for n in range(batch_size):
             for i in range(proposal_width):
                 for j in range(proposal_height):
                     _x, _y = i * self.stride, j * self.stride
                     region_score = score_map[n, :, _x:_x + self.stride, _y:_y + self.stride].mean()
-                    if ax_tmp[n][2] < region_score.item():
+                    if ax_tmp[n][2] > region_score.item():
                         ax_tmp[n] = torch.tensor([_x, _y, region_score])
 
         _img_stride = (input.size(2) - self.receptive_field) // score_map.size(2)
         ax_transform = ax_tmp[:, :2] * _img_stride + self.receptive_field
-        return ax_transform
+        return ax_transform.int()
 
-    def _mask_operation(self, real, fake, ax):
-        mask = torch.zeros(real.size(0), real.size(1), real.size(2), real.size(3)).cuda()
-        for i in range(real.size(0)):
+    def _mask_operation(self, real_data, fake_data, ax):
+        mask = torch.zeros(real_data.size(0), real_data.size(1), real_data.size(2), real_data.size(3)).cuda()
+        for i in range(real_data.size(0)):
             x, y = ax[i, :]
             mask[i, :, x:x + self.receptive_field, y:y + self.receptive_field] = 1
-        masked_fake_data = fake * mask + real * (1 - mask)
+        masked_fake_data = fake_data * mask + real_data * (1 - mask)
         return masked_fake_data
 
     def forward(self, score_map, real_data, fake_data, real, fake):
-        print("score_map size", score_map.size())
-        print("real size", real.size())
+        # print("score_map size", score_map.size())
+        # print("real size", real.size())
         ax = self._localize(score_map, real_data)
         # r means the discriminative region
         # without r means the image size

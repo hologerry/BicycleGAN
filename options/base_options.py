@@ -52,7 +52,7 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=1,
+        parser.add_argument('--num_threads', default=50,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
@@ -104,9 +104,9 @@ class BaseOptions():
                             help='slide window size for discriminative region')
         parser.add_argument('--window_height', type=int, default=2,
                             help='slide window size for discriminative region')
-        parser.add_argument('--region_width', type=int, default=20,
+        parser.add_argument('--region_width', type=int, default=32,
                             help='discriminative region width')
-        parser.add_argument('--region_height', type=int, default=20,
+        parser.add_argument('--region_height', type=int, default=32,
                             help='discriminative region height')
         parser.add_argument('--mask_operation', type=bool, default=True,
                             help='use mask operation or not')

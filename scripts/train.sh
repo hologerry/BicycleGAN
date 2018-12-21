@@ -84,7 +84,7 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
-  BATCH_SIZE=2
+  BATCH_SIZE=100
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -118,7 +118,7 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
-  BATCH_SIZE=128
+  BATCH_SIZE=100
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -152,7 +152,7 @@ case ${CLASS} in
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=10
   FEW_SIZE=30
-  BATCH_SIZE=128
+  BATCH_SIZE=100
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -185,7 +185,7 @@ case ${CLASS} in
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=10
   FEW_SIZE=30
-  BATCH_SIZE=128
+  BATCH_SIZE=100
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
