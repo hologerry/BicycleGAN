@@ -41,6 +41,7 @@ USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
 
 BLACK_EPOCH=0
+VALIDATE_FREQ=0
 DISPLAY_FREQ=500
 
 MODEL='bicycle_gan'
@@ -83,7 +84,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  NENCODE=4
+  NENCODE=9
   BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -117,15 +118,15 @@ case ${CLASS} in
   CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  NENCODE=4
+  NENCODE=9
   BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=1000
-  NITER_DECAY=4000
-  SAVE_EPOCH=500
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=100
   NEF=64
   NGF=32
   NDF=32
@@ -144,6 +145,7 @@ case ${CLASS} in
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=50
   BLACK_EPOCH=0
   DISPLAY_FREQ=100
   ;;
@@ -266,5 +268,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \
   --black_epoch_freq ${BLACK_EPOCH} \
+  --validate_freq ${VALIDATE_FREQ} \
   --display_freq ${DISPLAY_FREQ}
 

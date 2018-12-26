@@ -33,10 +33,10 @@ for i, data in enumerate(islice(dataset, opt.num_test)):
     file_name = ABC_path.split('/')[-1].split('.')[0]
     print('process input image %3.3d/%3.3d' % (i, opt.num_test))
     real_in, fake_out_B, real_out_B, fake_out, real_out = model.test()
-    images = [real_in, real_out, fake_out]
-    names = ['input', 'ground_truth', 'encoded']
+    images = [real_out, fake_out]
+    names = ['ground_truth', 'encoded']
 
     img_path = file_name
-    save_images(webpage, images, names, img_path, aspect_ratio=opt.aspect_ratio, width=opt.fineSize)
+    save_images(images, names, img_path, webpage=webpage, aspect_ratio=opt.aspect_ratio, width=opt.fineSize)
 
 webpage.save()

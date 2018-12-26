@@ -871,8 +871,8 @@ class Proposal(nn.Module):
             box_index = torch.tensor([0], dtype=torch.int32).cuda()
             fake_r.append(self.roi_align(fake[i].view(-1, real.size(1), real.size(2), real.size(3)), boxes, box_index))
             real_r.append(self.roi_align(real[i].view(-1, real.size(1), real.size(2), real.size(3)), boxes, box_index))
-            fake_data_r.append(self.roi_align(fake_data[i].view(-1, real.size(1), real.size(2), real.size(3)),
-                                              boxes, box_index))
+            fake_data_r.append(self.roi_align(fake_data[i].view(-1, real_data.size(1), real_data.size(2),
+                                                                real_data.size(3)), boxes, box_index))
             real_data_r.append(self.roi_align(real_data[i].view(-1, real.size(1), real.size(2), real.size(3)),
                                               boxes, box_index))
 

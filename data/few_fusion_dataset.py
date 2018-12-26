@@ -17,8 +17,8 @@ class FewFusionDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
-        assert(self.opt.nencode == 4)
-        self.few_alphas = ['0', '1', '2', '3', '4']
+        self.few_alphas = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
+        assert(self.opt.nencode == len(self.few_alphas))
 
     def __getitem__(self, index):
         ABC_path = self.ABC_paths[index]

@@ -27,6 +27,8 @@ class TrainOptions(BaseOptions):
                             help='frequency of saving checkpoints at the end of epochs')
         parser.add_argument('--black_epoch_freq', type=int, default=0,
                             help='frequency of black epoch')
+        parser.add_argument('--validate_freq', type=int, default=0,
+                            help='frequency of log out all test result')
         parser.add_argument('--continue_train', action='store_true',
                             help='continue training: load the latest model')
         parser.add_argument('--epoch_count', type=int, default=1,
