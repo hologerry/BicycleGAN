@@ -14,15 +14,14 @@ if __name__ == '__main__':
     dataset_size = len(data_loader)
     print('#training images = %d' % dataset_size)
 
-    validate_opt = opt
-    validate_opt.phase = 'val'
-    validate_opt.num_threads = 1   # test code only supports num_threads=1
-    validate_opt.batch_size = 1   # test code only supports batch_size=1
-    validate_opt.serial_batches = True  # no shuffle
-    val_data_loader = CreateDataLoader(opt)
-    val_dataset = val_data_loader.load_data()
-    val_dataset_size = len(val_data_loader)
-    print('#validation images = %d' % val_dataset_size)
+    if opt.validate_freq > 0:
+        validate_opt = opt
+        validate_opt.phase = 'val'
+        validate_opt.serial_batches = True  # no shuffle
+        val_data_loader = CreateDataLoader(opt)
+        val_dataset = val_data_loader.load_data()
+        val_dataset_size = len(val_data_loader)
+        print('#validation images = %d' % val_dataset_size)
 
     model = create_model(opt)
     model.setup(opt)
@@ -34,7 +33,6 @@ if __name__ == '__main__':
         iter_data_time = time.time()
         epoch_iter = 0
 
-        model.train()
         for i, data in enumerate(dataset):
             iter_start_time = time.time()
             if total_steps % opt.print_freq == 0:
@@ -76,17 +74,21 @@ if __name__ == '__main__':
             model.save_networks(epoch)
 
         if opt.validate_freq > 0 and epoch % opt.validate_freq == 0:
-            model.eval()
+            eval_model = model.eval()
             for i, data in enumerate(val_dataset):
-                model.set_input(data)
-                ABC_path = data['ABC_path'][0]
-                file_name = ABC_path.split('/')[-1].split('.')[0]
-                real_in, fake_out_B, real_out_B, fake_out, real_out = model.test()
-                images = [real_out, fake_out]
-                names = ['ground_truth', 'encoded']
+                eval_model.set_input(data)
+                real_in, fake_out_B, real_out_B, fake_out, real_out = eval_model.test()
+                for i in range(opt.batch_size):
+                    ABC_path = data['ABC_path'][i]
+                    file_name = ABC_path.split('/')[-1].split('.')[0]
+                    real_out_i = real_out[i].unsqueeze(0)
+                    fake_out_i = fake_out[i].unsqueeze(0)
+                    images = [real_out, fake_out]
+                    names = ['ground_truth', 'encoded']
 
-                img_path = str(epoch) + '_' + file_name
-                save_images(images, names, img_path, opt=validate_opt, aspect_ratio=1.0, width=validate_opt.fineSize)
+                    img_path = str(epoch) + '_' + file_name
+                    save_images(images, names, img_path, opt=validate_opt, aspect_ratio=1.0,
+                                width=validate_opt.fineSize)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
