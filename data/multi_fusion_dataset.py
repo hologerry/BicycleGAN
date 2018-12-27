@@ -31,30 +31,25 @@ class MultiFusionDataset(BaseDataset):
         Shape_paths = []
         Colors = []
         Color_paths = []
-        if self.opt.nencode > 1:
-            ABC_path_list = list(ABC_path)
-            # for shapes
-            random.shuffle(self.alphabets)
-            chars_random = self.alphabets[:self.opt.nencode]
-            for char in chars_random:
-                ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
-                s_path = "".join(ABC_path_list)
-                Shape_paths.append(s_path)
-                Shapes.append(Image.open(s_path).convert('RGB').crop((w, 0, w+w, h)))
-            # for colors
-            random.shuffle(self.alphabets)
-            chars_random = self.alphabets[:self.opt.nencode]
-            for char in chars_random:
-                ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
-                c_path = "".join(ABC_path_list)
-                Color_paths.append(c_path)
-                Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
-        else:
-            Shapes.append(B)
-            Shape_paths.append(ABC_path)
-            Colors.append(C)
-            Color_paths.append(ABC_path)
+        ABC_path_list = list(ABC_path)
+        # for shapes
+        random.shuffle(self.alphabets)
+        chars_random = self.alphabets[:self.opt.nencode]
+        for char in chars_random:
+            ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
+            s_path = "".join(ABC_path_list)
+            Shape_paths.append(s_path)
+            Shapes.append(Image.open(s_path).convert('RGB').crop((w, 0, w+w, h)))
+        # for colors
+        random.shuffle(self.alphabets)
+        chars_random = self.alphabets[:self.opt.nencode]
+        for char in chars_random:
+            ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
+            c_path = "".join(ABC_path_list)
+            Color_paths.append(c_path)
+            Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
+
         A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient

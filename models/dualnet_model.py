@@ -35,6 +35,7 @@ class DualNetModel(BaseModel):
         use_D_B = opt.isTrain and opt.lambda_GAN_B > 0.0
         # use_D_B = False
         use_R = opt.isTrain and opt.lambda_GAN_R > 0.0
+        use_R = False
 
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
@@ -75,7 +76,8 @@ class DualNetModel(BaseModel):
             self.vgg_layers = ['conv3_2', 'conv4_2']
 
             # Discriminative region proposal
-            self.proposal = networks.Proposal(opt)
+            if self.use_R:
+                self.proposal = networks.Proposal(opt)
 
             # initialize optimizers
             self.optimizers = []
@@ -141,6 +143,8 @@ class DualNetModel(BaseModel):
             real_data_r, fake_data_r, real_r, fake_r = self.proposal(score_map, real_data, fake_data, real, fake)
 
         self.masked_fake = masked_fake
+        self.real_r = real_r
+        self.fake_r = fake_r
         # print("masked fake data size", masked_fake_data.size())
         pred_fake = netR(masked_fake_data.detach())
         pred_real = netR(real_data)
@@ -195,6 +199,8 @@ class DualNetModel(BaseModel):
                 self.loss_G_CX += self.criterionCX(self.vgg_real_C[l], self.vgg_fake_C[l]) * self.opt.lambda_CX
                 self.loss_G_CX_B += self.criterionCX(self.vgg_real_B[l], self.vgg_fake_B[l]) * self.opt.lambda_CX_B
 
+        # 3, b region contextual loss
+
         # 4, L2 losss
         self.loss_G_MSE = 0.0
         if self.opt.lambda_L2 > 0.0:
@@ -240,6 +246,7 @@ class DualNetModel(BaseModel):
         self.update_G()
         self.update_D()
 
-        self.forward()
-        self.update_G()
-        self.update_R()
+        if self.use_R:
+            self.forward()
+            self.update_R()
+            self.update_G()
