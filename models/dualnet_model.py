@@ -18,7 +18,7 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'G_GAN_R', 'D', 'D_B', 'R']
+        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
@@ -26,7 +26,7 @@ class DualNetModel(BaseModel):
         # DualNet model only support AtoC now, BtoC and AtoB need to do
         # BicycleGAN model supports all
         assert(self.dirsection == 'AtoC')
-        self.visual_names = ['real_A', 'real_B', 'fake_B', 'real_C', 'fake_C', 'masked_fake']
+        self.visual_names = ['real_A', 'real_B', 'fake_B', 'real_C', 'fake_C']
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         # D for color
@@ -36,6 +36,7 @@ class DualNetModel(BaseModel):
         # use_D_B = False
         use_R = opt.isTrain and opt.lambda_GAN_R > 0.0
         use_R = False
+        self.use_R = use_R
 
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
@@ -113,6 +114,11 @@ class DualNetModel(BaseModel):
             self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
             return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C
 
+    def train(self):
+        for name in self.model_names:
+            model_name = 'net' + name
+            getattr(self, model_name).train()
+
     def forward(self):
         # generate fake_C
         self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
@@ -181,7 +187,8 @@ class DualNetModel(BaseModel):
         # 1, G(A) should fool D
         self.loss_G_GAN = self.backward_G_GAN(self.fake_data_C, self.netD, self.opt.lambda_GAN)
         self.loss_G_GAN_B = self.backward_G_GAN(self.fake_data_B, self.netD_B, self.opt.lambda_GAN_B)
-        self.loss_G_GAN_R = self.backward_G_GAN(self.fake_data_C, self.netR, self.opt.lambda_GAN_R)
+        if self.use_R:
+            self.loss_G_GAN_R = self.backward_G_GAN(self.fake_data_C, self.netR, self.opt.lambda_GAN_R)
 
         # 2, reconstruction |fake_C-real_C| |fake_B-real_B|
         self.loss_G_L1 = 0.0
@@ -236,7 +243,8 @@ class DualNetModel(BaseModel):
         # update dual net G
         self.set_requires_grad(self.netD, False)
         self.set_requires_grad(self.netD_B, False)
-        self.set_requires_grad(self.netR, False)
+        if self.use_R:
+            self.set_requires_grad(self.netR, False)
         self.optimizer_G.zero_grad()
         self.backward_G()
         self.optimizer_G.step()

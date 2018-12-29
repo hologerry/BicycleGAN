@@ -32,6 +32,7 @@ if __name__ == '__main__':
         epoch_start_time = time.time()
         iter_data_time = time.time()
         epoch_iter = 0
+        model.train()
 
         for i, data in enumerate(dataset):
             iter_start_time = time.time()
@@ -63,6 +64,7 @@ if __name__ == '__main__':
             if total_steps % opt.save_latest_freq == 0:
                 print('saving the latest model (epoch %d, total_steps %d)' %
                       (epoch, total_steps))
+                print("experiment name:", opt.name)
                 model.save_networks('latest')
 
             iter_data_time = time.time()
@@ -74,16 +76,19 @@ if __name__ == '__main__':
             model.save_networks(epoch)
 
         if opt.validate_freq > 0 and epoch % opt.validate_freq == 0:
-            eval_model = model.eval()
+            model.eval()
             for i, data in enumerate(val_dataset):
-                eval_model.set_input(data)
-                real_in, fake_out_B, real_out_B, fake_out, real_out = eval_model.test()
-                for i in range(opt.batch_size):
-                    ABC_path = data['ABC_path'][i]
-                    file_name = ABC_path.split('/')[-1].split('.')[0]
+                model.set_input(data)
+                real_in, fake_out_B, real_out_B, fake_out, real_out = model.test()
+                ABC_path = data['ABC_path']
+                # print("ABC_path len", len(ABC_path))
+                # last batch will be smaller than batch size
+                for i in range(len(ABC_path)):
+                    ABC_path_i = ABC_path[i]
+                    file_name = ABC_path_i.split('/')[-1].split('.')[0]
                     real_out_i = real_out[i].unsqueeze(0)
                     fake_out_i = fake_out[i].unsqueeze(0)
-                    images = [real_out, fake_out]
+                    images = [real_out_i, fake_out_i]
                     names = ['ground_truth', 'encoded']
 
                     img_path = str(epoch) + '_' + file_name

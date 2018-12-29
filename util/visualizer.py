@@ -17,6 +17,8 @@ def save_images(images, names, image_path, webpage=None, opt=None, aspect_ratio=
         ims, txts, links = [], [], []
     elif opt is not None:  # validation mode
         image_dir = os.path.join(opt.checkpoints_dir, opt.name, 'validation_logs')
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
 
     for label, im_data in zip(names, images):
         im = util.tensor2im(im_data)
