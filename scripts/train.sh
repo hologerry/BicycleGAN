@@ -84,7 +84,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  NENCODE=9
+  NENCODE=8
   BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -118,7 +118,7 @@ case ${CLASS} in
   CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  NENCODE=9
+  NENCODE=8
   BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -136,9 +136,9 @@ case ${CLASS} in
   NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=20.0
-  LAMBDA_CX=45.0
-  LAMBDA_CX_B=35.0
+  LAMBDA_L1_B=15.0
+  LAMBDA_CX=50.0
+  LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
   DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
