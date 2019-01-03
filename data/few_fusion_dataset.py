@@ -72,13 +72,11 @@ class FewFusionDataset(BaseDataset):
                 Color_paths.append(c_path)
                 Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
-        vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
         A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'Shapes': Shapes, 'Colors': Colors,
-                'ABC_path': ABC_path, 'Shape_paths': Shape_paths, 'Color_paths': Color_paths,
-                'vgg_Shapes': vgg_Shapes, 'vgg_Colors':vgg_Colors}
+                'ABC_path': ABC_path, 'Shape_paths': Shape_paths, 'Color_paths': Color_paths}
 
     def __len__(self):
         return len(self.ABC_paths)

@@ -3,7 +3,7 @@ import random
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, transform_fusion
+from data.base_dataset import BaseDataset, transform_fusion, transform_vgg
 from data.image_folder import make_dataset
 
 
@@ -44,11 +44,12 @@ class UnpairedFewFusionDataset(BaseDataset):
             Shapes.append(Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)))
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
-        A, B, C, Shapes, Colors = transform_vgg(self.opt, A, B, C, Shapes, Colors)
+        vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
+        A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'Shapes': Shapes, 'Colors': Colors,
-                'ABC_path': ABC_path, 'Style_paths': Style_paths}
+                'ABC_path': ABC_path, 'Style_paths': Style_paths, 'vgg_Shapes': vgg_Shapes, 'vgg_Colors':vgg_Colors}
 
     def __len__(self):
         return len(self.ABC_paths)
