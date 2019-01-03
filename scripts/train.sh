@@ -40,6 +40,8 @@ USE_SPECTRAL_NORM_G=''
 USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
 
+LR=0.0002
+
 BLACK_EPOCH=0
 VALIDATE_FREQ=0
 DISPLAY_FREQ=500
@@ -84,7 +86,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  NENCODE=8
+  NENCODE=4
   BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -118,7 +120,7 @@ case ${CLASS} in
   CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  NENCODE=8
+  NENCODE=4
   BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
@@ -148,6 +150,7 @@ case ${CLASS} in
   VALIDATE_FREQ=50
   BLACK_EPOCH=0
   DISPLAY_FREQ=100
+  LR=0.00002
   ;;
 'skeleton_gray_color')
   MODEL='dualnet'
@@ -269,5 +272,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   ${CONTINUE_TRAIN} \
   --black_epoch_freq ${BLACK_EPOCH} \
   --validate_freq ${VALIDATE_FREQ} \
-  --display_freq ${DISPLAY_FREQ}
+  --display_freq ${DISPLAY_FREQ} \
+  --lr ${LR}
 

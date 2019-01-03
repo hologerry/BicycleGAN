@@ -114,10 +114,23 @@ class DualNetModel(BaseModel):
             self.real_Colors = self.real_Shapes
             self.real_C = self.real_B
 
-    def test(self, encode=True):
+    def test(self):
         with torch.no_grad():
             self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
             return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C
+
+    def validate(self):
+        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
+                           'G_L1_val', 'G_L1_B_val']
+
+        with torch.no_grad():
+            self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
+            self.loss_G_L1_val = 0.0
+            self.loss_G_L1_B_val = 0.0
+            if self.opt.lambda_L1 > 0.0:
+                self.loss_G_L1_val = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
+                self.loss_G_L1_B_val = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
+                return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C
 
     def train(self):
         for name in self.model_names:
@@ -210,8 +223,6 @@ class DualNetModel(BaseModel):
                 # symmetric contextual loss
                 self.loss_G_CX += self.criterionCX(self.vgg_real_C[l], self.vgg_fake_C[l]) * self.opt.lambda_CX
                 self.loss_G_CX_B += self.criterionCX(self.vgg_real_B[l], self.vgg_fake_B[l]) * self.opt.lambda_CX_B
-
-        # 3, b region contextual loss
 
         # 4, L2 losss
         self.loss_G_MSE = 0.0

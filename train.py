@@ -79,7 +79,7 @@ if __name__ == '__main__':
             model.eval()
             for i, data in enumerate(val_dataset):
                 model.set_input(data)
-                real_in, fake_out_B, real_out_B, fake_out, real_out = model.test()
+                real_in, fake_out_B, real_out_B, fake_out, real_out = model.validate()
                 ABC_path = data['ABC_path']
                 # print("ABC_path len", len(ABC_path))
                 # last batch will be smaller than batch size
@@ -88,8 +88,10 @@ if __name__ == '__main__':
                     file_name = ABC_path_i.split('/')[-1].split('.')[0]
                     real_out_i = real_out[i].unsqueeze(0)
                     fake_out_i = fake_out[i].unsqueeze(0)
-                    images = [real_out_i, fake_out_i]
-                    names = ['ground_truth', 'encoded']
+                    real_out_B_i = real_out_B[i].unsqueeze(0)
+                    fake_out_B_i = fake_out_B[i].unsqueeze(0)
+                    images = [real_out_i, fake_out_i, real_out_B_i, fake_out_B_i]
+                    names = ['real', 'fake', 'real_B', 'fake_B']
 
                     img_path = str(epoch) + '_' + file_name
                     save_images(images, names, img_path, opt=validate_opt, aspect_ratio=1.0,
