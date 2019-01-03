@@ -1,15 +1,22 @@
 set -ex
+<<<<<<< HEAD
 # CiLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
 MODEL='Dualnet'
+=======
+# CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
+MODEL='dualnet'
+>>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
 CLASS=${1}
 GPU_ID=${2}
 
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
-PORT=10002
+
+PORT=9097
 
 NZ=16
-
+NENCODE=4
+FEW_SIZE=10
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
@@ -38,7 +45,10 @@ USE_SPECTRAL_NORM_G=''
 USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
 
+LR=0.0002
+
 BLACK_EPOCH=0
+VALIDATE_FREQ=0
 DISPLAY_FREQ=500
 
 MODEL='bicycle_gan'
@@ -79,25 +89,40 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'base_gray_color')
+<<<<<<< HEAD
   MODEL='dualnet3'
+=======
+  MODEL='dualnet'
+>>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=512
+  NENCODE=4
+  BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=50
-  NITER_DECAY=100
-  SAVE_EPOCH=10
+  NITER=10
+  NITER_DECAY=20
+  SAVE_EPOCH=2
   NEF=64
   NGF=32
   NDF=32
+<<<<<<< HEAD
   NET_G='dualnet3'
   NET_D='basic_64_multi'
   NET_D2='basic_64_multi'
+=======
+  NET_G='dualnet'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
+>>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=20.0
+  LAMBDA_L1_B=50.0
+  LAMBDA_CX=25.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_L2=100.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -106,37 +131,87 @@ case ${CLASS} in
   BLACK_EPOCH=0
   ;;
 'base_gray_texture')
+  DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
+  CLASS=$CLASS'_'$DATA_ID
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=128
+  NENCODE=4
+  BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=400
-  NITER_DECAY=600
-  SAVE_EPOCH=10
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=100
   NEF=64
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=30.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_CX=50.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_L2=100.0
+  DATASET_MODE='unpaired_few_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=50
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
+  LR=0.00002
+'base_gray_texture_unpaired')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
+  BATCH_SIZE=80
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=100
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
+  NET_E='resnet_64'
+  #LAMBDA_L1=100.0
+  #LAMBDA_L1_B=60.0
+  #LAMBDA_CX=50.0
+  #LAMBDA_CX_B=15.0
+  #LAMBDA_L2=100.0
+  LAMBDA_L1=0.0
+  LAMBDA_L1_B=0.0
+  LAMBDA_CX=0.0
+  LAMBDA_CX_B=0.0
+  LAMBDA_L2=0.0
   DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=50
   BLACK_EPOCH=0
   DISPLAY_FREQ=100
+  LR=0.00002
   ;;
 'skeleton_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=256
+  NENCODE=10
+  FEW_SIZE=30
+  BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -148,11 +223,15 @@ case ${CLASS} in
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
-  LAMBDA_L1_B=0.0
+  LAMBDA_L1_B=50.0
+  LAMBDA_CX=25.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_L2=100.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -163,7 +242,9 @@ case ${CLASS} in
   'skeleton_gray_texture')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=128
+  NENCODE=10
+  FEW_SIZE=30
+  BATCH_SIZE=80
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -175,11 +256,15 @@ case ${CLASS} in
   NGF=32
   NDF=32
   NET_G='dualnet'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=20.0
+  LAMBDA_CX=25.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_L2=100.0
   DATASET_MODE='cn_multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -196,7 +281,6 @@ esac
 
 DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
-
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
@@ -215,6 +299,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   ${USE_ATTENTION} \
   ${USE_SPECTRAL_NORM_G} \
   ${USE_SPECTRAL_NORM_D} \
+  --nencode ${NENCODE} \
+  --few_size ${FEW_SIZE} \
   --nz ${NZ} \
   --save_epoch_freq ${SAVE_EPOCH} \
   --input_nc ${INPUT_NC} \
@@ -226,14 +312,20 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --netG ${NET_G} \
   --netE ${NET_E} \
   --netD ${NET_D} \
-  --netD2 ${NET_D2} \
+  --netD_B ${NET_D2} \
+  --netR ${NET_R} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
   --lambda_L1_B ${LAMBDA_L1_B} \
+  --lambda_CX ${LAMBDA_CX} \
+  --lambda_CX_B ${LAMBDA_CX_B} \
+  --lambda_L2 ${LAMBDA_L2} \
   --where_add ${WHERE_ADD} \
-  --conditional_D ${CONDITIONAL_D} \
+  ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \
   --black_epoch_freq ${BLACK_EPOCH} \
-  --display_freq ${DISPLAY_FREQ}
+  --validate_freq ${VALIDATE_FREQ} \
+  --display_freq ${DISPLAY_FREQ} \
+  --lr ${LR}
 

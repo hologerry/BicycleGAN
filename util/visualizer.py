@@ -8,12 +8,17 @@ from scipy.misc import imresize
 
 
 # save image to the disk
-def save_images(webpage, images, names, image_path, aspect_ratio=1.0, width=256):
-    image_dir = webpage.get_image_dir()
+def save_images(images, names, image_path, webpage=None, opt=None, aspect_ratio=1.0, width=256):
     name = ntpath.basename(image_path)
 
-    webpage.add_header(name)
-    ims, txts, links = [], [], []
+    if webpage is not None:  # test mode
+        image_dir = webpage.get_image_dir()
+        webpage.add_header(name)
+        ims, txts, links = [], [], []
+    elif opt is not None:  # validation mode
+        image_dir = os.path.join(opt.checkpoints_dir, opt.name, 'validation_logs')
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
 
     for label, im_data in zip(names, images):
         im = util.tensor2im(im_data)
@@ -25,11 +30,13 @@ def save_images(webpage, images, names, image_path, aspect_ratio=1.0, width=256)
         if aspect_ratio < 1.0:
             im = imresize(im, (int(h / aspect_ratio), w), interp='bicubic')
         util.save_image(im, save_path)
+        if webpage is not None:
+            ims.append(image_name)
+            txts.append(label)
+            links.append(image_name)
 
-        ims.append(image_name)
-        txts.append(label)
-        links.append(image_name)
-    webpage.add_images(ims, txts, links, width=width)
+    if webpage is not None:
+        webpage.add_images(ims, txts, links, width=width)
 
 
 class Visualizer():

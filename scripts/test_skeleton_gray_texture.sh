@@ -1,20 +1,20 @@
 set -ex
 # models
-DATA_ID=$2
-RESULTS_DIR='./results/base_gray_texture_'${DATA_ID}
+RESULTS_DIR='./results/skeleton_gray_texture'
 MODEL='dualnet'
 
 
 # dataset
-CLASS='base_gray_texture_'${DATA_ID}
+CLASS='skeleton_gray_texture'
 
-PHASE='val'
+PHASE='test'
 
 DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
 FINE_SIZE=64
 INPUT_NC=3
-NENCODE=4
+NENCODE=10
+FEW_SIZE=10
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 NITER=30
@@ -28,12 +28,12 @@ NET_D='basic_64_multi'
 NET_D2='basic_64_multi'
 NET_E='resnet_64'
 LAMBDA_L1=20.0
-DATASET_MODE='few_fusion'  # NOTICE  train and test are different because of FEW
+DATASET_MODE='cn_multi_fusion'
 USE_ATTENTION='--use_attention'
 WHERE_ADD='all'
 CONDITIONAL_D='--conditional_D'
 
-NUM_TEST=1000
+NUM_TEST=10000
 
 # misc
 GPU_ID=$1   # gpu id
@@ -45,6 +45,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --results_dir ${RESULTS_DIR} \
   --checkpoints_dir ./pretrained_models/ \
   --nencode ${NENCODE} \
+  --few_size ${FEW_SIZE} \
   --name ${CLASS} \
   --phase ${PHASE} \
   --direction ${DIRECTION} \

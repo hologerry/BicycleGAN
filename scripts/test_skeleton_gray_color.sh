@@ -13,6 +13,8 @@ DIRECTION='AtoC' # 'AtoB' or 'BtoC'
 LOAD_SIZE=64
 FINE_SIZE=64
 INPUT_NC=3
+NENCODE=10
+FEW_SIZE=10
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 NITER=30
@@ -31,7 +33,7 @@ USE_ATTENTION='--use_attention'
 WHERE_ADD='all'
 CONDITIONAL_D='--conditional_D'
 
-NUM_TEST=10000
+NUM_TEST=2000
 
 # misc
 GPU_ID=$1   # gpu id
@@ -42,6 +44,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --dataroot ./datasets/${CLASS} \
   --results_dir ${RESULTS_DIR} \
   --checkpoints_dir ./pretrained_models/ \
+  --nencode ${NENCODE} \
+  --few_size ${FEW_SIZE} \
   --name ${CLASS} \
   --phase ${PHASE} \
   --direction ${DIRECTION} \
@@ -56,7 +60,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --netG ${NET_G} \
   --netE ${NET_E} \
   --netD ${NET_D} \
-  --netD2 ${NET_D2} \
+  --netD_B ${NET_D2} \
   --dataset_mode ${DATASET_MODE} \
   --num_test ${NUM_TEST} \
   --no_flip

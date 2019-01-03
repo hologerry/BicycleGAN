@@ -26,7 +26,9 @@ class BaseOptions():
         parser.add_argument('--output_nc', type=int, default=3,
                             help='# of output image channels')
         parser.add_argument('--nencode', type=int, default=4,
-                            help='# of image(s) for encoder')
+                            help='# of image(s) for encoder, must smaller or equal than few_size')
+        parser.add_argument('--few_size', type=int, default=10,
+                            help='complete set size for few shot')
         parser.add_argument('--nz', type=int, default=8,
                             help='# latent vector')
         parser.add_argument('--nef', type=int, default=64,
@@ -50,13 +52,13 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=64,
+        parser.add_argument('--num_threads', default=40,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
         parser.add_argument('--serial_batches', action='store_true',
                             help='if true, takes images in order to make batches, otherwise takes them randomly')
-        parser.add_argument('--use_dropout', action='store_false',
+        parser.add_argument('--use_dropout', action='store_true',
                             help='use dropout for the generator')
         parser.add_argument('--max_dataset_size', type=int, default=float("inf"),
                             help='Maximum number of samples allowed per dataset.' +
@@ -65,14 +67,19 @@ class BaseOptions():
                             help='if specified, do not flip the images for data argumentation')
 
         # models
+        parser.add_argument('--vgg', type=str, default='./models/vgg19-dcbb9e9d.pth',
+                            help='path to vgg pre-trained model, '
+                            + 'download it from https://download.pytorch.org/models/vgg19-dcbb9e9d.pth')
         parser.add_argument('--num_Ds', type=int, default=2,
                             help='number of Discrminators')
         parser.add_argument('--gan_mode', type=str,
                             default='lsgan', help='dcgan|lsgan')
         parser.add_argument('--netD', type=str, default='basic_256_multi',
                             help='selects model to use for netD')
-        parser.add_argument('--netD2', type=str, default='basic_256_multi',
+        parser.add_argument('--netD_B', type=str, default='basic_256_multi',
                             help='selects model to use for netD')
+        parser.add_argument('--netR',  type=str, default='basic_256',
+                            help='selects model to use for netR')
         parser.add_argument('--netG', type=str, default='unet_256',
                             help='selects model to use for netG')
         parser.add_argument('--netE', type=str, default='resnet_256',
@@ -89,6 +96,20 @@ class BaseOptions():
                             help='if use spectral normalization in G')
         parser.add_argument('--use_spectral_norm_D', action='store_true',
                             help='if use spectral normalization in D')
+
+        # discirminative region options
+        parser.add_argument('--use_reviser', action='store_true',
+                            help='if use an additional reviser (from DRPAN paper)')
+        parser.add_argument('--window_width', type=int, default=2,
+                            help='slide window size for discriminative region')
+        parser.add_argument('--window_height', type=int, default=2,
+                            help='slide window size for discriminative region')
+        parser.add_argument('--region_width', type=int, default=32,
+                            help='discriminative region width')
+        parser.add_argument('--region_height', type=int, default=32,
+                            help='discriminative region height')
+        parser.add_argument('--mask_operation', type=bool, default=True,
+                            help='use mask operation or not')
 
         # extra parameters
         parser.add_argument('--where_add', type=str, default='all',

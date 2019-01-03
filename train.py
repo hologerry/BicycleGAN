@@ -3,7 +3,7 @@ import time
 from data import CreateDataLoader
 from models import create_model
 from options.train_options import TrainOptions
-from util.visualizer import Visualizer
+from util.visualizer import Visualizer, save_images
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
@@ -11,6 +11,15 @@ if __name__ == '__main__':
     dataset = data_loader.load_data()
     dataset_size = len(data_loader)
     print('#training images = %d' % dataset_size)
+
+    if opt.validate_freq > 0:
+        validate_opt = opt
+        validate_opt.phase = 'val'
+        validate_opt.serial_batches = True  # no shuffle
+        val_data_loader = CreateDataLoader(opt)
+        val_dataset = val_data_loader.load_data()
+        val_dataset_size = len(val_data_loader)
+        print('#validation images = %d' % val_dataset_size)
 
     model = create_model(opt)
     model.setup(opt)
@@ -21,6 +30,7 @@ if __name__ == '__main__':
         epoch_start_time = time.time()
         iter_data_time = time.time()
         epoch_iter = 0
+        model.train()
 
         for i, data in enumerate(dataset):
             iter_start_time = time.time()
@@ -36,10 +46,14 @@ if __name__ == '__main__':
             if not model.is_train():
                 continue
 
+<<<<<<< HEAD
             if opt.stage1_epoch != 0 and epoch < opt.stage1_epoch:
                 model.optimize_parameters_1()
             else:
                 model.optimize_parameters()
+=======
+            model.optimize_parameters()
+>>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
 
             if total_steps % opt.display_freq == 0:
                 save_result = total_steps % opt.update_html_freq == 0
@@ -55,14 +69,48 @@ if __name__ == '__main__':
             if total_steps % opt.save_latest_freq == 0:
                 print('saving the latest model (epoch %d, total_steps %d)' %
                       (epoch, total_steps))
+                print("experiment name:", opt.name)
                 model.save_networks('latest')
 
             iter_data_time = time.time()
+
         if epoch % opt.save_epoch_freq == 0:
             print('saving the model at the end of epoch %d, iters %d' %
                   (epoch, total_steps))
             model.save_networks('latest')
             model.save_networks(epoch)
+
+        if opt.validate_freq > 0 and epoch % opt.validate_freq == 0:
+            model.eval()
+            validation_loss_B = 0.0
+            validation_loss_C = 0.0
+            b = 0
+            for i, data in enumerate(val_dataset):
+                model.set_input(data)
+                real_in, fake_out_B, real_out_B, fake_out, real_out, val_loss_B, val_loss_C = model.validate()
+                validation_loss_B += val_loss_B
+                validation_loss_C += val_loss_C
+                b += 1
+                ABC_path = data['ABC_path']
+                # print("ABC_path len", len(ABC_path))
+                # last batch will be smaller than batch size
+                for i in range(len(ABC_path)):
+                    ABC_path_i = ABC_path[i]
+                    file_name = ABC_path_i.split('/')[-1].split('.')[0]
+                    real_out_i = real_out[i].unsqueeze(0)
+                    fake_out_i = fake_out[i].unsqueeze(0)
+                    real_out_B_i = real_out_B[i].unsqueeze(0)
+                    fake_out_B_i = fake_out_B[i].unsqueeze(0)
+                    images = [real_out_i, fake_out_i, real_out_B_i, fake_out_B_i]
+                    names = ['real', 'fake', 'real_B', 'fake_B']
+
+                    img_path = str(epoch) + '_' + file_name
+                    save_images(images, names, img_path, opt=validate_opt, aspect_ratio=1.0,
+                                width=validate_opt.fineSize)
+            validation_loss_B /= b
+            validation_loss_C /= b
+            print('End of epoch %d / %d \t Validation loss: L1_B: %f, L1_C: %f' %
+                  (epoch, opt.niter + opt.niter_decay, validation_loss_B, validation_loss_C))
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
