@@ -3,7 +3,7 @@ import random
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, transform_fusion
+from data.base_dataset import BaseDataset, transform_fusion, transform_vgg
 from data.image_folder import make_dataset
 
 
@@ -78,11 +78,14 @@ class FewFusionDataset(BaseDataset):
             Shape_paths.append(ABC_path)
             Colors.append(C)
             Color_paths.append(ABC_path)
+
+        vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
         A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'Shapes': Shapes, 'Colors': Colors,
-                'ABC_path': ABC_path, 'Shape_paths': Shape_paths, 'Color_paths': Color_paths}
+                'ABC_path': ABC_path, 'Shape_paths': Shape_paths, 'Color_paths': Color_paths,
+                'vgg_Shapes': vgg_Shapes, 'vgg_Colors':vgg_Colors}
 
     def __len__(self):
         return len(self.ABC_paths)

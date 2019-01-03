@@ -76,6 +76,9 @@ class DualNetModel(BaseModel):
             self.vgg19.eval()
             self.vgg_layers = ['conv3_2', 'conv4_2']
 
+            # patch based loss
+            self.patchLoss = networks.PatchLoss(self.device, self.opt).to(self.device)
+
             # Discriminative region proposal
             if self.use_R:
                 self.proposal = networks.Proposal(opt)
@@ -104,6 +107,8 @@ class DualNetModel(BaseModel):
         self.real_C = input['C'].to(self.device)  # C is the color font
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
+        self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
+        self.vgg_Colors = input['vgg_Colors'].to(self.device)
         # current epoch is black epoch
         if blk_epoch:
             self.real_Colors = self.real_Shapes
@@ -213,8 +218,14 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_L2 > 0.0:
             self.loss_G_MSE = self.criterionMSE(self.fake_C, self.real_C) * self.opt.lambda_L2
 
+
+        # 5. patch loss
+        self.patch_G_loss = self.patchLoss(self.fake_data_C, self.real_data_B, self.vgg_Shapes, self.vgg_Colors)
+
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_L1 + self.loss_G_L1_B \
-            + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE
+            + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE \
+            + self.patch_G_loss
+            
         self.loss_G.backward(retain_graph=True)
 
     def update_R(self):

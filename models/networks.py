@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from roi_align.roi_align import RoIAlign
 from torch.nn import Parameter, init
 from torch.optim import lr_scheduler
+from .vgg import VGG19
 
 ###############################################################################
 # Functions
@@ -1390,3 +1391,63 @@ class G_Unet_add_all(nn.Module):
 
     def forward(self, x, z):
         return self.model(x, z)
+
+
+
+
+
+class PatchLoss(nn.Module):
+    def __init__(self, device, opt):
+        super(PatchLoss, self).__init__()
+        self.vgg19 = VGG19().to(device)
+        self.vgg19.load_model(opt.vgg)
+        self.vgg19.eval()
+        self.vgg_layer = 'conv3_2'
+
+
+    def forward(self, output, reference, shape_ref, color_ref):
+        '''
+        f_output: N * C * 32 * 32
+        f_groundtruth: N * C * 32 * 32
+        F_style: N * C * 64 * 64
+        '''
+
+        output_feat = self.vgg19(output)[self.vgg_layer]
+        ref_feat = self.vgg19(reference)[self.vgg_layer]
+        color_feat = self.vgg19(color_ref)[self.vgg_layer]
+        shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
+
+        N, C, H, W = output_feat.shape
+        unfolder1 = torch.nn.Unfold(kernel_size=(H-1, W-1))
+        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-1, W*2-1))
+        output_pat = unfolder1(output_feat)  # N * C*H-1*W-1 * (2*2)
+        output_pat = torch.view((N, H-1, W-1, C, 2, 2))
+        shape_pat = unfolder2(shape_feat)
+        shape_pat = torch.view((N, 2, 2, C, (H*2-1)*(W*2-1)) )
+        color_pat = unfolder2(color_feat)
+        color_pat = torch.view((N, 2, 2, C, (H*2-1)*(W*2-1)) )
+
+        dist = list()
+        for i in range(N):
+            ref_i = ref_feat[i].view(1, ref_i.shape[0], ref_i.shape[1], ref_i.shape[2])
+            shape_i = shape_pat[i]
+
+            conv1 = nn.Conv2d(C, (H*2-1)*(W*2-1), kernel_size=2, stride=1, bias=False)
+            conv1.weight = shape_i
+            net = nn.Sequential(conv1)
+            similarity = net(ref_i)
+            argmax = torch.argmax(similarity, 1)
+
+            matched = torch.zeros(output_pat[i].shape)
+            for k in range(H-1):
+                for j in range(W-1):
+                    row = k
+                    col = j
+                    ind = argmax[0, row, col]
+                    matched[row, col, ...] = color_pat[i, ind, ...]
+
+            matched = torch.unsqueeze(matched, 0)
+            dist.append(matched)
+
+        dist = torch.cat(dist, dim=0)
+        return torch.nn.L1Loss(output_pat, dist)
