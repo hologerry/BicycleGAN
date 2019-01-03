@@ -1,5 +1,5 @@
 set -ex
-# CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
+# CiLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
 MODEL='Dualnet'
 CLASS=${1}
 GPU_ID=${2}
@@ -81,7 +81,7 @@ case ${CLASS} in
 'base_gray_color')
   MODEL='dualnet3'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-  BATCH_SIZE=128
+  BATCH_SIZE=512
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
