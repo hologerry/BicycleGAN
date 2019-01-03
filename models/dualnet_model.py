@@ -18,7 +18,10 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B']
+        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
+                           'G_L1_val', 'G_L1_B_val']
+        self.loss_G_L1_val = 0.0
+        self.loss_G_L1_B_val = 0.0
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         # It is up to the direction AtoB or BtoC or AtoC
         self.dirsection = opt.direction
@@ -120,9 +123,6 @@ class DualNetModel(BaseModel):
             return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C
 
     def validate(self):
-        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
-                           'G_L1_val', 'G_L1_B_val']
-
         with torch.no_grad():
             self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
             self.loss_G_L1_val = 0.0
@@ -130,7 +130,8 @@ class DualNetModel(BaseModel):
             if self.opt.lambda_L1 > 0.0:
                 self.loss_G_L1_val = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
                 self.loss_G_L1_B_val = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
-                return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C
+                return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C, \
+                    self.loss_G_L1_B_val, self.loss_G_L1_val
 
     def train(self):
         for name in self.model_names:

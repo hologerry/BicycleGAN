@@ -3,9 +3,7 @@ import time
 from data import CreateDataLoader
 from models import create_model
 from options.train_options import TrainOptions
-from util.visualizer import Visualizer
-from util.visualizer import save_images
-
+from util.visualizer import Visualizer, save_images
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
@@ -77,9 +75,15 @@ if __name__ == '__main__':
 
         if opt.validate_freq > 0 and epoch % opt.validate_freq == 0:
             model.eval()
+            validation_loss_B = 0.0
+            validation_loss_C = 0.0
+            b = 0
             for i, data in enumerate(val_dataset):
                 model.set_input(data)
-                real_in, fake_out_B, real_out_B, fake_out, real_out = model.validate()
+                real_in, fake_out_B, real_out_B, fake_out, real_out, val_loss_B, val_loss_C = model.validate()
+                validation_loss_B += val_loss_B
+                validation_loss_C += val_loss_C
+                b += 1
                 ABC_path = data['ABC_path']
                 # print("ABC_path len", len(ABC_path))
                 # last batch will be smaller than batch size
@@ -96,6 +100,10 @@ if __name__ == '__main__':
                     img_path = str(epoch) + '_' + file_name
                     save_images(images, names, img_path, opt=validate_opt, aspect_ratio=1.0,
                                 width=validate_opt.fineSize)
+            validation_loss_B /= b
+            validation_loss_C /= b
+            print('End of epoch %d / %d \t Validation loss: L1_B: %f, L1_C: %f' %
+                  (epoch, opt.niter + opt.niter_decay, validation_loss_B, validation_loss_C))
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
