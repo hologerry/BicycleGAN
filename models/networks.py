@@ -7,7 +7,6 @@ from torch.nn import Parameter, init
 from torch.optim import lr_scheduler
 
 from .vgg import VGG19
-from roi_align.roi_align import RoIAlign
 
 ###############################################################################
 # Functions

@@ -190,7 +190,7 @@ case ${CLASS} in
   VALIDATE_FREQ=50
   BLACK_EPOCH=0
   DISPLAY_FREQ=100
-  LR=0.00002
+  LR=0.00001
   ;;
 'skeleton_gray_color')
   MODEL='dualnet'
