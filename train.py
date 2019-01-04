@@ -1,4 +1,5 @@
 import time
+import copy
 
 from data import CreateDataLoader
 from models import create_model
@@ -13,10 +14,10 @@ if __name__ == '__main__':
     print('#training images = %d' % dataset_size)
 
     if opt.validate_freq > 0:
-        validate_opt = opt
+        validate_opt = copy.deepcopy(opt)
         validate_opt.phase = 'val'
         validate_opt.serial_batches = True  # no shuffle
-        val_data_loader = CreateDataLoader(opt)
+        val_data_loader = CreateDataLoader(validate_opt)
         val_dataset = val_data_loader.load_data()
         val_dataset_size = len(val_data_loader)
         print('#validation images = %d' % val_dataset_size)

@@ -142,7 +142,7 @@ case ${CLASS} in
   LAMBDA_CX=50.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
-  DATASET_MODE='unpaired_few_fusion'
+  DATASET_MODE='few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'

@@ -38,8 +38,8 @@ class UnpairedFewFusionDataset(BaseDataset):
         chars_random = self.few_alphas[:self.opt.nencode]
         for char in chars_random:
             ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
-            style_path = "".join(ABC_path_list)
-            style_path = style_path.replace('train', 'style')
+            phase_path = "".join(ABC_path_list)
+            style_path = phase_path.replace(self.opt.phase, 'style')
             Style_paths.append(style_path)
             Shapes.append(Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)))
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
@@ -49,7 +49,8 @@ class UnpairedFewFusionDataset(BaseDataset):
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'C': C, 'Shapes': Shapes, 'Colors': Colors,
-                'ABC_path': ABC_path, 'Style_paths': Style_paths, 'vgg_Shapes': vgg_Shapes, 'vgg_Colors':vgg_Colors}
+                'ABC_path': ABC_path, 'Style_paths': Style_paths,
+                'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors}
 
     def __len__(self):
         return len(self.ABC_paths)
