@@ -1405,27 +1405,37 @@ class PatchLoss(nn.Module):
         self.vgg_layer = 'conv3_2'
         self.loss = torch.nn.L1Loss()
 
+    def l2_normalize_patch(self, features):
+        # Normalize on channel dimension (axis=1)
+        norms = features.norm(p=2, dim=(1,4,5), keepdim=True)
+        features = features.div(norms)
+        return features
+
     def forward(self, output, reference, shape_ref, color_ref):
         '''
-        f_output: N * C * 32 * 32
-        f_groundtruth: N * C * 32 * 32
-        F_style: N * C * 64 * 64
+        output: G output
+        reference: output reference
+        shape_ref: color reference
+        color_ref: colors, style input
         '''
 
-        output_feat = self.vgg19(output)[self.vgg_layer]
+        output_feat = self.vgg19(output)[self.vgg_layer] # N * C * 8 * 8
         ref_feat = self.vgg19(reference)[self.vgg_layer]
-        color_feat = self.vgg19(color_ref)[self.vgg_layer]
+        color_feat = self.vgg19(color_ref)[self.vgg_layer] # N * C * 16 * 16
         shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
 
         N, C, H, W = output_feat.shape
         unfolder1 = torch.nn.Unfold(kernel_size=(H-1, W-1))
         unfolder2 = torch.nn.Unfold(kernel_size=(H*2-1, W*2-1))
-        output_pat = unfolder1(output_feat)  # N * C*H-1*W-1 * (2*2)
-        output_pat = output_pat.view((N, H-1, W-1, C, 2, 2))
+        output_pat = unfolder1(output_feat)  # N * (C*H-1*W-1) * (2*2)
+        output_pat = output_pat.view((N, C, H-1, W-1, 2, 2))
+        
         shape_pat = unfolder2(shape_feat)
-        shape_pat = shape_pat.view((N, (H*2-1)*(W*2-1), C, 2, 2) )
+        shape_pat = shape_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2) )
+        shape_pat = torch.transpose(shape_pat, 1, 2)
+
         color_pat = unfolder2(color_feat)
-        color_pat = color_pat.view((N, (H*2-1)*(W*2-1), C, 2, 2) )
+        color_pat = color_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2) )
 
         dist = list()
         for i in range(N):
@@ -1444,10 +1454,14 @@ class PatchLoss(nn.Module):
                     row = k
                     col = j
                     ind = argmax[0, row, col]
-                    matched[row, col, ...] = color_pat[i, ind, ...]
+                    matched[:, row, col, ...] = color_pat[i, :, ind, ...]
 
             matched = torch.unsqueeze(matched, 0)
             dist.append(matched)
-
         dist = torch.cat(dist, dim=0)
-        return self.loss(output_pat, dist)
+
+        output_pat = self.l2_normalize_patch(output_pat)
+        dist = self.l2_normalize_patch(dist)
+        loss = self.loss(output_pat, dist)
+
+        return loss
