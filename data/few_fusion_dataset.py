@@ -3,7 +3,7 @@ import random
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, transform_fusion, transform_vgg
+from data.base_dataset import BaseDataset, transform_fusion
 from data.image_folder import make_dataset
 
 
