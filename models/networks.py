@@ -3,10 +3,11 @@ import functools
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torch.nn import Parameter, init
 from torch.optim import lr_scheduler
+
 from .vgg import VGG19
+from roi_align.roi_align import RoIAlign
 
 ###############################################################################
 # Functions
@@ -1197,9 +1198,9 @@ class DualnetBlock(nn.Module):
                 attn_layer2 = get_self_attention_layer(outer_nc)
                 up_B += [attn_layer2]
 
-            #if norm_layer is not None:
-            #    up += [norm_layer(outer_nc)]
-            #    up_B += [norm_layer(outer_nc)]
+            # if norm_layer is not None:
+            #     up += [norm_layer(outer_nc)]
+            #     up_B += [norm_layer(outer_nc)]
 
             if use_dropout:
                 up += [nn.Dropout(0.5)]
@@ -1392,9 +1393,6 @@ class G_Unet_add_all(nn.Module):
         return self.model(x, z)
 
 
-
-
-
 class PatchLoss(nn.Module):
     def __init__(self, device, opt):
         super(PatchLoss, self).__init__()
@@ -1407,7 +1405,7 @@ class PatchLoss(nn.Module):
 
     def l2_normalize_patch(self, features):
         # Normalize on channel dimension (axis=1)
-        norms = features.norm(p=2, dim=(1,4,5), keepdim=True)
+        norms = features.norm(p=2, dim=(1, 4, 5), keepdim=True)
         features = features.div(norms)
         return features
 
@@ -1419,9 +1417,9 @@ class PatchLoss(nn.Module):
         color_ref: colors, style input
         '''
 
-        output_feat = self.vgg19(output)[self.vgg_layer] # N * C * 8 * 8
+        output_feat = self.vgg19(output)[self.vgg_layer]  # N * C * 8 * 8
         ref_feat = self.vgg19(reference)[self.vgg_layer]
-        color_feat = self.vgg19(color_ref)[self.vgg_layer] # N * C * 16 * 16
+        color_feat = self.vgg19(color_ref)[self.vgg_layer]  # N * C * 16 * 16
         shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
 
         N, C, H, W = output_feat.shape
@@ -1429,13 +1427,13 @@ class PatchLoss(nn.Module):
         unfolder2 = torch.nn.Unfold(kernel_size=(H*2-1, W*2-1))
         output_pat = unfolder1(output_feat)  # N * (C*H-1*W-1) * (2*2)
         output_pat = output_pat.view((N, C, H-1, W-1, 2, 2))
-        
+
         shape_pat = unfolder2(shape_feat)
-        shape_pat = shape_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2) )
+        shape_pat = shape_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2))
         shape_pat = torch.transpose(shape_pat, 1, 2)
 
         color_pat = unfolder2(color_feat)
-        color_pat = color_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2) )
+        color_pat = color_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2))
 
         dist = list()
         for i in range(N):
