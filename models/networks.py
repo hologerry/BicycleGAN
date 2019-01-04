@@ -1405,8 +1405,11 @@ class PatchLoss(nn.Module):
 
     def l2_normalize_patch(self, features):
         # Normalize on patch dimension (axis=1,4,5)
-        norms = torch.norm(features, p=2, dim=(1,4,5), keepdim=True)
+        N, C, H, W, k1, k2 = features.shape
+        features = features.permute(0, 1, 4, 5, 2, 3).view(N, C*k1*k2, H, W)
+        norms = torch.norm(features, p=2, dim=1, keepdim=True)
         features = features.div(norms)
+        features = features.view(N, C, k1, k2, H, W).permute(0, 1, 4, 5, 2, 3)
         return features
 
     def forward(self, output, reference, shape_ref, color_ref):
