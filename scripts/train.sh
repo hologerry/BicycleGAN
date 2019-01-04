@@ -1,11 +1,6 @@
 set -ex
-<<<<<<< HEAD
-# CiLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
-MODEL='Dualnet'
-=======
 # CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
 MODEL='dualnet'
->>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
 CLASS=${1}
 GPU_ID=${2}
 
@@ -89,11 +84,7 @@ case ${CLASS} in
   SAVE_EPOCH=10
   ;;
 'base_gray_color')
-<<<<<<< HEAD
-  MODEL='dualnet3'
-=======
   MODEL='dualnet'
->>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
   BATCH_SIZE=80
@@ -107,16 +98,10 @@ case ${CLASS} in
   NEF=64
   NGF=32
   NDF=32
-<<<<<<< HEAD
-  NET_G='dualnet3'
-  NET_D='basic_64_multi'
-  NET_D2='basic_64_multi'
-=======
   NET_G='dualnet'
   NET_D='basic_64'
   NET_D2='basic_64'
   NET_R='basic_64'
->>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=50.0
@@ -166,11 +151,12 @@ case ${CLASS} in
   BLACK_EPOCH=0
   DISPLAY_FREQ=100
   LR=0.00002
+  ;;
 'base_gray_texture_unpaired')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
-  BATCH_SIZE=80
+  BATCH_SIZE=32
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
@@ -196,7 +182,7 @@ case ${CLASS} in
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
-  DATASET_MODE='few_fusion'
+  DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'

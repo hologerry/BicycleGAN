@@ -46,14 +46,7 @@ if __name__ == '__main__':
             if not model.is_train():
                 continue
 
-<<<<<<< HEAD
-            if opt.stage1_epoch != 0 and epoch < opt.stage1_epoch:
-                model.optimize_parameters_1()
-            else:
-                model.optimize_parameters()
-=======
             model.optimize_parameters()
->>>>>>> c70cd04bdcd53f11d32aeb81ccc5581320b6fc0a
 
             if total_steps % opt.display_freq == 0:
                 save_result = total_steps % opt.update_html_freq == 0

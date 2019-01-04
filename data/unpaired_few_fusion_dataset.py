@@ -22,7 +22,7 @@ class UnpairedFewFusionDataset(BaseDataset):
         assert(self.opt.nencode == (len(self.few_alphas)-1))
 
     def __getitem__(self, index):
-        ABC_path = self.A_paths[index]
+        ABC_path = self.ABC_paths[index]
         ABC = Image.open(ABC_path).convert('RGB')
         w3, h = ABC.size
         w = int(w3 / 3)

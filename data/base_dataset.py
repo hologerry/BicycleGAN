@@ -134,9 +134,6 @@ def __scale_width(img, target_width):
 
 
 def transform_vgg(Shapes, Colors):
-    if not opt.resize_or_crop == 'none':
-        raise ValueError(
-            "Only support none mode for resize_or_crop on base_gray_color dataset")
     assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
 
@@ -145,10 +142,8 @@ def transform_vgg(Shapes, Colors):
     tmp1 = torch.cat((Shapes[0], Shapes[1]), 1)
     tmp2 = torch.cat((Shapes[2], Shapes[3]), 1)
     tmp3 = torch.cat((tmp1,tmp2), 2)
-    print(tmp3.shape)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
-    Colors = torch.cat(Colors)
     tmp4 = torch.cat((Colors[0], Colors[1]), 1)
     tmp5 = torch.cat((Colors[2], Colors[3]), 1)
     tmp6 = torch.cat((tmp4,tmp5), 2)

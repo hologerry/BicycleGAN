@@ -19,7 +19,7 @@ class DualNetModel(BaseModel):
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
-                           'G_L1_val', 'G_L1_B_val']
+                           'G_L1_val', 'G_L1_B_val', 'patch_G']
         self.loss_G_L1_val = 0.0
         self.loss_G_L1_B_val = 0.0
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
@@ -232,11 +232,11 @@ class DualNetModel(BaseModel):
 
 
         # 5. patch loss
-        self.patch_G_loss = self.patchLoss(self.fake_data_C, self.real_data_B, self.vgg_Shapes, self.vgg_Colors)
+        self.loss_patch_G = self.patchLoss(self.fake_C, self.real_B, self.vgg_Shapes, self.vgg_Colors)
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE \
-            + self.patch_G_loss
+            + self.loss_patch_G
             
         self.loss_G.backward(retain_graph=True)
 
