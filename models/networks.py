@@ -1406,8 +1406,8 @@ class PatchLoss(nn.Module):
         self.loss = torch.nn.L1Loss()
 
     def l2_normalize_patch(self, features):
-        # Normalize on channel dimension (axis=1)
-        norms = features.norm(p=2, dim=(1,4,5), keepdim=True)
+        # Normalize on patch dimension (axis=1,4,5)
+        norms = torch.norm(features, p=2, dim=(1,4,5), keepdim=True)
         features = features.div(norms)
         return features
 
