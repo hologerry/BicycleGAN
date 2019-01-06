@@ -124,15 +124,31 @@ def transform_fusion(opt, A, B, C, Shapes, Colors):
     return A, B, C, Shapes, Colors
 
 
-def transform_list(Shapes, Colors):
+def transform_triple(opt, A, B, C, Bases, Shapes, Colors):
+    if not opt.resize_or_crop == 'none':
+        raise ValueError(
+            "Only support none mode for resize_or_crop on base_gray_color dataset")
+    assert(isinstance(Bases, list))
     assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
-    Shapes_list = list(map(lambda s: transforms.Normalize(
-        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
-    Colors_list = list(map(lambda c: transforms.Normalize(
-        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+    A = transforms.ToTensor()(A)
+    B = transforms.ToTensor()(B)
+    C = transforms.ToTensor()(C)
+    A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
+    B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
+    C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
 
-    return Shapes_list, Colors_list
+    Bases = list(map(lambda b: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
+    Bases = torch.cat(Bases)
+    Shapes = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Shapes = torch.cat(Shapes)
+    Colors = list(map(lambda c: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+    Colors = torch.cat(Colors)
+
+    return A, B, C, Bases, Shapes, Colors
 
 
 def __scale_width(img, target_width):

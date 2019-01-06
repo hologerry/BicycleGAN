@@ -3,7 +3,7 @@ import random
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, transform_fusion, transform_vgg
+from data.base_dataset import BaseDataset, transform_triple, transform_vgg
 from data.image_folder import make_dataset
 
 
@@ -29,6 +29,7 @@ class UnpairedFewFusionDataset(BaseDataset):
         A = ABC.crop((0, 0, w, h))
         B = ABC.crop((w, 0, w+w, h))
         C = ABC.crop((w+w, 0, w+w+w, h))
+        Bases = []
         Shapes = []
         Colors = []
         Style_paths = []
@@ -41,14 +42,16 @@ class UnpairedFewFusionDataset(BaseDataset):
             phase_path = "".join(ABC_path_list)
             style_path = phase_path.replace(self.opt.phase, 'style')
             Style_paths.append(style_path)
+            Bases.append(Image.open(style_path).convert('RGB').crop((0, 0, w, h)))
             Shapes.append(Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)))
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
-        A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
+        # A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
+        A, B, C, Bases, Shapes, Colors = transform_triple(self.opt, A, B, C, Bases, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
-        return {'A': A, 'B': B, 'C': C, 'Shapes': Shapes, 'Colors': Colors,
+        return {'A': A, 'B': B, 'C': C, 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
                 'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors}
 

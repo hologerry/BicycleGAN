@@ -194,14 +194,14 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
-  BATCH_SIZE=80
+  BATCH_SIZE=32
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=500
-  NITER_DECAY=2500
-  SAVE_EPOCH=100
+  NITER=200
+  NITER_DECAY=800
+  SAVE_EPOCH=50
   NEF=64
   NGF=32
   NDF=32
@@ -210,13 +210,14 @@ case ${CLASS} in
   NET_D2='basic_64'
   NET_R='basic_64'
   NET_E='resnet_64'
-  LAMBDA_L1=100.0
-  LAMBDA_L1_B=60.0
-  LAMBDA_CX=50.0
-  LAMBDA_CX_B=15.0
-  LAMBDA_TX=5.0
-  LAMBDA_L2=100.0
-  DATASET_MODE='list_few_fusion'
+  LAMBDA_L1=0.0
+  LAMBDA_L1_B=0.0
+  LAMBDA_CX=0.0
+  LAMBDA_CX_B=0.0
+  LAMBDA_TX=10.0
+  LAMBDA_TX_B=5.0
+  LAMBDA_L2=0.0
+  DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
@@ -337,6 +338,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_L1 ${LAMBDA_L1} \
   --lambda_L1_B ${LAMBDA_L1_B} \
   --lambda_TX ${LAMBDA_TX} \
+  --lambda_TX_B ${LAMBDA_TX_B} \
   --lambda_CX ${LAMBDA_CX} \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
