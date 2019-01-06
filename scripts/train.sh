@@ -44,7 +44,7 @@ LR=0.0002
 
 BLACK_EPOCH=0
 VALIDATE_FREQ=0
-DISPLAY_FREQ=500
+DISPLAY_FREQ=100
 
 MODEL='bicycle_gan'
 
@@ -182,6 +182,7 @@ case ${CLASS} in
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
+  LAMBDA_PATCH=0.0
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -189,8 +190,9 @@ case ${CLASS} in
   CONTINUE_TRAIN='--continue_train'
   VALIDATE_FREQ=5
   BLACK_EPOCH=0
-  DISPLAY_FREQ=100
-  LR=0.0000001
+  DISPLAY_FREQ=32
+  PRINT_FREQ=32
+  LR=0.000001
   ;;
 'skeleton_gray_color')
   MODEL='dualnet'
@@ -283,8 +285,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --resize_or_crop ${RESIZE_OR_CROP} \
   ${NO_FLIP} \
   ${USE_ATTENTION} \
-  ${USE_SPECTRAL_NORM_G} \
-  ${USE_SPECTRAL_NORM_D} \
   --nencode ${NENCODE} \
   --few_size ${FEW_SIZE} \
   --nz ${NZ} \
@@ -313,5 +313,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --black_epoch_freq ${BLACK_EPOCH} \
   --validate_freq ${VALIDATE_FREQ} \
   --display_freq ${DISPLAY_FREQ} \
+  --print_freq ${PRINT_FREQ} \
   --lr ${LR}
 

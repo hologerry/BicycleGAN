@@ -212,7 +212,7 @@ class DualNetModel(BaseModel):
         # 2, reconstruction |fake_C-real_C| |fake_B-real_B|
         self.loss_G_L1 = 0.0
         self.loss_G_L1_B = 0.0
-        if self.opt.lambda_L1 > 0.0:
+        if self.opt.lambda_L1 > 0.0 or self.opt.lambda_L1_B > 0.0:
             self.loss_G_L1 = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
             self.loss_G_L1_B = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
 
