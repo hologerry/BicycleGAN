@@ -68,6 +68,8 @@ class TrainOptions(BaseOptions):
                             help='weight on D (for B) loss, D(G(B, E(B)))')
         parser.add_argument('--lambda_GAN_R', type=float, default=0.01,
                             help='weight on D (for B) loss, D(G(B, E(B)))')
+        parser.add_argument('--lambda_TX', type=float, default=2.0,
+                            help='weight on D (for B) loss, D(G(B, E(B)))')
 
         self.isTrain = True
         return parser

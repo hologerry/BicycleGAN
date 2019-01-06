@@ -124,6 +124,17 @@ def transform_fusion(opt, A, B, C, Shapes, Colors):
     return A, B, C, Shapes, Colors
 
 
+def transform_list(Shapes, Colors):
+    assert(isinstance(Shapes, list))
+    assert(isinstance(Colors, list))
+    Shapes_list = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Colors_list = list(map(lambda c: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+
+    return Shapes_list, Colors_list
+
+
 def __scale_width(img, target_width):
     ow, oh = img.size
     if (ow == target_width):
@@ -141,11 +152,11 @@ def transform_vgg(Shapes, Colors):
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
     tmp1 = torch.cat((Shapes[0], Shapes[1]), 1)
     tmp2 = torch.cat((Shapes[2], Shapes[3]), 1)
-    tmp3 = torch.cat((tmp1,tmp2), 2)
+    tmp3 = torch.cat((tmp1, tmp2), 2)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
     tmp4 = torch.cat((Colors[0], Colors[1]), 1)
     tmp5 = torch.cat((Colors[2], Colors[3]), 1)
-    tmp6 = torch.cat((tmp4,tmp5), 2)
+    tmp6 = torch.cat((tmp4, tmp5), 2)
 
-    return tmp3, tmp6    
+    return tmp3, tmp6

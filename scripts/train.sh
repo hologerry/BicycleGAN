@@ -36,8 +36,6 @@ NET_G='unet_64'
 NET_D='basic_64_multi'
 NET_E='resnet_64'
 USE_ATTENTION=''
-USE_SPECTRAL_NORM_G=''
-USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
 
 LR=0.0002
@@ -192,6 +190,42 @@ case ${CLASS} in
   DISPLAY_FREQ=100
   LR=0.00002
   ;;
+'base_gray_texture_style')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
+  BATCH_SIZE=80
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=100
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
+  NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_CX=50.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_TX=5.0
+  LAMBDA_L2=100.0
+  DATASET_MODE='list_few_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=50
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
+  LR=0.00002
+  ;;
 'skeleton_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
@@ -283,8 +317,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --resize_or_crop ${RESIZE_OR_CROP} \
   ${NO_FLIP} \
   ${USE_ATTENTION} \
-  ${USE_SPECTRAL_NORM_G} \
-  ${USE_SPECTRAL_NORM_D} \
   --nencode ${NENCODE} \
   --few_size ${FEW_SIZE} \
   --nz ${NZ} \
@@ -304,6 +336,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
   --lambda_L1_B ${LAMBDA_L1_B} \
+  --lambda_TX ${LAMBDA_TX} \
   --lambda_CX ${LAMBDA_CX} \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
