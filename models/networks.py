@@ -1197,9 +1197,9 @@ class DualnetBlock(nn.Module):
                 attn_layer2 = get_self_attention_layer(outer_nc)
                 up_B += [attn_layer2]
 
-            # if norm_layer is not None:
-            #     up += [norm_layer(outer_nc)]
-            #     up_B += [norm_layer(outer_nc)]
+            if norm_layer is not None:
+                up += [norm_layer(outer_nc)]
+                up_B += [norm_layer(outer_nc)]
 
             if use_dropout:
                 up += [nn.Dropout(0.5)]
