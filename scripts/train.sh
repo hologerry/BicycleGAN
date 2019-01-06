@@ -190,7 +190,7 @@ case ${CLASS} in
   DISPLAY_FREQ=100
   LR=0.00002
   ;;
-'base_gray_texture_style')
+'base_gray_texture_tx')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
