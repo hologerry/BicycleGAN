@@ -7,7 +7,7 @@ GPU_ID=${2}
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 
-PORT=9097
+PORT=10002
 
 NZ=16
 NENCODE=4
@@ -178,7 +178,7 @@ case ${CLASS} in
   #LAMBDA_CX_B=15.0
   #LAMBDA_L2=100.0
   LAMBDA_L1=0.0
-  LAMBDA_L1_B=0.0
+  LAMBDA_L1_B=100.0
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
@@ -187,10 +187,10 @@ case ${CLASS} in
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
-  VALIDATE_FREQ=50
+  VALIDATE_FREQ=5
   BLACK_EPOCH=0
   DISPLAY_FREQ=100
-  LR=0.00001
+  LR=0.0000001
   ;;
 'skeleton_gray_color')
   MODEL='dualnet'

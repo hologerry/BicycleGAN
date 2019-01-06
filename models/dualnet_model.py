@@ -130,7 +130,7 @@ class DualNetModel(BaseModel):
             if self.opt.lambda_L1 > 0.0:
                 self.loss_G_L1_val = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
                 self.loss_G_L1_B_val = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
-                return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C, \
+            return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C, \
                     self.loss_G_L1_B_val, self.loss_G_L1_val
 
     def train(self):
@@ -232,7 +232,7 @@ class DualNetModel(BaseModel):
 
 
         # 5. patch loss
-        self.loss_patch_G = self.patchLoss(self.fake_C, self.real_B, self.vgg_Shapes, self.vgg_Colors)
+        self.loss_patch_G = self.patchLoss(self.fake_C, self.real_B, self.vgg_Shapes, self.vgg_Colors) * self.opt.lambda_patch
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE \
