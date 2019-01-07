@@ -192,7 +192,7 @@ case ${CLASS} in
   BLACK_EPOCH=0
   DISPLAY_FREQ=32
   PRINT_FREQ=32
-  LR=0.000001
+  LR=0.0001
   ;;
 'skeleton_gray_color')
   MODEL='dualnet'

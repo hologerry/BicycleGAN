@@ -232,7 +232,7 @@ class DualNetModel(BaseModel):
 
 
         # 5. patch loss
-        self.loss_patch_G = self.patchLoss(self.fake_C, self.real_B, self.vgg_Shapes, self.vgg_Colors) * self.opt.lambda_patch
+        self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) * self.opt.lambda_patch
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE \
