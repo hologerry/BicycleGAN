@@ -147,6 +147,11 @@ class DualNetModel(BaseModel):
         self.vgg_fake_B = self.vgg19(self.fake_B)
         self.vgg_real_B = self.vgg19(self.real_B)
 
+        #gray
+        self.gray_fake_C = 0.299 * self.fake_C[:,0,...] + 0.587 * self.fake_C[:,1,...] + 0.114 * self.fake_C[:,2,...]
+        self.gray_real_C = 0.299 * self.real_C[:,0,...] + 0.587 * self.real_C[:,1,...] + 0.114 * self.real_C[:,2,...]
+        self.gray_vgg_Colors = 0.299 * self.vgg_Colors[:,0,...] + 0.587 * self.vgg_Colors[:,1,...] + 0.114 * self.vgg_Colors[:,2,...]
+
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
             self.real_data_B = torch.cat([self.real_A, self.real_B], 1)
@@ -216,6 +221,8 @@ class DualNetModel(BaseModel):
             self.loss_G_L1 = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
             self.loss_G_L1_B = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
 
+        self.loss_gray_L1 = self.criterionL1(self.gray_real_C, self.gray_fake_C) * self.opt.lambda_L1
+
         # 3, contextual loss
         self.loss_G_CX = 0.0
         self.loss_G_CX_B = 0.0
@@ -232,11 +239,13 @@ class DualNetModel(BaseModel):
 
 
         # 5. patch loss
-        self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) * self.opt.lambda_patch
+        self.loss_patch_G = self.patchLoss(self.fake_C, self.gray_real_C, self.gray_vgg_Colors, self.vgg_Colors) * self.opt.lambda_patch
+
+
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE \
-            + self.loss_patch_G
+            + self.loss_patch_G + self.loss_gray_L1
             
         self.loss_G.backward(retain_graph=True)
 
