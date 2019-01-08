@@ -268,7 +268,7 @@ case ${CLASS} in
   ;;
 esac
 
-DATE=`date '+%d_%m_%Y-%H_conv2_2-patch3'`      # delete minute for more convinent continue training, just run one experiment in an hour
+DATE=`date '+%d_%m_%Y-%H_conv2_2-patch3_nonorm'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command
