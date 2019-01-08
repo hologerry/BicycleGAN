@@ -72,8 +72,8 @@ class DualNetModel(BaseModel):
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
-            self.criterionL1 = torch.nn.L1Loss(reduce=False)
-            self.criterionMSE = torch.nn.MSELoss(reduce=False)
+            self.criterionL1 = torch.nn.L1Loss(reduction='none')
+            self.criterionMSE = torch.nn.MSELoss(reduction='none')
 
             # Contextual Loss
             self.criterionCX = networks.CXLoss(sigma=0.5).to(self.device)
@@ -227,8 +227,12 @@ class DualNetModel(BaseModel):
         self.loss_G_L1 = 0.0
         self.loss_G_L1_B = 0.0
         if self.opt.lambda_L1 > 0.0:
-            self.loss_G_L1 = torch.sum(self.label * self.criterionL1(self.fake_C, self.real_C)) * self.opt.lambda_L1
-            self.loss_G_L1_B = torch.sum(self.label * self.criterionL1(self.fake_B, self.real_B)) * self.opt.lambda_L1_B
+            L1 = torch.mean(torch.mean(torch.mean(
+                self.criterionL1(self.fake_C, self.real_C), dim=1), dim=1), dim=1)
+            self.loss_G_L1 = torch.sum(self.label * L1) * self.opt.lambda_L1
+            L1_B = torch.mean(torch.mean(torch.mean(
+                self.criterionL1(self.fake_B, self.real_B), dim=1), dim=1), dim=1)
+            self.loss_G_L1_B = torch.sum(self.label * L1_B) * self.opt.lambda_L1_B
 
         # 3. contextual loss
         self.loss_G_CX = 0.0

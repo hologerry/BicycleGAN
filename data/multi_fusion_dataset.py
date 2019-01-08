@@ -51,7 +51,7 @@ class MultiFusionDataset(BaseDataset):
             Color_paths.append(c_path)
             Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
-        label = torch.tensor(1)
+        label = torch.tensor(1.0)
         A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
