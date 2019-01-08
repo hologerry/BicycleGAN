@@ -178,17 +178,18 @@ case ${CLASS} in
   #LAMBDA_CX_B=15.0
   #LAMBDA_L2=100.0
   LAMBDA_L1=0.0
-  LAMBDA_L1_B=100.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_GARY=100.0
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
-  LAMBDA_PATCH=0.0
+  LAMBDA_PATCH=0.001
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
-  VALIDATE_FREQ=5
+  VALIDATE_FREQ=10
   BLACK_EPOCH=0
   DISPLAY_FREQ=32
   PRINT_FREQ=32
@@ -267,7 +268,7 @@ case ${CLASS} in
   ;;
 esac
 
-DATE=`date '+%d_%m_%Y-%H'`      # delete minute for more convinent continue training, just run one experiment in an hour
+DATE=`date '+%d_%m_%Y-%H_conv2_2-patch3'`      # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command

@@ -1399,7 +1399,7 @@ class PatchLoss(nn.Module):
         self.vgg19 = VGG19().to(device)
         self.vgg19.load_model(opt.vgg)
         self.vgg19.eval()
-        self.vgg_layer = 'conv3_2'
+        self.vgg_layer = 'conv2_2'
         self.loss = torch.nn.L1Loss()
 
     def l2_normalize_patch(self, features):
@@ -1425,17 +1425,17 @@ class PatchLoss(nn.Module):
         shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
 
         N, C, H, W = output_feat.shape
-        unfolder1 = torch.nn.Unfold(kernel_size=(H-1, W-1))
-        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-1, W*2-1))
+        unfolder1 = torch.nn.Unfold(kernel_size=(H-2, W-2))
+        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-2, W*2-2))
         output_pat = unfolder1(output_feat)  # N * (C*H-1*W-1) * (2*2)
-        output_pat = output_pat.view((N, C, H-1, W-1, 2, 2))
+        output_pat = output_pat.view((N, C, H-2, W-2, 3, 3))
 
         shape_pat = unfolder2(shape_feat)
-        shape_pat = shape_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2))
+        shape_pat = shape_pat.view((N, C, (H*2-2)*(W*2-2), 3, 3))
         shape_pat = torch.transpose(shape_pat, 1, 2)
 
         color_pat = unfolder2(color_feat)
-        color_pat = color_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2))
+        color_pat = color_pat.view((N, C, (H*2-2)*(W*2-2), 3, 3))
 
         dist = list()
         for i in range(N):
@@ -1449,8 +1449,8 @@ class PatchLoss(nn.Module):
             argmax = torch.argmax(similarity, 1)
 
             matched = torch.zeros(output_pat[i].shape).to(self.device)
-            for k in range(H-1):
-                for j in range(W-1):
+            for k in range(H-2):
+                for j in range(W-2):
                     row = k
                     col = j
                     ind = argmax[0, row, col]
@@ -1464,7 +1464,7 @@ class PatchLoss(nn.Module):
         dist = self.l2_normalize_patch(dist)
 
         diff = (output_pat-dist).abs()
-        l1_patch = diff.sum(dim=1).sum(dim=4).sum(dim=5)
+        l1_patch = diff.sum(dim=1).sum(dim=-2).sum(dim=-1)
         l1_clip = torch.clamp(l1_patch, 0, 10)
         loss = l1_clip.sum()
         
