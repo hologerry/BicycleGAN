@@ -1460,12 +1460,12 @@ class PatchLoss(nn.Module):
             dist.append(matched)
         dist = torch.cat(dist, dim=0)
 
-        output_pat = self.l2_normalize_patch(output_pat)
-        dist = self.l2_normalize_patch(dist)
+        #output_pat = self.l2_normalize_patch(output_pat)
+        #dist = self.l2_normalize_patch(dist)
 
         diff = (output_pat-dist).abs()
         l1_patch = diff.sum(dim=1).sum(dim=-2).sum(dim=-1)
-        l1_clip = torch.clamp(l1_patch, 0, 10)
+        l1_clip = torch.clamp(l1_patch, 0, 1000)
         loss = l1_clip.sum()
         
         return loss
