@@ -1419,38 +1419,40 @@ class PatchLoss(nn.Module):
         color_ref: colors, style input
         '''
 
+        patch_size = 3
+
         output_feat = self.vgg19(output)[self.vgg_layer]  # N * C * 8 * 8
         ref_feat = self.vgg19(reference)[self.vgg_layer]
         color_feat = self.vgg19(color_ref)[self.vgg_layer]  # N * C * 16 * 16
         shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
 
         N, C, H, W = output_feat.shape
-        unfolder1 = torch.nn.Unfold(kernel_size=(H-2, W-2))
-        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-2, W*2-2))
+        unfolder1 = torch.nn.Unfold(kernel_size=(H-patch_size+1, W-patch_size+1))
+        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-patch_size+1, W*2-patch_size+1))
         output_pat = unfolder1(output_feat)  # N * (C*H-1*W-1) * (2*2)
-        output_pat = output_pat.view((N, C, H-2, W-2, 3, 3))
+        output_pat = output_pat.view((N, C, H-patch_size+1, W-patch_size+1, patch_size, patch_size))
 
         shape_pat = unfolder2(shape_feat)
-        shape_pat = shape_pat.view((N, C, (H*2-2)*(W*2-2), 3, 3))
+        shape_pat = shape_pat.view((N, C, (H*2-patch_size+1)*(W*2-patch_size+1), patch_size, patch_size))
         shape_pat = torch.transpose(shape_pat, 1, 2)
 
         color_pat = unfolder2(color_feat)
-        color_pat = color_pat.view((N, C, (H*2-2)*(W*2-2), 3, 3))
+        color_pat = color_pat.view((N, C, (H*2-patch_size+1)*(W*2-patch_size+1), patch_size, patch_size))
 
         dist = list()
         for i in range(N):
             ref_i = ref_feat[i].view(1, ref_feat[i].shape[0], ref_feat[i].shape[1], ref_feat[i].shape[2])
             shape_i = shape_pat[i]
 
-            conv1 = nn.Conv2d(C, (H*2-1)*(W*2-1), kernel_size=2, stride=1, bias=False)
+            conv1 = nn.Conv2d(C, (H*2-patch_size+1)*(W*2-patch_size+1), kernel_size=2, stride=1, bias=False)
             conv1.weight = torch.nn.Parameter(shape_i)
             net = nn.Sequential(conv1)
             similarity = net(ref_i)
             argmax = torch.argmax(similarity, 1)
 
             matched = torch.zeros(output_pat[i].shape).to(self.device)
-            for k in range(H-2):
-                for j in range(W-2):
+            for k in range(H-patch_size+1):
+                for j in range(W-patch_size+1):
                     row = k
                     col = j
                     ind = argmax[0, row, col]
