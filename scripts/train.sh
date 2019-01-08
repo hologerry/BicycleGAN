@@ -81,7 +81,7 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'base_gray_color')
+'base_gray_color' | 'base_gray_color_s')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
@@ -106,6 +106,8 @@ case ${CLASS} in
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
+  LAMBDA_TX=0.0
+  LAMBDA_TX_B=0.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -150,7 +152,7 @@ case ${CLASS} in
   DISPLAY_FREQ=100
   LR=0.00002
   ;;
-'base_gray_texture_unpaired')
+'base_gray_texture_unpaired' | 'base_gray_texture_unpaired_s')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
@@ -170,16 +172,16 @@ case ${CLASS} in
   NET_D2='basic_64'
   NET_R='basic_64'
   NET_E='resnet_64'
-  #LAMBDA_L1=100.0
-  #LAMBDA_L1_B=60.0
-  #LAMBDA_CX=50.0
-  #LAMBDA_CX_B=15.0
-  #LAMBDA_L2=100.0
-  LAMBDA_L1=0.0
-  LAMBDA_L1_B=0.0
-  LAMBDA_CX=0.0
-  LAMBDA_CX_B=0.0
-  LAMBDA_L2=0.0
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_CX=50.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_L2=100.0
+  # LAMBDA_L1=0.0
+  # LAMBDA_L1_B=0.0
+  # LAMBDA_CX=0.0
+  # LAMBDA_CX_B=0.0
+  # LAMBDA_L2=0.0
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -194,7 +196,7 @@ case ${CLASS} in
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
-  BATCH_SIZE=32
+  BATCH_SIZE=20
   LOAD_SIZE=64
   FINE_SIZE=64
   RESIZE_OR_CROP='none'

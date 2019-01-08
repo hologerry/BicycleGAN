@@ -18,10 +18,7 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        # self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_MSE', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
-        #                    'G_L1_val', 'G_L1_B_val', 'patch_G']
-        # unpaired no l1/l2 and cs loss!
-        self.loss_names = ['G_GAN', 'G_GAN_B', 'D', 'D_B', 'G_TX', 'G_TX_B',
+        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_GAN', 'G_GAN_B', 'D', 'D_B', 'G_TX', 'G_TX_B',
                            'G_L1_val', 'G_L1_B_val']
         self.loss_G_L1_val = 0.0
         self.loss_G_L1_B_val = 0.0
@@ -43,6 +40,9 @@ class DualNetModel(BaseModel):
         use_R = opt.isTrain and opt.lambda_GAN_R > 0.0
         use_R = False
         self.use_R = use_R
+
+        # TX loss
+        self.TX = opt.lambda_TX > 0.0
 
         self.model_names = ['G']
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
@@ -72,15 +72,15 @@ class DualNetModel(BaseModel):
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
-            self.criterionL1 = torch.nn.L1Loss()
-            self.criterionMSE = torch.nn.MSELoss()
+            self.criterionL1 = torch.nn.L1Loss(reduce=False)
+            self.criterionMSE = torch.nn.MSELoss(reduce=False)
 
             # Contextual Loss
             self.criterionCX = networks.CXLoss(sigma=0.5).to(self.device)
             self.vgg19 = VGG19().to(self.device)
             self.vgg19.load_model(self.opt.vgg)
             self.vgg19.eval()
-            self.vgg_layers = ['conv3_2', 'conv4_2']
+            self.vgg_layers = ['conv3_3', 'conv4_2']
 
             # patch based loss
             self.patchLoss = networks.PatchLoss(self.device, self.opt).to(self.device)
@@ -111,7 +111,9 @@ class DualNetModel(BaseModel):
         self.real_A = input['A'].to(self.device)  # A is the base font
         self.real_B = input['B'].to(self.device)  # B is the gray shape
         self.real_C = input['C'].to(self.device)  # C is the color font
-        self.real_Bases = input['Bases'].to(self.device)
+        self.label = input['label'].to(self.device)  # label == 1 means the image is in the few set
+        if self.TX:
+            self.real_Bases = input['Bases'].to(self.device)
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
         # self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
@@ -149,14 +151,15 @@ class DualNetModel(BaseModel):
         self.vgg_fake_B = self.vgg19(self.fake_B)
         self.vgg_real_B = self.vgg19(self.real_B)
         # for TX loss
-        self.vgg_real_A = self.vgg19(self.real_A)
-        self.vgg_real_Bases_list = []
-        self.vgg_real_Shapes_list = []
-        self.vgg_real_Colors_list = []
-        for i in range(self.opt.nencode):
-            self.vgg_real_Bases_list.append(self.vgg19(self.real_Bases[:, i*3:(i+1)*3, :, :]))
-            self.vgg_real_Shapes_list.append(self.vgg19(self.real_Shapes[:, i*3:(i+1)*3, :, :]))
-            self.vgg_real_Colors_list.append(self.vgg19(self.real_Colors[:, i*3:(i+1)*3, :, :]))
+        if self.TX > 0.0:
+            self.vgg_real_A = self.vgg19(self.real_A)
+            self.vgg_real_Bases_list = []
+            self.vgg_real_Shapes_list = []
+            self.vgg_real_Colors_list = []
+            for i in range(self.opt.nencode):
+                self.vgg_real_Bases_list.append(self.vgg19(self.real_Bases[:, i*3:(i+1)*3, :, :]))
+                self.vgg_real_Shapes_list.append(self.vgg19(self.real_Shapes[:, i*3:(i+1)*3, :, :]))
+                self.vgg_real_Colors_list.append(self.vgg19(self.real_Colors[:, i*3:(i+1)*3, :, :]))
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
@@ -224,8 +227,8 @@ class DualNetModel(BaseModel):
         self.loss_G_L1 = 0.0
         self.loss_G_L1_B = 0.0
         if self.opt.lambda_L1 > 0.0:
-            self.loss_G_L1 = self.criterionL1(self.fake_C, self.real_C) * self.opt.lambda_L1
-            self.loss_G_L1_B = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1_B
+            self.loss_G_L1 = torch.sum(self.label * self.criterionL1(self.fake_C, self.real_C)) * self.opt.lambda_L1
+            self.loss_G_L1_B = torch.sum(self.label * self.criterionL1(self.fake_B, self.real_B)) * self.opt.lambda_L1_B
 
         # 3. contextual loss
         self.loss_G_CX = 0.0
@@ -233,13 +236,12 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_CX > 0.0:
             for l in self.vgg_layers:
                 # symmetric contextual loss
-                self.loss_G_CX += self.criterionCX(self.vgg_real_C[l], self.vgg_fake_C[l]) * self.opt.lambda_CX
-                self.loss_G_CX_B += self.criterionCX(self.vgg_real_B[l], self.vgg_fake_B[l]) * self.opt.lambda_CX_B
+                cx, cx_batch = self.criterionCX(self.vgg_real_C[l], self.vgg_fake_C[l])
+                self.loss_G_CX += torch.sum(cx_batch * self.label) * self.opt.lambda_CX
+                cx_B, cx_B_batch = self.criterionCX(self.vgg_real_B[l], self.vgg_fake_B[l])
+                self.loss_G_CX_B += torch.sum(cx_B_batch * self.label) * self.opt.lambda_CX_B
 
-        # 4. L2 loss
-        self.loss_G_MSE = 0.0
-        if self.opt.lambda_L2 > 0.0:
-            self.loss_G_MSE = self.criterionMSE(self.fake_C, self.real_C) * self.opt.lambda_L2
+        # 4. L2 loss no use ... deleted
 
         # 5. patch loss
         self.loss_patch_G = 0.0
@@ -253,17 +255,17 @@ class DualNetModel(BaseModel):
                 for l in self.vgg_layers:
                     self.loss_G_TX += \
                         self.criterionCX(self.vgg_real_Colors_list[ni][l]-self.vgg_real_Bases_list[ni][l],
-                                         self.vgg_fake_C[l]-self.vgg_real_A[l]) * self.opt.lambda_TX
+                                         self.vgg_fake_C[l]-self.vgg_real_A[l])[0] * self.opt.lambda_TX
                     self.loss_G_TX_B += \
                         self.criterionCX(self.vgg_real_Shapes_list[ni][l]-self.vgg_real_Bases_list[ni][l],
-                                         self.vgg_fake_B[l]-self.vgg_real_A[l]) * self.opt.lambda_TX_B
+                                         self.vgg_fake_B[l]-self.vgg_real_A[l])[0] * self.opt.lambda_TX_B
 
         # self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_L1 + self.loss_G_L1_B \
-        #     + self.loss_G_CX + self.loss_G_CX_B + self.loss_G_MSE \
+        #     + self.loss_G_CX + self.loss_G_CX_B \
         #     + self.loss_patch_G
 
-        # unpaired no l1/l2 and cx loss !
-        self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_TX + self.loss_G_TX_B
+        self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B + self.loss_G_TX + self.loss_G_TX_B \
+            + self.loss_G_L1 + self.loss_G_L1_B + self.loss_G_CX + self.loss_G_CX_B
 
         self.loss_G.backward(retain_graph=True)
 

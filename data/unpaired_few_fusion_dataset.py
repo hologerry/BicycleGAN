@@ -3,7 +3,7 @@ import random
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, transform_triple, transform_vgg
+from data.base_dataset import BaseDataset, transform_triple_with_label, transform_vgg
 from data.image_folder import make_dataset
 
 
@@ -19,6 +19,8 @@ class UnpairedFewFusionDataset(BaseDataset):
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
         # self.few_alphas = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
         self.few_alphas = ['0', '1', '2', '3', '4']
+        with open(os.path.join(opt.dataroot, "few_dic.txt")) as f:
+            self.few_dict = f.readlines()
         assert(self.opt.nencode == (len(self.few_alphas)-1))
 
     def __getitem__(self, index):
@@ -34,11 +36,16 @@ class UnpairedFewFusionDataset(BaseDataset):
         Colors = []
         Style_paths = []
         ABC_path_list = list(ABC_path)
+        target_font = int(ABC_path.split("/")[-1].split("_")[0])
+        target_char = ABC_path_list[-5]
+        label = 0
+        if target_char in self.few_dict[target_font-11000].split():
+            label = 1
         # for shapes
         random.shuffle(self.few_alphas)
         chars_random = self.few_alphas[:self.opt.nencode]
         for char in chars_random:
-            ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
+            ABC_path_list[-5] = char  # /path/to/img/XXXX_X.png
             phase_path = "".join(ABC_path_list)
             style_path = phase_path.replace(self.opt.phase, 'style')
             Style_paths.append(style_path)
@@ -48,10 +55,11 @@ class UnpairedFewFusionDataset(BaseDataset):
 
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
         # A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
-        A, B, C, Bases, Shapes, Colors = transform_triple(self.opt, A, B, C, Bases, Shapes, Colors)
+        label, A, B, C, Bases, Shapes, Colors = \
+            transform_triple_with_label(self.opt, label, A, B, C, Bases, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
-        return {'A': A, 'B': B, 'C': C, 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
+        return {'A': A, 'B': B, 'C': C, 'label': label, 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
                 'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors}
 
