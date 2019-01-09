@@ -165,7 +165,7 @@ def transform_triple_with_label(opt, label, A, B, C, Bases, Shapes, Colors):
     B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
     C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
 
-    if label == 0:
+    if label == 0.0:
         C = torch.zeros_like(C)
     label = torch.tensor(label)
 

@@ -38,9 +38,9 @@ class UnpairedFewFusionDataset(BaseDataset):
         ABC_path_list = list(ABC_path)
         target_font = int(ABC_path.split("/")[-1].split("_")[0])
         target_char = ABC_path_list[-5]
-        label = 0
-        if target_char in self.few_dict[target_font-11000].split():
-            label = 1
+        label = 0.0
+        if target_char in self.few_dict[target_font-11000].strip():
+            label = 1.0
         # for shapes
         random.shuffle(self.few_alphas)
         chars_random = self.few_alphas[:self.opt.nencode]
