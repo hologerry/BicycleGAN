@@ -29,7 +29,7 @@ class DualNetModel(BaseModel):
         # DualNet model only support AtoC now, BtoC and AtoB need to do
         # BicycleGAN model supports all
         assert(self.dirsection == 'AtoC')
-        self.visual_names = ['real_A', 'real_B', 'fake_B', 'real_C', 'fake_C']
+        self.visual_names = ['real_A', 'real_B', 'fake_B', 'real_C', 'real_C_l', 'fake_C']
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         # D for color
@@ -73,6 +73,7 @@ class DualNetModel(BaseModel):
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
             self.criterionL1 = torch.nn.L1Loss(reduction='none')
+            self.criterionL1_reduce = torch.nn.L1Loss()
             self.criterionMSE = torch.nn.MSELoss(reduction='none')
 
             # Contextual Loss
@@ -110,8 +111,12 @@ class DualNetModel(BaseModel):
     def set_input(self, input, blk_epoch=False):
         self.real_A = input['A'].to(self.device)  # A is the base font
         self.real_B = input['B'].to(self.device)  # B is the gray shape
+        self.real_B_G = input['B_G'].to(self.device)  # B_G is for GAN, label == 1: B_G == B, else B_G == Shapes[rand]
         self.real_C = input['C'].to(self.device)  # C is the color font
+        self.real_C_G = input['B_G'].to(self.device)  # C_G is for GAN, label == 1: C_G == C, else C_G == Colors[rand]
+        self.real_C_l = input['C_l'].to(self.device)  # C_l is the C * label, useful to visual
         self.label = input['label'].to(self.device)  # label == 1 means the image is in the few set
+
         if self.TX:
             self.real_Bases = input['Bases'].to(self.device)
         self.real_Shapes = input['Shapes'].to(self.device)
@@ -132,8 +137,8 @@ class DualNetModel(BaseModel):
     def validate(self):
         with torch.no_grad():
             self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
-            self.loss_G_L1_val = self.criterionL1(self.fake_C, self.real_C)
-            self.loss_G_L1_B_val = self.criterionL1(self.fake_B, self.real_B)
+            self.loss_G_L1_val = self.criterionL1_reduce(self.fake_C, self.real_C)
+            self.loss_G_L1_B_val = self.criterionL1_reduce(self.fake_B, self.real_B)
             return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C, \
                 self.loss_G_L1_B_val, self.loss_G_L1_val
 
@@ -161,16 +166,27 @@ class DualNetModel(BaseModel):
                 self.vgg_real_Shapes_list.append(self.vgg19(self.real_Shapes[:, i*3:(i+1)*3, :, :]))
                 self.vgg_real_Colors_list.append(self.vgg19(self.real_Colors[:, i*3:(i+1)*3, :, :]))
 
+        # if self.opt.conditional_D:   # tedious conditoinal data
+        #     self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
+        #     self.real_data_B = torch.cat([self.real_A, self.real_B], 1)
+        #     self.fake_data_C = torch.cat([self.real_A, self.fake_C], 1)
+        #     self.real_data_C = torch.cat([self.real_A, self.real_C], 1)
+        # else:
+        #     self.fake_data_B = self.fake_B
+        #     self.real_data_B = self.real_B
+        #     self.fake_data_C = self.fake_C
+        #     self.real_data_C = self.real_C
+
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
-            self.real_data_B = torch.cat([self.real_A, self.real_B], 1)
+            self.real_data_B = torch.cat([self.real_A, self.real_B_G], 1)
             self.fake_data_C = torch.cat([self.real_A, self.fake_C], 1)
-            self.real_data_C = torch.cat([self.real_A, self.real_C], 1)
+            self.real_data_C = torch.cat([self.real_A, self.real_C_G], 1)
         else:
             self.fake_data_B = self.fake_B
-            self.real_data_B = self.real_B
+            self.real_data_B = self.real_B_G
             self.fake_data_C = self.fake_C
-            self.real_data_C = self.real_C
+            self.real_data_C = self.real_C_G
 
     def backward_R(self, netR, netD, real_data, fake_data, real, fake):
         score_map = netD(fake_data.detach())

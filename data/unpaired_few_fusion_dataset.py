@@ -55,11 +55,12 @@ class UnpairedFewFusionDataset(BaseDataset):
 
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
         # A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
-        label, A, B, C, Bases, Shapes, Colors = \
-            transform_triple_with_label(self.opt, label, A, B, C, Bases, Shapes, Colors)
+        A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors = \
+            transform_triple_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
-        return {'A': A, 'B': B, 'C': C, 'label': label, 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
+        return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
+                'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
                 'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors}
 

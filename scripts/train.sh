@@ -182,8 +182,8 @@ case ${CLASS} in
   # LAMBDA_CX=0.0
   # LAMBDA_CX_B=0.0
   # LAMBDA_L2=0.0
-  LAMBDA_TX=10.0
-  LAMBDA_TX_B=5.0
+  LAMBDA_TX=0.0
+  LAMBDA_TX_B=0.0
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'

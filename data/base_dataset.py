@@ -151,7 +151,7 @@ def transform_triple(opt, A, B, C, Bases, Shapes, Colors):
     return A, B, C, Bases, Shapes, Colors
 
 
-def transform_triple_with_label(opt, label, A, B, C, Bases, Shapes, Colors):
+def transform_triple_with_label(opt, A, B, C, label, Bases, Shapes, Colors):
     if not opt.resize_or_crop == 'none':
         raise ValueError(
             "Only support none mode for resize_or_crop on base_gray_color dataset")
@@ -166,20 +166,31 @@ def transform_triple_with_label(opt, label, A, B, C, Bases, Shapes, Colors):
     C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
 
     if label == 0.0:
-        C = torch.zeros_like(C)
+        C_l = torch.zeros_like(C)
+    else:
+        C_l = C
     label = torch.tensor(label)
 
     Bases = list(map(lambda b: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
-    Bases = torch.cat(Bases)
     Shapes = list(map(lambda s: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
-    Shapes = torch.cat(Shapes)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+
+    rand_idx = random.randrange(opt.nencode)
+    if label == 0.0:
+        B_G = Shapes[rand_idx]
+        C_G = Colors[rand_idx]
+    else:
+        B_G = B
+        C_G = C
+
+    Bases = torch.cat(Bases)
+    Shapes = torch.cat(Shapes)
     Colors = torch.cat(Colors)
 
-    return label, A, B, C, Bases, Shapes, Colors
+    return A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors
 
 
 def __scale_width(img, target_width):
