@@ -13,14 +13,14 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self, parser):
-        parser.add_argument('--dataroot', required=True,
+        parser.add_argument('--dataroot', type=str, default='./datasets/small_base_gray_color_s',
                             help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
         parser.add_argument('--batch_size', type=int,
-                            default=16, help='input batch size')
+                            default=80, help='input batch size')
         parser.add_argument('--loadSize', type=int,
-                            default=286, help='scale images to this size')
+                            default=64, help='scale images to this size')
         parser.add_argument('--fineSize', type=int,
-                            default=256, help='then crop to this size')
+                            default=64, help='then crop to this size')
         parser.add_argument('--input_nc', type=int, default=3,
                             help='# of input image channels')
         parser.add_argument('--output_nc', type=int, default=3,
@@ -41,11 +41,11 @@ class BaseOptions():
                             help='gpu ids: e.g. 0  0,1,2, 0,2, -1 for CPU mode')
         parser.add_argument('--name', type=str, default='',
                             help='name of the experiment. It decides where to store samples and models')
-        parser.add_argument('--resize_or_crop', type=str, default='resize_and_crop',
+        parser.add_argument('--resize_or_crop', type=str, default='',
                             help='resize_and_crop, crop, scale_width, scale_width_and_crop, or none')
         parser.add_argument('--dataset_mode', type=str,
-                            default='aligned', help='multi_fusion,aligned,single')
-        parser.add_argument('--model', type=str, default='bicycle_gan',
+                            default='multi_fusion', help='multi_fusion,aligned,single')
+        parser.add_argument('--model', type=str, default='dualnet',
                             help='chooses which model to use. bicycle,, ...')
         parser.add_argument('--direction', type=str,
                             default='AtoB', help='AtoB or BtoC or AtoC, A base B gray C color.' +
@@ -74,15 +74,15 @@ class BaseOptions():
                             help='number of Discrminators')
         parser.add_argument('--gan_mode', type=str,
                             default='lsgan', help='dcgan|lsgan')
-        parser.add_argument('--netD', type=str, default='basic_256_multi',
+        parser.add_argument('--netD', type=str, default='basic_64',
                             help='selects model to use for netD')
-        parser.add_argument('--netD_B', type=str, default='basic_256_multi',
+        parser.add_argument('--netD_B', type=str, default='basic_64',
                             help='selects model to use for netD')
-        parser.add_argument('--netR',  type=str, default='basic_256',
+        parser.add_argument('--netR',  type=str, default='basic_64',
                             help='selects model to use for netR')
-        parser.add_argument('--netG', type=str, default='unet_256',
+        parser.add_argument('--netG', type=str, default='dualnet',
                             help='selects model to use for netG')
-        parser.add_argument('--netE', type=str, default='resnet_256',
+        parser.add_argument('--netE', type=str, default='resnet_64',
                             help='selects model to use for netE')
         parser.add_argument('--norm', type=str, default='instance',
                             help='instance normalization or batch normalization')
@@ -114,7 +114,7 @@ class BaseOptions():
         # extra parameters
         parser.add_argument('--where_add', type=str, default='all',
                             help='input|all|middle; where to add z in the network G')
-        parser.add_argument('--conditional_D', action='store_true',
+        parser.add_argument('--conditional_D', action='store_false',
                             help='if use conditional GAN for D')
         parser.add_argument('--init_type', type=str, default='xavier',
                             help='network initialization [normal|xavier|kaiming|orthogonal]')

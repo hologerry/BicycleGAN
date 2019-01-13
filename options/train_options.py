@@ -11,7 +11,7 @@ class TrainOptions(BaseOptions):
                             'panel with certain number of images per row.')
         parser.add_argument('--display_winsize', type=int,
                             default=256, help='display window size')
-        parser.add_argument('--display_id', type=int, default=1,
+        parser.add_argument('--display_id', type=int, default=0,
                             help='window id of the web display')
         parser.add_argument('--display_port', type=int,
                             default=8097, help='visdom display port')
@@ -23,7 +23,7 @@ class TrainOptions(BaseOptions):
                             help='frequency of showing training results on console')
         parser.add_argument('--save_latest_freq', type=int, default=10000,
                             help='frequency of saving the latest results')
-        parser.add_argument('--save_epoch_freq', type=int, default=5,
+        parser.add_argument('--save_epoch_freq', type=int, default=50,
                             help='frequency of saving checkpoints at the end of epochs')
         parser.add_argument('--black_epoch_freq', type=int, default=0,
                             help='frequency of black epoch')
@@ -68,9 +68,9 @@ class TrainOptions(BaseOptions):
                             help='weight on D (for B) loss, D(G(B, E(B)))')
         parser.add_argument('--lambda_GAN_R', type=float, default=0.01,
                             help='weight on D (for B) loss, D(G(B, E(B)))')
-        parser.add_argument('--lambda_TX', type=float, default=2.0,
+        parser.add_argument('--lambda_TX', type=float, default=0.0,
                             help='weight on D (for B) loss, D(G(B, E(B)))')
-        parser.add_argument('--lambda_TX_B', type=float, default=1.0,
+        parser.add_argument('--lambda_TX_B', type=float, default=0.0,
                             help='weight on D (for B) loss, D(G(B, E(B)))')
 
         self.isTrain = True
