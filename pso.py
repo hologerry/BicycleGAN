@@ -152,8 +152,8 @@ class PSO:
 
     def get_best_fitness_position(self):
         for particle in self.particles:
-            if particle.fitness < self.best_fitnesss:
-                self.best_fitnesss = particle.fitness
+            if particle.fitness < self.best_fitness:
+                self.best_fitness = particle.fitness
                 self.best_postition = copy.deepcopy(particle.position)
 
     def update_velocity(self, particle):
@@ -177,7 +177,7 @@ class PSO:
         if fitness < particle.best_fitness:
             particle.best_position = copy.deepcopy(particle.position)
             particle.best_fitness = fitness
-        if fitness < self.best_fitnesss:
+        if fitness < self.best_fitness:
             self.best_postition = copy.deepcopy(particle.position)
             self.best_fitness = fitness
 

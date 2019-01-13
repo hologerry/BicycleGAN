@@ -23,7 +23,7 @@ class TrainOptions(BaseOptions):
                             help='frequency of showing training results on console')
         parser.add_argument('--save_latest_freq', type=int, default=10000,
                             help='frequency of saving the latest results')
-        parser.add_argument('--save_epoch_freq', type=int, default=50,
+        parser.add_argument('--save_epoch_freq', type=int, default=2,
                             help='frequency of saving checkpoints at the end of epochs')
         parser.add_argument('--black_epoch_freq', type=int, default=0,
                             help='frequency of black epoch')
@@ -36,9 +36,9 @@ class TrainOptions(BaseOptions):
                             '<epoch_count>, <epoch_count>+<save_latest_freq>, ...')
         parser.add_argument('--phase', type=str,
                             default='train', help='train, val, test, etc')
-        parser.add_argument('--niter', type=int, default=100,
+        parser.add_argument('--niter', type=int, default=4,
                             help='# of iter(epoch) at starting learning rate')
-        parser.add_argument('--niter_decay', type=int, default=100,
+        parser.add_argument('--niter_decay', type=int, default=6,
                             help='# of iter(epoch) to linearly decay learning rate to zero')
         parser.add_argument('--beta1', type=float,
                             default=0.9, help='momentum term of adam')
