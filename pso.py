@@ -7,7 +7,7 @@ from models import create_model
 from options.train_options import TrainOptions
 from util.visualizer import Visualizer, save_images
 
-from pso_helper import get_range_list, convert_hp_to_dict
+from pso_helper import get_range_list, convert_hp_to_dict, print_options
 
 
 class Particle:
@@ -34,14 +34,16 @@ class Particle:
         # model train
         # model evaluation
         name = str(iter_id) + '_' + str(self.particle_id)
-        checkpoints_dir = 'checkpoints/' + name
-        opt = TrainOptions.parse()
+        checkpoints_dir = 'checkpoints/pso'
+        opt = TrainOptions().parse()
         opt.name = name
         opt.checkpoints_dir = checkpoints_dir
 
         hp_opt_dict = convert_hp_to_dict(self.position, self.dim)
-        for i in iter(hp_opt_dict):
-            opt[i] = hp_opt_dict[i]
+        for key, value in hp_opt_dict.items():
+            setattr(opt, key, value)
+
+        print_options(opt)
 
         data_loader = CreateDataLoader(opt)
         dataset = data_loader.load_data()

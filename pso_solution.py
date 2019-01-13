@@ -1,8 +1,6 @@
-
-
 from pso import PSO
 
-dim = 16
+dim = 14
 size = 20
 iter_num = 100
 

@@ -1,6 +1,10 @@
+from util import util
+import os
+
+
 # reference to hyper-parameters.md
 # use int to denote the value
-norm = ['instance', 'batch']
+# norm = ['instance', 'batch']
 upsample = ['basic', 'bilinear']
 nl = ['relu', 'lrelu', 'elu']
 use_attention = [False, True]
@@ -13,7 +17,6 @@ lr_decay_iters = [100, 500, 1000]
 
 lambda_L1 = list(range(1, 21))
 lambda_L1_B = list(range(1, 21))
-lambda_L2 = list(range(1, 21))
 lambda_CX = list(range(1, 21))
 lambda_CX_B = list(range(1, 21))
 lambda_GAN = list(range(1, 11))
@@ -23,7 +26,7 @@ lambda_GAN_B = list(range(1, 11))
 def get_range_list():
     range_list = []
     # model related
-    range_list.append(2)  # norm
+    # range_list.append(2)  # norm
     range_list.append(2)  # upsample
     range_list.append(3)  # nl
     range_list.append(2)  # use_attention
@@ -36,7 +39,6 @@ def get_range_list():
     # lambda parameters
     range_list.append(20)  # l1
     range_list.append(20)  # l1 b
-    range_list.append(20)  # l2
     range_list.append(20)  # cx
     range_list.append(20)  # cx b
     range_list.append(10)  # gan
@@ -49,7 +51,7 @@ def convert_hp_to_dict(hps, dim):
     hp_opt = {}
     assert(isinstance(hps, list))
     assert(len(hps) == dim)
-    hp_opt['norm'] = norm[hps[0]]
+    # hp_opt['norm'] = norm[hps[0]]
     hp_opt['upsample'] = upsample[hps[1]]
     hp_opt['nl'] = nl[hps[2]]
     hp_opt['use_attention'] = use_attention[hps[3]]
@@ -60,10 +62,28 @@ def convert_hp_to_dict(hps, dim):
     hp_opt['lr_decay_iters'] = lr_decay_iters[hps[8]]
     hp_opt['lambda_L1'] = lambda_L1[hps[9]]*5.0
     hp_opt['lambda_L1_B'] = lambda_L1_B[hps[10]]*5.0
-    hp_opt['lambda_L2'] = lambda_L2[hps[11]]*5.0
     hp_opt['lambda_CX'] = lambda_CX[hps[12]]*5.0
     hp_opt['lambda_CX_B'] = lambda_CX_B[hps[13]]*5.0
     hp_opt['lambda_GAN'] = lambda_GAN[hps[14]]*5.0
     hp_opt['lambda_GAN_B'] = lambda_GAN_B[hps[15]]*5.0
 
+    print(hp_opt)
+
     return hp_opt
+
+
+def print_options(opt):
+    message = ''
+    message += '----------------- Options ---------------\n'
+    for k, v in sorted(vars(opt).items()):
+        message += '{:>25}: {:<30}\n'.format(str(k), str(v))
+    message += '----------------- End -------------------'
+    print(message)
+
+    # save to the disk
+    expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
+    util.mkdirs(expr_dir)
+    file_name = os.path.join(expr_dir, 'opt.txt')
+    with open(file_name, 'wt') as opt_file:
+        opt_file.write(message)
+        opt_file.write('\n')

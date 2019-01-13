@@ -2,7 +2,6 @@ import os.path
 import random
 
 from PIL import Image
-import torch
 
 from data.base_dataset import BaseDataset, transform_fusion
 from data.image_folder import make_dataset
@@ -52,13 +51,9 @@ class MultiFusionDataset(BaseDataset):
             Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
         A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
-        C_l = C
-        label = torch.tensor(1.0)
-        B_G = B
-        C_G = C
 
         # A is the reference, B is the gray shape, C is the gradient
-        return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
+        return {'A': A, 'B': B, 'C': C,
                 'Shapes': Shapes, 'Colors': Colors,
                 'ABC_path': ABC_path, 'Shape_paths': Shape_paths, 'Color_paths': Color_paths}
 

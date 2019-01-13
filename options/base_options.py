@@ -33,22 +33,22 @@ class BaseOptions():
                             help='# latent vector')
         parser.add_argument('--nef', type=int, default=64,
                             help='# of encoder filters in first conv layer')
-        parser.add_argument('--ngf', type=int, default=64,
+        parser.add_argument('--ngf', type=int, default=32,
                             help='# of gen filters in first conv layer')
-        parser.add_argument('--ndf', type=int, default=64,
+        parser.add_argument('--ndf', type=int, default=32,
                             help='# of discrim filters in first conv layer')
         parser.add_argument('--gpu_ids', type=str, default='0',
                             help='gpu ids: e.g. 0  0,1,2, 0,2, -1 for CPU mode')
         parser.add_argument('--name', type=str, default='',
                             help='name of the experiment. It decides where to store samples and models')
-        parser.add_argument('--resize_or_crop', type=str, default='',
+        parser.add_argument('--resize_or_crop', type=str, default='none',
                             help='resize_and_crop, crop, scale_width, scale_width_and_crop, or none')
         parser.add_argument('--dataset_mode', type=str,
                             default='multi_fusion', help='multi_fusion,aligned,single')
         parser.add_argument('--model', type=str, default='dualnet',
                             help='chooses which model to use. bicycle,, ...')
         parser.add_argument('--direction', type=str,
-                            default='AtoB', help='AtoB or BtoC or AtoC, A base B gray C color.' +
+                            default='AtoC', help='AtoB or BtoC or AtoC, A base B gray C color.' +
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
@@ -184,7 +184,7 @@ class BaseOptions():
                       ) if opt.suffix != '' else ''
             opt.name = opt.name + suffix
 
-        self.print_options(opt)
+        # self.print_options(opt)
 
         # set gpu ids
         str_ids = opt.gpu_ids.split(',')

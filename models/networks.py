@@ -638,9 +638,9 @@ class CXLoss(nn.Module):
 
         CX = CX.max(dim=3)[0].max(dim=2)[0]
         CX = CX.mean(1)
-        CX_B = -torch.log(CX)
-        CX = torch.mean(CX_B)
-        return CX, CX_B
+        CX = -torch.log(CX)
+        CX = torch.mean(CX)
+        return CX
 
 
 class RecLoss(nn.Module):
