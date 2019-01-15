@@ -43,7 +43,7 @@ class Particle:
         for key, value in hp_opt_dict.items():
             setattr(opt, key, value)
 
-        print_options(opt)
+        print_options(opt, hp_opt_dict)
 
         data_loader = CreateDataLoader(opt)
         dataset = data_loader.load_data()
@@ -183,10 +183,12 @@ class PSO:
 
     def iterate(self):
         print("Iterating pso")
-        for i in range(self.iter_num):
+        for i in range(1, self.iter_num):
             for particle in self.particles:
                 self.update_velocity(particle)
                 self.update_position(i, particle)
             self.fitness_list.append(self.best_fitness)
+            print("End of iter %d / %d" % (i, self.iter_num))
+            print("Current best fitness:", self.best_fitness)
 
         return self.fitness_list, self.best_postition

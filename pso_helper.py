@@ -16,11 +16,17 @@ lr_policy = ['lambda', 'step']  # plateau is not supported due to the step() has
 lr_decay_iters = [100, 500, 1000]
 
 lambda_L1 = list(range(1, 21))
+lambda_L1 = [1.0] + list(map(lambda e: e*5.0, lambda_L1))
 lambda_L1_B = list(range(1, 21))
+lambda_L1_B = [1.0] + list(map(lambda e: e*5.0, lambda_L1_B))
 lambda_CX = list(range(1, 21))
+lambda_CX = [1.0] + list(map(lambda e: e*5.0, lambda_CX))
 lambda_CX_B = list(range(1, 21))
+lambda_CX_B = [1.0] + list(map(lambda e: e*5.0, lambda_CX_B))
 lambda_GAN = list(range(1, 11))
+lambda_GAN = [0.1, 1.0] + list(map(lambda e: e*5.0, lambda_GAN))
 lambda_GAN_B = list(range(1, 11))
+lambda_GAN_B = [0.1, 1.0] + list(map(lambda e: e*5.0, lambda_GAN_B))
 
 
 def get_range_list():
@@ -66,23 +72,15 @@ def convert_hp_to_dict(hps, dim):
     hp_opt['lambda_GAN'] = lambda_GAN[hps[12]]*5.0
     hp_opt['lambda_GAN_B'] = lambda_GAN_B[hps[13]]*5.0
 
-    print(hp_opt)
-
     return hp_opt
 
 
-def print_options(opt):
-    message = ''
-    message += '----------------- Options ---------------\n'
-    for k, v in sorted(vars(opt).items()):
-        message += '{:>25}: {:<30}\n'.format(str(k), str(v))
-    message += '----------------- End -------------------'
-    print(message)
-
+def print_options(opt, hp_opt):
     # save to the disk
+    print(hp_opt)
     expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
     util.mkdirs(expr_dir)
     file_name = os.path.join(expr_dir, 'opt.txt')
     with open(file_name, 'wt') as opt_file:
-        opt_file.write(message)
+        opt_file.write(hp_opt)
         opt_file.write('\n')
