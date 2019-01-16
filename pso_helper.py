@@ -33,22 +33,22 @@ def get_range_list():
     range_list = []
     # model related
     # range_list.append(2)  # norm
-    range_list.append(2)  # upsample
-    range_list.append(3)  # nl
-    range_list.append(2)  # use_attention
-    range_list.append(4)  # init_type
+    range_list.append(len(upsample))  # upsample
+    range_list.append(len(nl))  # nl
+    range_list.append(len(use_attention))  # use_attention
+    range_list.append(len(init_type))  # init_type
     # optimizer related
-    range_list.append(5)  # beta1
-    range_list.append(6)  # lr
-    range_list.append(2)  # lr_policy
-    range_list.append(3)  # lr_decay_iters
+    range_list.append(len(beta1))  # beta1
+    range_list.append(len(lr))  # lr
+    range_list.append(len(lr_policy))  # lr_policy
+    range_list.append(len(lr_decay_iters))  # lr_decay_iters
     # lambda parameters
-    range_list.append(20)  # l1
-    range_list.append(20)  # l1 b
-    range_list.append(20)  # cx
-    range_list.append(20)  # cx b
-    range_list.append(10)  # gan
-    range_list.append(10)  # gan b
+    range_list.append(len(lambda_L1))  # l1
+    range_list.append(len(lambda_L1_B))  # l1 b
+    range_list.append(len(lambda_CX))  # cx
+    range_list.append(len(lambda_CX_B))  # cx b
+    range_list.append(len(lambda_GAN))  # gan
+    range_list.append(len(lambda_GAN_B))  # gan b
 
     return range_list
 
@@ -65,12 +65,12 @@ def convert_hp_to_dict(hps, dim):
     hp_opt['lr'] = lr[hps[5]]
     hp_opt['lr_policy'] = lr_policy[hps[6]]
     hp_opt['lr_decay_iters'] = lr_decay_iters[hps[7]]
-    hp_opt['lambda_L1'] = lambda_L1[hps[8]]*5.0
-    hp_opt['lambda_L1_B'] = lambda_L1_B[hps[9]]*5.0
-    hp_opt['lambda_CX'] = lambda_CX[hps[10]]*5.0
-    hp_opt['lambda_CX_B'] = lambda_CX_B[hps[11]]*5.0
-    hp_opt['lambda_GAN'] = lambda_GAN[hps[12]]*5.0
-    hp_opt['lambda_GAN_B'] = lambda_GAN_B[hps[13]]*5.0
+    hp_opt['lambda_L1'] = lambda_L1[hps[8]]
+    hp_opt['lambda_L1_B'] = lambda_L1_B[hps[9]]
+    hp_opt['lambda_CX'] = lambda_CX[hps[10]]
+    hp_opt['lambda_CX_B'] = lambda_CX_B[hps[11]]
+    hp_opt['lambda_GAN'] = lambda_GAN[hps[12]]
+    hp_opt['lambda_GAN_B'] = lambda_GAN_B[hps[13]]
 
     return hp_opt
 
@@ -82,5 +82,5 @@ def print_options(opt, hp_opt):
     util.mkdirs(expr_dir)
     file_name = os.path.join(expr_dir, 'opt.txt')
     with open(file_name, 'wt') as opt_file:
-        opt_file.write(hp_opt)
+        opt_file.write(str(hp_opt))
         opt_file.write('\n')

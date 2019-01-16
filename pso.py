@@ -127,7 +127,7 @@ class Particle:
                 save_images(images, names, img_path, opt=validate_opt, aspect_ratio=1.0,
                             width=validate_opt.fineSize)
 
-        self.fitness = validation_loss
+        self.fitness = validation_loss.item()
         return self.fitness
 
 

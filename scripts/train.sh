@@ -38,7 +38,7 @@ NET_E='resnet_64'
 USE_ATTENTION=''
 LAMBDA_L1=10.0
 
-LR=0.0002
+LR=0.002
 
 BLACK_EPOCH=0
 VALIDATE_FREQ=0
@@ -81,7 +81,7 @@ case ${CLASS} in
   NITER_DECAY=50
   SAVE_EPOCH=10
   ;;
-'base_gray_color' | 'base_gray_color_s')
+'base_gray_color' | 'base_gray_color_s' | 'small_base_gray_color_s')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
@@ -114,6 +114,7 @@ case ${CLASS} in
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN=''
   BLACK_EPOCH=0
+  VALIDATE_FREQ=10
   ;;
 'base_gray_texture')
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
