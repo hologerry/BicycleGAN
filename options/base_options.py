@@ -16,7 +16,7 @@ class BaseOptions():
         parser.add_argument('--dataroot', type=str, default='./datasets/small_base_gray_color_s',
                             help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
         parser.add_argument('--batch_size', type=int,
-                            default=80, help='input batch size')
+                            default=70, help='input batch size')
         parser.add_argument('--loadSize', type=int,
                             default=64, help='scale images to this size')
         parser.add_argument('--fineSize', type=int,
@@ -52,7 +52,7 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=40,
+        parser.add_argument('--num_threads', default=35,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
