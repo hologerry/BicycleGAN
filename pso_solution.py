@@ -12,7 +12,7 @@ with open("pso_result.txt", "w") as f:
     f.write("best fitness: " + str(fitness_list[-1]) + "\n")
     f.write("history fitness:\n")
     for i in range(len(fitness_list)):
-        f.write(str(fitness_list(i)) + "\n")
+        f.write(str(fitness_list[i]) + "\n")
 
 print("best position:", best_position)
 print("best fitness:", fitness_list[-1])
