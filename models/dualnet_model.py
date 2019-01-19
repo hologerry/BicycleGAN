@@ -163,12 +163,13 @@ class DualNetModel(BaseModel):
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
             self.real_data_B = torch.cat([self.real_A, self.real_B], 1)
             self.fake_data_C = torch.cat([self.real_A, self.fake_C], 1)
-            self.real_data_C = torch.cat([self.real_A, self.real_C], 1)
+            self.real_data_C = torch.cat([self.real_A, self.real_Colors[:,:3,...]], 1)
+
         else:
             self.fake_data_B = self.fake_B
             self.real_data_B = self.real_B
             self.fake_data_C = self.fake_C
-            self.real_data_C = self.real_C
+            self.real_data_C = self.real_Colors[:,:3,...]
 
     def backward_R(self, netR, netD, real_data, fake_data, real, fake):
         score_map = netD(fake_data.detach())

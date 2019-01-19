@@ -4,6 +4,7 @@ MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
+
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 
@@ -163,7 +164,7 @@ case ${CLASS} in
   NO_FLIP='--no_flip'
   NITER=500
   NITER_DECAY=2500
-  SAVE_EPOCH=100
+  SAVE_EPOCH=10
   NEF=64
   NGF=32
   NDF=32
@@ -183,7 +184,7 @@ case ${CLASS} in
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
-  LAMBDA_PATCH=0.001
+  LAMBDA_PATCH=0.00001
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -193,6 +194,120 @@ case ${CLASS} in
   BLACK_EPOCH=0
   DISPLAY_FREQ=32
   PRINT_FREQ=32
+  LR=0.0001
+  ;;
+'11018')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
+  BATCH_SIZE=4
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
+  NET_E='resnet_64'
+  LAMBDA_L1=0.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_GARY=100.0
+  LAMBDA_CX=0.0
+  LAMBDA_CX_B=0.0
+  LAMBDA_L2=0.0
+  LAMBDA_PATCH=0.00001
+  DATASET_MODE='unpaired_few_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=10
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=4
+  PRINT_FREQ=4
+  LR=0.0001
+  ;;
+'11030')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
+  BATCH_SIZE=4
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
+  NET_E='resnet_64'
+  LAMBDA_L1=0.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_GARY=100.0
+  LAMBDA_CX=0.0
+  LAMBDA_CX_B=0.0
+  LAMBDA_L2=0.0
+  LAMBDA_PATCH=0.00001
+  DATASET_MODE='unpaired_few_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=10
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=4
+  PRINT_FREQ=4
+  LR=0.0001
+  ;;
+'11027')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
+  BATCH_SIZE=4
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  RESIZE_OR_CROP='none'
+  NO_FLIP='--no_flip'
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=10
+  NEF=64
+  NGF=32
+  NDF=32
+  NET_G='dualnet'
+  NET_D='basic_64'
+  NET_D2='basic_64'
+  NET_R='basic_64'
+  NET_E='resnet_64'
+  LAMBDA_L1=0.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_GARY=100.0
+  LAMBDA_CX=0.0
+  LAMBDA_CX_B=0.0
+  LAMBDA_L2=0.0
+  LAMBDA_PATCH=0.00001
+  DATASET_MODE='unpaired_few_fusion'
+  USE_ATTENTION='--use_attention'
+  WHERE_ADD='all'
+  CONDITIONAL_D='--conditional_D'
+  CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=10
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=4
+  PRINT_FREQ=4
   LR=0.0001
   ;;
 'skeleton_gray_color')
@@ -268,7 +383,7 @@ case ${CLASS} in
   ;;
 esac
 
-DATE=`date '+%d_%m_%Y-%H_conv2_2-patch3_nonorm'`      # delete minute for more convinent continue training, just run one experiment in an hour
+DATE=`date '+%d_%m_%Y-%H_conv1'`    # delete minute for more convinent continue training, just run one experiment in an hour
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command
@@ -308,6 +423,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_CX ${LAMBDA_CX} \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
+  --lambda_patch ${LAMBDA_PATCH} \
   --where_add ${WHERE_ADD} \
   ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \

@@ -1399,7 +1399,7 @@ class PatchLoss(nn.Module):
         self.vgg19 = VGG19().to(device)
         self.vgg19.load_model(opt.vgg)
         self.vgg19.eval()
-        self.vgg_layer = 'conv2_2'
+        self.vgg_layer = 'conv1_2'
         self.loss = torch.nn.L1Loss()
 
     def l2_normalize_patch(self, features):
@@ -1419,8 +1419,13 @@ class PatchLoss(nn.Module):
         color_ref: colors, style input
         '''
 
-        patch_size = 3
-
+        patch_size = 2
+        '''
+        output_feat = self.vgg19(output)[self.vgg_layer]  # N * C * 8 * 8
+        ref_feat = self.vgg19(reference)[self.vgg_layer]
+        color_feat = self.vgg19(color_ref)[self.vgg_layer]  # N * C * 16 * 16
+        shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
+        '''
         output_feat = self.vgg19(output)[self.vgg_layer]  # N * C * 8 * 8
         ref_feat = self.vgg19(reference)[self.vgg_layer]
         color_feat = self.vgg19(color_ref)[self.vgg_layer]  # N * C * 16 * 16
@@ -1433,6 +1438,8 @@ class PatchLoss(nn.Module):
         output_pat = output_pat.view((N, C, H-patch_size+1, W-patch_size+1, patch_size, patch_size))
 
         shape_pat = unfolder2(shape_feat)
+        shape_pat = shape_pat.view((N, C, (H*2-patch_size+1), (W*2-patch_size+1), patch_size, patch_size))
+        shape_pat = self.l2_normalize_patch(shape_pat)
         shape_pat = shape_pat.view((N, C, (H*2-patch_size+1)*(W*2-patch_size+1), patch_size, patch_size))
         shape_pat = torch.transpose(shape_pat, 1, 2)
 
