@@ -168,13 +168,13 @@ class DualNetModel(BaseModel):
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
-            self.real_data_B = torch.cat([self.real_A, self.real_B], 1)
+            self.real_data_B = torch.cat([self.real_A, self.real_Shapes[:,:3,...]], 1)
             self.fake_data_C = torch.cat([self.real_A, self.fake_C], 1)
             self.real_data_C = torch.cat([self.real_A, self.real_Colors[:,:3,...]], 1)
 
         else:
             self.fake_data_B = self.fake_B
-            self.real_data_B = self.real_B
+            self.real_data_B = self.real_Shapes[:,:3,...]
             self.fake_data_C = self.fake_C
             self.real_data_C = self.real_Colors[:,:3,...]
 
@@ -226,10 +226,8 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_L2 > 0.0:
             self.loss_G_MSE = self.criterionMSE(self.fake_C, self.real_C) * self.opt.lambda_L2
 
-
         # 5. patch loss
         self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) * self.opt.lambda_patch
-
 
         # 6. local adv loss
         self.loss_local_adv = self.backward_G_GAN(self.fake_B_blocks, self.netD_local, self.opt.lambda_local_D) * self.opt.lambda_local_D
