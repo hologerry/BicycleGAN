@@ -129,7 +129,7 @@ class Particle:
                             width=validate_opt.fineSize)
 
         self.fitness = validation_loss.item()
-        print("Current iter %d particle %d fitness: %d" % (iter_id, self.particle_id, self.fitness))
+        print("Current iter" + str(iter_id) + " particle " + str(self.particle_id) + " fitness: " + str(self.fitness))
 
         return self.fitness
 
