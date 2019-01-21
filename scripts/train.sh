@@ -172,6 +172,7 @@ case ${CLASS} in
   NET_G='dualnet'
   NET_D='basic_64'
   NET_D2='basic_64'
+  NET_DLOCAL='basic_32'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
   LAMBDA_L1_B=60.0
@@ -204,7 +205,8 @@ case ${CLASS} in
   CONTINUE_TRAIN='--continue_train'
   VALIDATE_FREQ=50
   BLACK_EPOCH=0
-  DISPLAY_FREQ=100
+  DISPLAY_FREQ=32
+  PRINT_FREQ=32
   LR=0.00002
   ;;
 'base_gray_texture_tx')
@@ -446,7 +448,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --netE ${NET_E} \
   --netD ${NET_D} \
   --netD_B ${NET_D2} \
-  --netDlocal ${NET_DLOCAL} \
+  --netD_local ${NET_DLOCAL} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
@@ -457,10 +459,10 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
   --lambda_patch ${LAMBDA_PATCH} \
-  --lambda_GAN {LAMBDA_GAN} \
-  --lambda_GAN_B {LAMBDA_GAN_B} \
-  --lambda_local_D {LAMBDA_LOCAL_D} \
-  --lambda_local_style {LAMBDA_LOCAL_STYLE} \
+  --lambda_GAN ${LAMBDA_GAN} \
+  --lambda_GAN_B ${LAMBDA_GAN_B} \
+  --lambda_local_D ${LAMBDA_LOCAL_D} \
+  --lambda_local_style ${LAMBDA_LOCAL_STYLE} \
   --where_add ${WHERE_ADD} \
   ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \

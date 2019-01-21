@@ -81,6 +81,8 @@ class BaseOptions():
                             help='selects model to use for netD')
         parser.add_argument('--netD_B', type=str, default='basic_256_multi',
                             help='selects model to use for netD')
+        parser.add_argument('--netD_local', type=str, default='basic_32',
+                            help='local D')
         parser.add_argument('--netR',  type=str, default='basic_256',
                             help='selects model to use for netR')
         parser.add_argument('--netG', type=str, default='unet_256',

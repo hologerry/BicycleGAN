@@ -76,6 +76,10 @@ class TrainOptions(BaseOptions):
                             help='weight on patch loss')
         parser.add_argument('--lambda_gray', type=float, default=1.0,
                             help='weight on gray l1 loss')
+        parser.add_argument('--lambda_local_D', type=float, default=1.0,
+                            help='weight on local adv loss')
+        parser.add_argument('--lambda_local_style', type=float, default=1.0,
+                            help='weight on local style loss')
 
         self.isTrain = True
         return parser
