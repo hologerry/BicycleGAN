@@ -335,7 +335,7 @@ class DualNetModel(BaseModel):
                                 and 0.98 <= target_tensor[j, 1, x + block_size, y + block_size] <= 1
                                 and 0.98 <= target_tensor[j, 2, x + block_size, y + block_size] <= 1)):
                         break
-                target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size].unsqueeze(0),
+                target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size],
                                                    requires_grad=False)
                 if i == 0:
                     target_blocks = target_random_block
@@ -350,19 +350,20 @@ class DualNetModel(BaseModel):
                 """
                 x1 = random.randint(0, img_size - block_size)
                 y1 = random.randint(0, img_size - block_size)
-                input_random_block = torch.tensor(input.data[j, :, x1:x1 + block_size, y1:y1 + block_size].unsqueeze(0),
+                input_random_block = torch.tensor(input.data[j, :, x1:x1 + block_size, y1:y1 + block_size],
                                                   requires_grad=False)
                 if i == 0:
                     input_blocks = input_random_block
                 else:
                     input_blocks = torch.cat([input_blocks, target_random_block], 0)
+        
+            input_blocks = torch.unsqueeze(input_blocks, 0)
+            target_blocks = torch.unsqueeze(target_blocks, 0)            
             if j == 0:
-                input_blocks = torch.unsqueeze(input_blocks, 0)
-                target_blocks = torch.unsqueeze(target_blocks, 0)
                 batch_input_blocks = input_blocks
                 batch_target_blocks = target_blocks
             else:
-                batch_input_blocks = torch.cat([batch_target_blocks, target_blocks], 0)
-                batch_target_blocks = target_blocks
+                batch_input_blocks = torch.cat([batch_input_blocks, input_blocks], 0)
+                batch_target_blocks = torch.cat([batch_target_blocks, target_blocks], 0)
 
         return batch_input_blocks, batch_target_blocks
