@@ -44,7 +44,15 @@ class UnpairedFewFusionDataset(BaseDataset):
             Shapes.append(Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)))
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
+        B = 0.299 * C[..., 0] + 0.587 * C[..., 1] + 0.114 * C[..., 2]
+        B = B.unsqueeze(2)
+        B = torch.cat([B, B, B], dim=1)
+
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
+        vgg_Shapes = 0.299 * vgg_Colors[..., 0] + 0.587 * vgg_Colors[..., 1] + 0.114 * vgg_Colors[..., 2]
+        vgg_Shapes = vgg_Shapes.unsqueeze(2)
+        vgg_Shapes = torch.cat([vgg_Shapes, vgg_Shapes, vgg_Shapes], dim=1)
+
         A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient

@@ -51,39 +51,6 @@ MODEL='bicycle_gan'
 
 # dataset parameters
 case ${CLASS} in
-'facades')
-  NITER=200
-  NITER_DECAY=200
-  SAVE_EPOCH=25
-  DIRECTION='BtoA'
-  ;;
-'edges2shoes')
-  NITER=30
-  NITER_DECAY=30
-  LOAD_SIZE=256
-  SAVE_EPOCH=5
-  INPUT_NC=1
-  NO_FLIP='--no_flip'
-  ;;
-'edges2handbags')
-  NITER=15
-  NITER_DECAY=15
-  LOAD_SIZE=256
-  SAVE_EPOCH=5
-  INPUT_NC=1
-  ;;
-'maps')
-  NITER=200
-  NITER_DECAY=200
-  LOAD_SIZE=600
-  SAVE_EPOCH=25
-  DIRECTION='BtoA'
-  ;;
-'night2day')
-  NITER=50
-  NITER_DECAY=50
-  SAVE_EPOCH=10
-  ;;
 'base_gray_color')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
@@ -168,23 +135,28 @@ case ${CLASS} in
   NEF=64
   NGF=32
   NDF=32
+
   NET_G='dualnet'
   NET_D='basic_64'
   NET_D2='basic_64'
-  NET_R='basic_64'
   NET_E='resnet_64'
   #LAMBDA_L1=100.0
   #LAMBDA_L1_B=60.0
   #LAMBDA_CX=50.0
   #LAMBDA_CX_B=15.0
   #LAMBDA_L2=100.0
-  LAMBDA_L1=0.0
+
+  LAMBDA_GAN=10.0
+  LAMBDA_GAN_B=10.0
+  LAMBDA_L1=100.0
   LAMBDA_L1_B=60.0
-  LAMBDA_GARY=100.0
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
   LAMBDA_PATCH=0.00001
+  LAMBDA_LOCAL_D=100.0
+  LAMBDA_LOCAL_STYLE=100.0
+
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -292,6 +264,7 @@ case ${CLASS} in
   NET_D2='basic_64'
   NET_R='basic_64'
   NET_E='resnet_64'
+
   LAMBDA_L1=0.0
   LAMBDA_L1_B=60.0
   LAMBDA_GARY=100.0
@@ -299,6 +272,8 @@ case ${CLASS} in
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
   LAMBDA_PATCH=0.00001
+
+
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -424,6 +399,10 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
   --lambda_patch ${LAMBDA_PATCH} \
+  --lambda_GAN {LAMBDA_GAN} \
+  --lambda_GAN_B {LAMBDA_GAN_B} \
+  --lambda_local_D {LAMBDA_LOCAL_D} \
+  --lambda_local_style {LAMBDA_LOCAL_STYLE} \
   --where_add ${WHERE_ADD} \
   ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \
