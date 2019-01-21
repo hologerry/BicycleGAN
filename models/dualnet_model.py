@@ -160,8 +160,7 @@ class DualNetModel(BaseModel):
         self.gray_vgg_Colors = self.gray_vgg_Colors.unsqueeze(1)
         self.gray_vgg_Colors = torch.cat([self.gray_vgg_Colors, self.gray_vgg_Colors, self.gray_vgg_Colors], dim=1)
         '''
-
-
+        
         #local blocks
         self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
         self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
