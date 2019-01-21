@@ -153,8 +153,13 @@ def define_D(input_nc, ndf, netD,
     nl = 'lrelu'  # use leaky relu for D
     nl_layer = get_non_linearity(layer_type=nl)
 
+
+
     if netD == 'basic_64':
         net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
+                        use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
+    elif netD == 'basic_32':
+        net = D_NLayers(input_nc, ndf, n_layers=4, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_128':
         net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
@@ -410,12 +415,15 @@ class D_NLayers(nn.Module):
 
         nf_mult_prev = nf_mult
         nf_mult = min(2**n_layers, 8)
+        
         sequence += [
             nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
                       kernel_size=kw, stride=1, padding=padw, bias=use_bias)]
+        
         if norm_layer is not None:
             sequence += [norm_layer(ndf * nf_mult)]
         sequence += [nl_layer()]
+
         if use_spectral_norm:
             sequence += [SpectralNorm(nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw,
                                       stride=1, padding=0, bias=use_bias))]

@@ -392,6 +392,7 @@ case ${CLASS} in
   NET_G='dualnet'
   NET_D='basic_64'
   NET_D2='basic_64'
+  NET_DLOCAL='basic_32'
   NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
@@ -445,7 +446,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --netE ${NET_E} \
   --netD ${NET_D} \
   --netD_B ${NET_D2} \
-  --netR ${NET_R} \
+  --netDlocal ${NET_DLOCAL} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \

@@ -204,29 +204,6 @@ class DualNetModel(BaseModel):
             self.fake_data_C = self.fake_C
             self.real_data_C = self.real_C_G
 
-    def backward_R(self, netR, netD, real_data, fake_data, real, fake):
-        score_map = netD(fake_data.detach())
-        # r means region
-        if self.opt.mask_operation:
-            masked_fake_data, masked_fake, real_data_r, fake_data_r, real_r, fake_r \
-                = self.proposal(score_map, real_data, fake_data, real, fake)
-        else:
-            real_data_r, fake_data_r, real_r, fake_r = self.proposal(score_map, real_data, fake_data, real, fake)
-
-        self.masked_fake = masked_fake
-        self.real_r = real_r
-        self.fake_r = fake_r
-        # print("masked fake data size", masked_fake_data.size())
-        pred_fake = netR(masked_fake_data.detach())
-        pred_real = netR(real_data)
-        # print("Reviser ouput size", pred_fake.size())
-        loss_R_fake, _ = self.criterionGAN(pred_fake, False)
-        loss_R_real, _ = self.criterionGAN(pred_real, True)
-        # Combined loss
-        loss_R = loss_R_fake + loss_R_real
-        loss_R.backward()
-        return loss_R, [loss_R_fake, loss_R_real]
-
     def backward_D(self, netD, real, fake):
         # Fake, stop backprop to the generator by detaching fake_B
         pred_fake = netD(fake.detach())
