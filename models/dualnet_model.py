@@ -325,16 +325,8 @@ class DualNetModel(BaseModel):
 
         for j in range(batch_size):
             for i in range(self.opt.block_num):
-                while True:
-                    x = random.randint(0, height - block_size - 1)
-                    y = random.randint(0, width - block_size - 1)
-                    if not ((0.98 <= target_tensor[j, 0, x, y] <= 1
-                             and 0.98 <= target_tensor[j, 1, x, y] <= 1
-                             and 0.98 <= target_tensor[j, 2, x, y] <= 1)
-                            or (0.98 <= target_tensor[j, 0, x + block_size, y + block_size] <= 1
-                                and 0.98 <= target_tensor[j, 1, x + block_size, y + block_size] <= 1
-                                and 0.98 <= target_tensor[j, 2, x + block_size, y + block_size] <= 1)):
-                        break
+                x = random.randint(0, height - block_size - 1)
+                y = random.randint(0, width - block_size - 1)
                 target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size],
                                                    requires_grad=False)
                 if i == 0:
