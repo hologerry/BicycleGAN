@@ -70,6 +70,9 @@ class BaseOptions():
         parser.add_argument('--vgg', type=str, default='./models/vgg19-dcbb9e9d.pth',
                             help='path to vgg pre-trained model, '
                             + 'download it from https://download.pytorch.org/models/vgg19-dcbb9e9d.pth')
+        parser.add_argument('--vgg_font', type=str, default='./models/vgg_font.pth',
+                            help='fine-tuned vgg in font dataset')
+
         parser.add_argument('--num_Ds', type=int, default=2,
                             help='number of Discrminators')
         parser.add_argument('--gan_mode', type=str,
