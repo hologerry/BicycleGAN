@@ -2,6 +2,7 @@ import torch
 from .base_model import BaseModel
 from . import networks
 from .vgg import VGG19
+import random
 
 
 class DualNetModel(BaseModel):
@@ -48,7 +49,7 @@ class DualNetModel(BaseModel):
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.nz, opt.ngf, self.opt.nencode, netG=opt.netG,
                                       norm=opt.norm, nl=opt.nl, use_dropout=opt.use_dropout, init_type=opt.init_type,
                                       gpu_ids=self.gpu_ids, where_add=self.opt.where_add, upsample=opt.upsample)
-        
+
         D_output_nc = (opt.input_nc + opt.output_nc) if opt.conditional_D else opt.output_nc
         use_sigmoid = opt.gan_mode == 'dcgan'
         if use_D:
@@ -56,20 +57,19 @@ class DualNetModel(BaseModel):
             self.netD = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD, norm=opt.norm, nl=opt.nl,
                                           use_sigmoid=use_sigmoid, init_type=opt.init_type,
                                           num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
-            
+
         if use_D_B:
             self.model_names += ['D_B']
             self.netD_B = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_B, norm=opt.norm, nl=opt.nl,
                                             use_sigmoid=use_sigmoid, init_type=opt.init_type, num_Ds=opt.num_Ds,
                                             gpu_ids=self.gpu_ids)
 
-
         # local adversarial loss
         use_local_D = opt.lambda_local_D > 0.0
         if use_local_D:
             self.netD_local = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
-                                          use_sigmoid=use_sigmoid, init_type=opt.init_type,
-                                          num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
+                                                use_sigmoid=use_sigmoid, init_type=opt.init_type,
+                                                num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
@@ -105,7 +105,8 @@ class DualNetModel(BaseModel):
                 self.optimizers.append(self.optimizer_D_B)
 
             if use_local_D:
-                self.optimizer_Dlocal = torch.optim.Adam(self.netD_local.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                self.optimizer_Dlocal = torch.optim.Adam(self.netD_local.parameters(), lr=opt.lr,
+                                                         betas=(opt.beta1, 0.999))
                 self.optimizers.append(self.optimizer_Dlocal)
 
     def is_train(self):
@@ -175,21 +176,21 @@ class DualNetModel(BaseModel):
         #     self.fake_data_C = self.fake_C
         #     self.real_data_C = self.real_C
 
-        #gray
-        '''
-        self.gray_fake_C = 0.299 * self.fake_C[:,0,...] + 0.587 * self.fake_C[:,1,...] + 0.114 * self.fake_C[:,2,...]
-        self.gray_fake_C = self.gray_fake_C.unsqueeze(1)
-        self.gray_fake_C = torch.cat([self.gray_fake_C, self.gray_fake_C, self.gray_fake_C], dim=1)
-        self.gray_real_C = 0.299 * self.real_C[:,0,...] + 0.587 * self.real_C[:,1,...] + 0.114 * self.real_C[:,2,...]
-        self.gray_real_C = self.gray_real_C.unsqueeze(1)
-        self.gray_real_C = torch.cat([self.gray_real_C, self.gray_real_C, self.gray_real_C], dim=1)
+        # gray
+        # self.gray_fake_C = 0.299 * self.fake_C[:, 0, ...] + 0.587 * self.fake_C[:, 1, ...] \
+        #     + 0.114 * self.fake_C[:, 2, ...]
+        # self.gray_fake_C = self.gray_fake_C.unsqueeze(1)
+        # self.gray_fake_C = torch.cat([self.gray_fake_C, self.gray_fake_C, self.gray_fake_C], dim=1)
+        # self.gray_real_C = 0.299 * self.real_C[:, 0, ...] + 0.587 * self.real_C[:, 1, ...] \
+        #     + 0.114 * self.real_C[:, 2, ...]
+        # self.gray_real_C = self.gray_real_C.unsqueeze(1)
+        # self.gray_real_C = torch.cat([self.gray_real_C, self.gray_real_C, self.gray_real_C], dim=1)
+        # self.gray_vgg_Colors = 0.299 * self.vgg_Colors[:, 0, ...] + 0.587 * self.vgg_Colors[:, 1, ...] \
+        #     + 0.114 * self.vgg_Colors[:, 2, ...]
+        # self.gray_vgg_Colors = self.gray_vgg_Colors.unsqueeze(1)
+        # self.gray_vgg_Colors = torch.cat([self.gray_vgg_Colors, self.gray_vgg_Colors, self.gray_vgg_Colors], dim=1)
 
-        self.gray_vgg_Colors = 0.299 * self.vgg_Colors[:,0,...] + 0.587 * self.vgg_Colors[:,1,...] + 0.114 * self.vgg_Colors[:,2,...]
-        self.gray_vgg_Colors = self.gray_vgg_Colors.unsqueeze(1)
-        self.gray_vgg_Colors = torch.cat([self.gray_vgg_Colors, self.gray_vgg_Colors, self.gray_vgg_Colors], dim=1)
-        '''
-        
-        #local blocks
+        # local blocks
         self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
         self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
 
@@ -278,27 +279,27 @@ class DualNetModel(BaseModel):
         # 4. L2 loss no use ... deleted
 
         # 5. patch loss
-        self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) * self.opt.lambda_patch
+        self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) \
+            * self.opt.lambda_patch
 
         # 6. local adv loss
-        self.loss_local_adv = self.backward_G_GAN(self.fake_B_blocks, self.netD_local, self.opt.lambda_local_D) * self.opt.lambda_local_D
+        self.loss_local_adv = self.backward_G_GAN(self.fake_B_blocks, self.netD_local, self.opt.lambda_local_D) \
+            * self.opt.lambda_local_D
 
         # 7. local style loss
-        self.loss_local_style = self.criterionSlocal(self.fake_C_blocks, self.real_color_blocks) * self.opt.lambda_local_style
-
+        self.loss_local_style = self.criterionSlocal(self.fake_C_blocks, self.real_color_blocks) \
+            * self.opt.lambda_local_style
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B \
             + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B \
             + self.loss_G_MSE \
-            + self.loss_patch_G + self.loss_gray_L1 \
+            + self.loss_patch_G \
             + self.loss_local_style + self.loss_local_adv
-            
+
         self.loss_G.backward(retain_graph=True)
 
-
     def update_D(self):
-
         self.set_requires_grad(self.netD, True)
         self.set_requires_grad(self.netD_B, True)
         self.set_requires_grad(self.netD_local, True)
@@ -315,7 +316,8 @@ class DualNetModel(BaseModel):
 
         if self.opt.lambda_local_D > 0.0:
             self.optimizer_Dlocal.zero_grad()
-            self.loss_Dlocal, self.losses_Dlocal = self.backward_D(self.netD_local, self.real_shape_blocks, self.fake_B_blocks)
+            self.loss_Dlocal, self.losses_Dlocal = self.backward_D(self.netD_local, self.real_shape_blocks,
+                                                                   self.fake_B_blocks)
             self.optimizer_Dlocal.step()
 
     def update_G(self):
@@ -335,28 +337,29 @@ class DualNetModel(BaseModel):
 
     def pretrain_D_local(self):
         self.forward()
-        self.update_D()        
+        self.update_D()
 
     def generate_random_block(self, input, target):
 
         batch_size, _, height, width = target.size()
         target_tensor = target.data
         block_size = self.opt.block_size
-        img_size=64
+        img_size = 64
 
         for j in range(batch_size):
             for i in range(self.opt.block_num):
                 while True:
                     x = random.randint(0, height - block_size - 1)
                     y = random.randint(0, width - block_size - 1)
-                    if not ((0.98 <= target_tensor[j, 0, x, y] <= 1 \
-                             and 0.98 <= target_tensor[j, 1, x, y] <= 1 \
-                             and 0.98 <= target_tensor[j, 2, x, y] <= 1) \
-                            or (0.98 <= target_tensor[j, 0, x + block_size, y + block_size] <= 1 \
-                                and 0.98 <= target_tensor[j, 1, x + block_size, y + block_size] <= 1 \
+                    if not ((0.98 <= target_tensor[j, 0, x, y] <= 1
+                             and 0.98 <= target_tensor[j, 1, x, y] <= 1
+                             and 0.98 <= target_tensor[j, 2, x, y] <= 1)
+                            or (0.98 <= target_tensor[j, 0, x + block_size, y + block_size] <= 1
+                                and 0.98 <= target_tensor[j, 1, x + block_size, y + block_size] <= 1
                                 and 0.98 <= target_tensor[j, 2, x + block_size, y + block_size] <= 1)):
                         break
-                target_random_block = Variable(target_tensor[j,:, x:x + block_size, y:y + block_size].unsqueeze(0), requires_grad=False)
+                target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size].unsqueeze(0),
+                                                   requires_grad=False)
                 if i == 0:
                     target_blocks = target_random_block
                 else:
@@ -365,16 +368,18 @@ class DualNetModel(BaseModel):
                 """
                     x_m = random.randint(0, width-block_size-1)
                 y_m = random.randint(0, height-block_size-1)
-                    input_blocks.append(Variable(input.data[:, x_m:x_m+block_size, y_m:y_m+block_size].unsqueeze(0), requires_grad=False))
+                    input_blocks.append(torch.tensor(input.data[:, x_m:x_m+block_size, y_m:y_m+block_size].unsqueeze(0),
+                                                     requires_grad=False))
                 """
                 x1 = random.randint(0, img_size - block_size)
                 y1 = random.randint(0, img_size - block_size)
-                input_random_block =  Variable(input.data[j,:, x1:x1 + block_size, y1:y1 + block_size].unsqueeze(0), requires_grad=False)
+                input_random_block = torch.tensor(input.data[j, :, x1:x1 + block_size, y1:y1 + block_size].unsqueeze(0),
+                                                  requires_grad=False)
                 if i == 0:
                     input_blocks = input_random_block
                 else:
                     input_blocks = torch.cat([input_blocks, target_random_block], 0)
-            if j==0:
+            if j == 0:
                 input_blocks = torch.unsqueeze(input_blocks, 0)
                 target_blocks = torch.unsqueeze(target_blocks, 0)
                 batch_input_blocks = input_blocks
