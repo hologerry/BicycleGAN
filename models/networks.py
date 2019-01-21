@@ -7,7 +7,6 @@ from torch.nn import Parameter, init
 from torch.optim import lr_scheduler
 
 from .vgg import VGG19
-from roi_align.roi_align import RoIAlign
 
 ###############################################################################
 # Functions
@@ -1400,7 +1399,7 @@ class PatchLoss(nn.Module):
         self.vgg19 = VGG19().to(device)
         self.vgg19.load_model(opt.vgg)
         self.vgg19.eval()
-        self.vgg_layer = 'conv3_2'
+        self.vgg_layer = 'conv2_2'
         self.loss = torch.nn.L1Loss()
 
     def l2_normalize_patch(self, features):
@@ -1420,38 +1419,40 @@ class PatchLoss(nn.Module):
         color_ref: colors, style input
         '''
 
+        patch_size = 3
+
         output_feat = self.vgg19(output)[self.vgg_layer]  # N * C * 8 * 8
         ref_feat = self.vgg19(reference)[self.vgg_layer]
         color_feat = self.vgg19(color_ref)[self.vgg_layer]  # N * C * 16 * 16
         shape_feat = self.vgg19(shape_ref)[self.vgg_layer]
 
         N, C, H, W = output_feat.shape
-        unfolder1 = torch.nn.Unfold(kernel_size=(H-1, W-1))
-        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-1, W*2-1))
+        unfolder1 = torch.nn.Unfold(kernel_size=(H-patch_size+1, W-patch_size+1))
+        unfolder2 = torch.nn.Unfold(kernel_size=(H*2-patch_size+1, W*2-patch_size+1))
         output_pat = unfolder1(output_feat)  # N * (C*H-1*W-1) * (2*2)
-        output_pat = output_pat.view((N, C, H-1, W-1, 2, 2))
+        output_pat = output_pat.view((N, C, H-patch_size+1, W-patch_size+1, patch_size, patch_size))
 
         shape_pat = unfolder2(shape_feat)
-        shape_pat = shape_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2))
+        shape_pat = shape_pat.view((N, C, (H*2-patch_size+1)*(W*2-patch_size+1), patch_size, patch_size))
         shape_pat = torch.transpose(shape_pat, 1, 2)
 
         color_pat = unfolder2(color_feat)
-        color_pat = color_pat.view((N, C, (H*2-1)*(W*2-1), 2, 2))
+        color_pat = color_pat.view((N, C, (H*2-patch_size+1)*(W*2-patch_size+1), patch_size, patch_size))
 
         dist = list()
         for i in range(N):
             ref_i = ref_feat[i].view(1, ref_feat[i].shape[0], ref_feat[i].shape[1], ref_feat[i].shape[2])
             shape_i = shape_pat[i]
 
-            conv1 = nn.Conv2d(C, (H*2-1)*(W*2-1), kernel_size=2, stride=1, bias=False)
+            conv1 = nn.Conv2d(C, (H*2-patch_size+1)*(W*2-patch_size+1), kernel_size=2, stride=1, bias=False)
             conv1.weight = torch.nn.Parameter(shape_i)
             net = nn.Sequential(conv1)
             similarity = net(ref_i)
             argmax = torch.argmax(similarity, 1)
 
             matched = torch.zeros(output_pat[i].shape).to(self.device)
-            for k in range(H-1):
-                for j in range(W-1):
+            for k in range(H-patch_size+1):
+                for j in range(W-patch_size+1):
                     row = k
                     col = j
                     ind = argmax[0, row, col]
@@ -1461,8 +1462,61 @@ class PatchLoss(nn.Module):
             dist.append(matched)
         dist = torch.cat(dist, dim=0)
 
-        output_pat = self.l2_normalize_patch(output_pat)
-        dist = self.l2_normalize_patch(dist)
-        loss = self.loss(output_pat, dist)
+        #output_pat = self.l2_normalize_patch(output_pat)
+        #dist = self.l2_normalize_patch(dist)
 
+        diff = (output_pat-dist).abs()
+        l1_patch = diff.sum(dim=1).sum(dim=-2).sum(dim=-1)
+        l1_clip = torch.clamp(l1_patch, 0, 1000)
+        loss = l1_clip.sum()
+        
+        return loss
+
+
+class GramMatrix(nn.Module):
+    def forward(self, input):
+        a, b, c, d = input.size()
+        # a=batch size(=1)
+        # b=number of feature maps
+        # (c,d)=dimensions of a f. map (N=c*d)
+
+        features = input.view(a * b, c * d)  # resise F_XL into \hat F_XL
+        G = torch.mm(features, features.t())  # compute the gram product
+
+        # we 'normalize' the values of the gram matrix
+        # by dividing by the number of element in each feature maps.
+        return G.div(a * b * c * d)
+
+
+# base style loss
+class Base_StyleLoss(nn.Module):
+    def __init__(self):
+        super(Base_StyleLoss, self).__init__()
+        self.gram = GramMatrix()
+        self.criterion = nn.MSELoss()
+
+    def __call__(self, input, target):
+        input_gram = self.gram(input)
+        target_gram = self.gram(target)
+        loss = self.criterion(input_gram, target_gram)
+        return loss
+
+
+# define the style loss
+class StyleLoss(nn.Module):
+    def __init__(self, device, opt):
+        super(StyleLoss, self).__init__()
+        self.device = device
+        self.vgg19 = VGG19().to(device)
+        self.vgg19.load_model(opt.vgg_font)
+        self.vgg19.eval()
+        self.vgg_layers = ['conv2_2', 'conv3_2']
+        self.criterion = Base_StyleLoss()
+
+    def __call__(self, input, target):
+        loss = 0.0
+        for layer in self.vgg_layers:
+            inp_feat = self.vgg19(input)[self.vgg_layer]
+            tar_feat = self.vgg19(target)[self.vgg_layer]
+            loss += self.criterion(inp_feat, tar_feat)
         return loss
