@@ -124,6 +124,75 @@ def transform_fusion(opt, A, B, C, Shapes, Colors):
     return A, B, C, Shapes, Colors
 
 
+def transform_triple(opt, A, B, C, Bases, Shapes, Colors):
+    if not opt.resize_or_crop == 'none':
+        raise ValueError(
+            "Only support none mode for resize_or_crop on base_gray_color dataset")
+    assert(isinstance(Bases, list))
+    assert(isinstance(Shapes, list))
+    assert(isinstance(Colors, list))
+    A = transforms.ToTensor()(A)
+    B = transforms.ToTensor()(B)
+    C = transforms.ToTensor()(C)
+    A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
+    B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
+    C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
+
+    Bases = list(map(lambda b: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
+    Bases = torch.cat(Bases)
+    Shapes = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Shapes = torch.cat(Shapes)
+    Colors = list(map(lambda c: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+    Colors = torch.cat(Colors)
+
+    return A, B, C, Bases, Shapes, Colors
+
+
+def transform_triple_with_label(opt, A, B, C, label, Bases, Shapes, Colors):
+    if not opt.resize_or_crop == 'none':
+        raise ValueError(
+            "Only support none mode for resize_or_crop on base_gray_color dataset")
+    assert(isinstance(Bases, list))
+    assert(isinstance(Shapes, list))
+    assert(isinstance(Colors, list))
+    A = transforms.ToTensor()(A)
+    B = transforms.ToTensor()(B)
+    C = transforms.ToTensor()(C)
+    A = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(A)
+    B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
+    C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
+
+    if label == 0.0:
+        C_l = torch.zeros_like(C)
+    else:
+        C_l = C
+    label = torch.tensor(label)
+
+    Bases = list(map(lambda b: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
+    Shapes = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Colors = list(map(lambda c: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+
+    rand_idx = random.randrange(opt.nencode)
+    if label == 0.0:
+        B_G = Shapes[rand_idx]
+        C_G = Colors[rand_idx]
+    else:
+        B_G = B
+        C_G = C
+
+    Bases = torch.cat(Bases)
+    Shapes = torch.cat(Shapes)
+    Colors = torch.cat(Colors)
+
+    return A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors
+
+
 def __scale_width(img, target_width):
     ow, oh = img.size
     if (ow == target_width):
@@ -141,11 +210,11 @@ def transform_vgg(Shapes, Colors):
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
     tmp1 = torch.cat((Shapes[0], Shapes[1]), 1)
     tmp2 = torch.cat((Shapes[2], Shapes[3]), 1)
-    tmp3 = torch.cat((tmp1,tmp2), 2)
+    tmp3 = torch.cat((tmp1, tmp2), 2)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
     tmp4 = torch.cat((Colors[0], Colors[1]), 1)
     tmp5 = torch.cat((Colors[2], Colors[3]), 1)
-    tmp6 = torch.cat((tmp4,tmp5), 2)
+    tmp6 = torch.cat((tmp4, tmp5), 2)
 
-    return tmp3, tmp6    
+    return tmp3, tmp6

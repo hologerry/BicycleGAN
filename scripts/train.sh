@@ -37,8 +37,6 @@ NET_G='unet_64'
 NET_D='basic_64_multi'
 NET_E='resnet_64'
 USE_ATTENTION=''
-USE_SPECTRAL_NORM_G=''
-USE_SPECTRAL_NORM_D=''
 LAMBDA_L1=10.0
 
 LR=0.0002
@@ -51,7 +49,40 @@ MODEL='bicycle_gan'
 
 # dataset parameters
 case ${CLASS} in
-'base_gray_color')
+'facades')
+  NITER=200
+  NITER_DECAY=200
+  SAVE_EPOCH=25
+  DIRECTION='BtoA'
+  ;;
+'edges2shoes')
+  NITER=30
+  NITER_DECAY=30
+  LOAD_SIZE=256
+  SAVE_EPOCH=5
+  INPUT_NC=1
+  NO_FLIP='--no_flip'
+  ;;
+'edges2handbags')
+  NITER=15
+  NITER_DECAY=15
+  LOAD_SIZE=256
+  SAVE_EPOCH=5
+  INPUT_NC=1
+  ;;
+'maps')
+  NITER=200
+  NITER_DECAY=200
+  LOAD_SIZE=600
+  SAVE_EPOCH=25
+  DIRECTION='BtoA'
+  ;;
+'night2day')
+  NITER=50
+  NITER_DECAY=50
+  SAVE_EPOCH=10
+  ;;
+'base_gray_color' | 'base_gray_color_s')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
@@ -76,6 +107,8 @@ case ${CLASS} in
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
+  LAMBDA_TX=0.0
+  LAMBDA_TX_B=0.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
@@ -120,7 +153,7 @@ case ${CLASS} in
   DISPLAY_FREQ=100
   LR=0.00002
   ;;
-'base_gray_texture_unpaired')
+'base_gray_texture_unpaired' | 'base_gray_texture_unpaired_s')
   MODEL='dualnet'
   DIRECTION='AtoC' # 'AtoB' or 'BtoC'
   NENCODE=4
@@ -140,6 +173,13 @@ case ${CLASS} in
   NET_D='basic_64'
   NET_D2='basic_64'
   NET_E='resnet_64'
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_CX=50.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_L2=100.0
+  LAMBDA_TX=0.0
+  LAMBDA_TX_B=0.0
   #LAMBDA_L1=100.0
   #LAMBDA_L1_B=60.0
   #LAMBDA_CX=50.0
@@ -162,6 +202,16 @@ case ${CLASS} in
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=50
+  BLACK_EPOCH=0
+  DISPLAY_FREQ=100
+  LR=0.00002
+  ;;
+'base_gray_texture_tx')
+  MODEL='dualnet'
+  DIRECTION='AtoC' # 'AtoB' or 'BtoC'
+  NENCODE=4
+  BATCH_SIZE=20
   VALIDATE_FREQ=10
   BLACK_EPOCH=0
   DISPLAY_FREQ=32
@@ -177,6 +227,9 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
+  NITER=200
+  NITER_DECAY=800
+  SAVE_EPOCH=50
   NITER=500
   NITER_DECAY=2500
   SAVE_EPOCH=10
@@ -193,6 +246,8 @@ case ${CLASS} in
   LAMBDA_GARY=100.0
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
+  LAMBDA_TX=10.0
+  LAMBDA_TX_B=5.0
   LAMBDA_L2=0.0
   LAMBDA_PATCH=0.00001
   DATASET_MODE='unpaired_few_fusion'
@@ -395,6 +450,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
   --lambda_L1_B ${LAMBDA_L1_B} \
+  --lambda_TX ${LAMBDA_TX} \
+  --lambda_TX_B ${LAMBDA_TX_B} \
   --lambda_CX ${LAMBDA_CX} \
   --lambda_CX_B ${LAMBDA_CX_B} \
   --lambda_L2 ${LAMBDA_L2} \
