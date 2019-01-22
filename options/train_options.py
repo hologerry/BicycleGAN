@@ -81,5 +81,9 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lambda_local_style', type=float, default=1.0,
                             help='weight on local style loss')
 
+        parser.add_argument('--block_size', type=int, default=32,
+                            help='block size of the image')
+        parser.add_argument('--block_num', type=int, default=2,
+                            help='block num of the image')
         self.isTrain = True
         return parser

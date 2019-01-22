@@ -264,13 +264,12 @@ class DualNetModel(BaseModel):
             * self.opt.lambda_local_D
 
         # 7. local style loss
-        self.loss_local_style = self.criterionSlocal(self.fake_C_blocks, self.real_color_blocks) \
+        self.loss_local_style = self.criterionSlocal(self.fake_C_blocks[:,:3,...], self.real_color_blocks[:,:3,...]) \
             * self.opt.lambda_local_style
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B \
             + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B \
-            + self.loss_G_MSE \
             + self.loss_patch_G \
             + self.loss_local_style + self.loss_local_adv
 

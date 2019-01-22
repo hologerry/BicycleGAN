@@ -159,6 +159,7 @@ def define_D(input_nc, ndf, netD,
         net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_32':
+        print(input_nc)
         net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_128':
@@ -1524,7 +1525,7 @@ class StyleLoss(nn.Module):
     def __call__(self, input, target):
         loss = 0.0
         for layer in self.vgg_layers:
-            inp_feat = self.vgg19(input)[self.vgg_layer]
-            tar_feat = self.vgg19(target)[self.vgg_layer]
+            inp_feat = self.vgg19(input)[layer]
+            tar_feat = self.vgg19(target)[layer]
             loss += self.criterion(inp_feat, tar_feat)
         return loss
