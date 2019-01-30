@@ -73,12 +73,12 @@ class UnpairedFewFusionDataset(BaseDataset):
 
         idx = np.array([0,1,2,3])
         random.shuffle(idx)
-        second_A = Bases[..., (idx[0]*3):(idx[0]*3+3)]
-        second_B = Shapes[..., (idx[0]*3):(idx[0]*3+3)]
-        second_C = Colors[..., (idx[0]*3):(idx[0]*3+3)]
-        second_ref1 = Colors[..., (idx[1]*3):(idx[1]*3+3)]
-        second_ref2 = Colors[..., (idx[2]*3):(idx[2]*3+3)]
-        second_ref3 = Colors[..., (idx[3]*3):(idx[3]*3+3)]
+        second_A = Bases[(idx[0]*3):(idx[0]*3+3), ...]
+        second_B = Shapes[(idx[0]*3):(idx[0]*3+3), ...]
+        second_C = Colors[(idx[0]*3):(idx[0]*3+3), ...]
+        second_ref1 = Colors[(idx[1]*3):(idx[1]*3+3), ...]
+        second_ref2 = Colors[(idx[2]*3):(idx[2]*3+3), ...]
+        second_ref3 = Colors[(idx[3]*3):(idx[3]*3+3), ...]
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
