@@ -360,7 +360,7 @@ class DualNetModel(BaseModel):
 
         for i in range(N):
             arr = array[i].cpu()
-            pic = Image.fromarray(arr.numpy())
+            pic = Image.fromarray(arr.numpy().astype('uint8'))
             pic = pic.filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*2 + 2)))
             pics.append(torch.from_numpy(np.array(pic)))
 
