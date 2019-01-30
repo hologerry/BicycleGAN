@@ -22,7 +22,7 @@ class DualNetModel(BaseModel):
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
-                           'G_L1_val', 'G_L1_B_val', 'patch_G', 'local_style', 'local_adv']
+                           'G_L1_val', 'G_L1_B_val', 'patch_G', 'local_style', 'local_adv', 'local_adv_B']
         self.loss_G_L1_val = 0.0
         self.loss_G_L1_B_val = 0.0
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
@@ -69,7 +69,7 @@ class DualNetModel(BaseModel):
         # local adversarial loss
         use_local_D = opt.lambda_local_D > 0.0
         if use_local_D:
-            self.model_names += ['local_D', 'local_D_B']
+            self.model_names += ['D_local', 'D_local_B']
             self.netD_local = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
                                                 use_sigmoid=use_sigmoid, init_type=opt.init_type,
                                                 num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
