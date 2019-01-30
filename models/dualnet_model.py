@@ -285,10 +285,10 @@ class DualNetModel(BaseModel):
         self.loss_second_cycle_B = 0.0
         self.loss_second_cycle_C = 0.0
         if self.opt.lambda_second > 0.0:
-            self.loss_second_cycle_B = torch.mean(torch.mean(torch.mean(
-                self.criterionL1(self.second_out_B, self.second_B), dim=1), dim=1), dim=1) * self.opt.lambda_second
-            self.loss_second_cycle_C = torch.mean(torch.mean(torch.mean(
-                self.criterionL1(self.second_out_C, self.second_C), dim=1), dim=1), dim=1) * self.opt.lambda_second
+            self.loss_second_cycle_B = torch.sum(torch.mean(torch.mean(torch.mean(
+                self.criterionL1(self.second_out_B, self.second_B), dim=1), dim=1), dim=1)) * self.opt.lambda_second
+            self.loss_second_cycle_C = torch.sum(torch.mean(torch.mean(torch.mean(
+                self.criterionL1(self.second_out_C, self.second_C), dim=1), dim=1), dim=1)) * self.opt.lambda_second
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B \
             + self.loss_G_L1 + self.loss_G_L1_B \
