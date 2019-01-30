@@ -359,9 +359,9 @@ class DualNetModel(BaseModel):
         N, _, _, _ = array.shape
 
         for i in range(N):
-            pic = Image.fromarray(array[i])
+            pic = Image.fromarray(array[i].numpy())
             pic = pic.filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*3 + 1)))
-            pics.append(np.array(pic))
+            pics.append(torch.from_numpy(np.array(pic)))
 
         pics = torch.cat(pics)
         return pics
