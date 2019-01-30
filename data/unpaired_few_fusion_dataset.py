@@ -1,9 +1,9 @@
 import os.path
 import random
+import numpy as np
+from PIL import Image,ImageFilter
 
-from PIL import Image
-
-from data.base_dataset import BaseDataset, transform_triple_with_label, transform_vgg
+from data.base_dataset import BaseDataset, transform_triple_with_label, transform_vgg, transform_blur
 from data.image_folder import make_dataset
 
 
@@ -35,6 +35,10 @@ class UnpairedFewFusionDataset(BaseDataset):
         Shapes = []
         Colors = []
         Style_paths = []
+        #gaussion filter
+        Blurs_shape = []
+        Blurs_color = []
+
         ABC_path_list = list(ABC_path)
         target_font = int(ABC_path.split("/")[-1].split("_")[0])
         target_char = ABC_path_list[-5]
@@ -53,7 +57,15 @@ class UnpairedFewFusionDataset(BaseDataset):
             Shapes.append(Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)))
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
+            Blurs_color.append(
+                Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)).filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*2+2)))
+                )
+            Blurs_shape.append(
+                Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)).filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*2+2)))
+                )
+
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
+        Blurs_shape, Blurs_color = transform_blur(Blurs_shape, Blurs_color)
 
         # A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
         A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors = \
@@ -63,10 +75,27 @@ class UnpairedFewFusionDataset(BaseDataset):
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
                 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
-                'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors}
+                'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors,
+                'blur_Shapes': Blurs_shape, 'blur_Colors': Blurs_color
+                }
 
     def __len__(self):
         return len(self.ABC_paths)
 
     def name(self):
         return 'UnpairedFewFusionDataset'
+
+
+    def gaussianFilter(self, array):
+
+        pics = list()
+        N, _, _, _ = array.shape
+
+        for i in range(N):
+            arr = array[i].cpu()
+            pic = Image.fromarray(arr.numpy().astype('uint8'))
+            pic = pic.filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*2 + 2)))
+            pics.append(torch.from_numpy(np.array(pic)))
+
+        pics = torch.cat(pics).to(self.device)
+        return pics

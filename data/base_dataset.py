@@ -218,3 +218,21 @@ def transform_vgg(Shapes, Colors):
     tmp6 = torch.cat((tmp4, tmp5), 2)
 
     return tmp3, tmp6
+
+
+def transform_blur(Shapes, Colors):
+    if not opt.resize_or_crop == 'none':
+        raise ValueError(
+            "Only support none mode for resize_or_crop on base_gray_color dataset")
+    assert(isinstance(Shapes, list))
+    assert(isinstance(Colors, list))
+
+    Shapes = list(map(lambda s: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    Colors = list(map(lambda c: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+
+    Shapes = torch.cat(Shapes)
+    Colors = torch.cat(Colors)
+
+    return Shapes, Colors
