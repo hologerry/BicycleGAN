@@ -139,8 +139,8 @@ class DualNetModel(BaseModel):
         self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
         self.vgg_Colors = input['vgg_Colors'].to(self.device)
 
-        self.blur_shapes = input['blur_Shapes'].to(self.device)
-        self.blur_colors = input['blur_Colors'].to(self.device) 
+        self.blur_Shapes = input['blur_Shapes'].to(self.device)
+        self.blur_Colors = input['blur_Colors'].to(self.device) 
 
     def test(self):
         with torch.no_grad():
