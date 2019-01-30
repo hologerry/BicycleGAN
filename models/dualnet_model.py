@@ -191,8 +191,11 @@ class DualNetModel(BaseModel):
         # self.gray_vgg_Colors = torch.cat([self.gray_vgg_Colors, self.gray_vgg_Colors, self.gray_vgg_Colors], dim=1)
 
         # local blocks
-        #self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
-        #self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
+        self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
+        self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
+
+        # gaussian blur
+        self.blur_shape_blocks = self.gaussianFilter(self.real_shape_blocks)
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
@@ -205,16 +208,23 @@ class DualNetModel(BaseModel):
             self.fake_data_C = self.fake_C
             self.real_data_C = self.real_C_G
 
-    def backward_D(self, netD, real, fake):
+    def backward_D(self, netD, real, fake, blur=None):
         # Fake, stop backprop to the generator by detaching fake_B
         pred_fake = netD(fake.detach())
 
         # real
         pred_real = netD(real)
+
+        # blur
+        loss_D_blur = 0.0
+        if blur is not None:
+            pred_blur = netD(blur)
+            loss_D_blur, _ = self.criterionGAN(pred_blur, False)
+
         loss_D_fake, _ = self.criterionGAN(pred_fake, False)
         loss_D_real, _ = self.criterionGAN(pred_real, True)
         # Combined loss
-        loss_D = loss_D_fake + loss_D_real
+        loss_D = loss_D_fake + loss_D_real + loss_D_blur
         loss_D.backward()
         return loss_D, [loss_D_fake, loss_D_real]
 
@@ -284,7 +294,7 @@ class DualNetModel(BaseModel):
     def update_D(self):
         self.set_requires_grad(self.netD, True)
         self.set_requires_grad(self.netD_B, True)
-        #self.set_requires_grad(self.netD_local, True)
+        self.set_requires_grad(self.netD_local, True)
         # update D
         if self.opt.lambda_GAN > 0.0:
             self.optimizer_D.zero_grad()
@@ -299,14 +309,14 @@ class DualNetModel(BaseModel):
         if self.opt.lambda_local_D > 0.0:
             self.optimizer_Dlocal.zero_grad()
             self.loss_Dlocal, self.losses_Dlocal = self.backward_D(self.netD_local, self.real_shape_blocks,
-                                                                   self.fake_B_blocks)
+                                                                   self.fake_B_blocks, self.blur_shape_blocks)
             self.optimizer_Dlocal.step()
 
     def update_G(self):
         # update dual net G
         self.set_requires_grad(self.netD, False)
         self.set_requires_grad(self.netD_B, False)
-        #self.set_requires_grad(self.netD_local, False)
+        self.set_requires_grad(self.netD_local, False)
 
         self.optimizer_G.zero_grad()
         self.backward_G()
@@ -364,3 +374,17 @@ class DualNetModel(BaseModel):
                 batch_target_blocks = torch.cat([batch_target_blocks, target_blocks], 0)
 
         return batch_input_blocks, batch_target_blocks
+
+
+    def gaussianFilter(self, array):
+
+        pics = list()
+        N, _, _, _ = array.shape
+
+        for i in range(N):
+            pic = Image.fromarray(array[i])
+            pic = pic.filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*3 + 1)))
+            pics.append(np.array(pic))
+
+        pics = torch.cat(pics)
+        return pics
