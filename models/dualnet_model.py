@@ -180,11 +180,8 @@ class DualNetModel(BaseModel):
                 self.vgg_real_Colors_list.append(self.vgg19(self.real_Colors[:, i*3:(i+1)*3, :, :]))
 
         # local blocks
-        self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
-        self.blur_shape_blocks, _ = self.generate_random_block(self.blur_Shapes, self.vgg_Shapes)
-
-        self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
-        self.blur_color_blocks, _ = self.generate_random_block(self.blur_Colors, self.vgg_Colors)
+        self.fake_B_blocks, self.real_shape_blocks, self.blur_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes, self.blur_Shapes)
+        self.fake_C_blocks, self.real_color_blocks, self.blur_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors, self.blur_Colors)
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
@@ -327,12 +324,16 @@ class DualNetModel(BaseModel):
         self.forward()
         self.update_D()
 
-    def generate_random_block(self, input, target):
+    def generate_random_block(self, input, target, target_blur):
 
         batch_size, _, height, width = target.size()
         target_tensor = target.data
         block_size = self.opt.block_size
         img_size = 64
+
+        inp_blk = list()
+        tar_blk = list()
+        tar_blr = list()
 
         for j in range(batch_size):
             for i in range(self.opt.block_num):
@@ -340,10 +341,14 @@ class DualNetModel(BaseModel):
                 y = random.randint(0, width - block_size - 1)
                 target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size],
                                                    requires_grad=False)
+                target_blur_block = torch.tensor(target_blur[j, :, x:x + block_size, y:y + block_size],
+                                                   requires_grad=False)
                 if i == 0:
                     target_blocks = target_random_block
+                    target_blur = target_blur_block
                 else:
                     target_blocks = torch.cat([target_blocks, target_random_block], 0)
+                    target_blur = torch.cat([target_blur, target_blur_block], 0)
 
                 """
                     x_m = random.randint(0, width-block_size-1)
@@ -361,12 +366,14 @@ class DualNetModel(BaseModel):
                     input_blocks = torch.cat([input_blocks, target_random_block], 0)
         
             input_blocks = torch.unsqueeze(input_blocks, 0)
-            target_blocks = torch.unsqueeze(target_blocks, 0)            
-            if j == 0:
-                batch_input_blocks = input_blocks
-                batch_target_blocks = target_blocks
-            else:
-                batch_input_blocks = torch.cat([batch_input_blocks, input_blocks], 0)
-                batch_target_blocks = torch.cat([batch_target_blocks, target_blocks], 0)
+            target_blocks = torch.unsqueeze(target_blocks, 0)
+            target_blur = torch.unsqueeze(target_blur, 0)            
+            inp_blk.append(input_blocks)
+            tar_blk.append(target_blocks)
+            tar_blr.append(target_blur)
 
-        return batch_input_blocks, batch_target_blocks
+        inp_blk = torch.cat(inp_blk)
+        tar_blk = torch.cat(tar_blk)
+        tar_blr = torch.cat(tar_blr)
+
+        return inp_blk, tar_blk, tar_blr
