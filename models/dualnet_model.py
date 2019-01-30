@@ -4,6 +4,8 @@ from . import networks
 from .vgg import VGG19
 import random
 
+from PIL import Image,ImageFilter
+
 
 class DualNetModel(BaseModel):
     def name(self):
