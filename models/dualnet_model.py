@@ -348,7 +348,7 @@ class DualNetModel(BaseModel):
                     target_blur = target_blur_block
                 else:
                     target_blocks = torch.cat([target_blocks, target_random_block], 0)
-                    target_blur = torch.cat([target_blur, target_blur_block], 0)
+                    target_blur = torch.cat([target_blur, target_random_block], 0)
 
                 """
                     x_m = random.randint(0, width-block_size-1)
