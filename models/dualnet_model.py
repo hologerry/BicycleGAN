@@ -125,8 +125,8 @@ class DualNetModel(BaseModel):
             self.real_Bases = input['Bases'].to(self.device)
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
-        #self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
-        #self.vgg_Colors = input['vgg_Colors'].to(self.device)
+        self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
+        self.vgg_Colors = input['vgg_Colors'].to(self.device)
 
     def test(self):
         with torch.no_grad():
@@ -164,31 +164,6 @@ class DualNetModel(BaseModel):
                 self.vgg_real_Bases_list.append(self.vgg19(self.real_Bases[:, i*3:(i+1)*3, :, :]))
                 self.vgg_real_Shapes_list.append(self.vgg19(self.real_Shapes[:, i*3:(i+1)*3, :, :]))
                 self.vgg_real_Colors_list.append(self.vgg19(self.real_Colors[:, i*3:(i+1)*3, :, :]))
-
-        # if self.opt.conditional_D:   # tedious conditoinal data
-        #     self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
-        #     self.real_data_B = torch.cat([self.real_A, self.real_B], 1)
-        #     self.fake_data_C = torch.cat([self.real_A, self.fake_C], 1)
-        #     self.real_data_C = torch.cat([self.real_A, self.real_C], 1)
-        # else:
-        #     self.fake_data_B = self.fake_B
-        #     self.real_data_B = self.real_B
-        #     self.fake_data_C = self.fake_C
-        #     self.real_data_C = self.real_C
-
-        # gray
-        # self.gray_fake_C = 0.299 * self.fake_C[:, 0, ...] + 0.587 * self.fake_C[:, 1, ...] \
-        #     + 0.114 * self.fake_C[:, 2, ...]
-        # self.gray_fake_C = self.gray_fake_C.unsqueeze(1)
-        # self.gray_fake_C = torch.cat([self.gray_fake_C, self.gray_fake_C, self.gray_fake_C], dim=1)
-        # self.gray_real_C = 0.299 * self.real_C[:, 0, ...] + 0.587 * self.real_C[:, 1, ...] \
-        #     + 0.114 * self.real_C[:, 2, ...]
-        # self.gray_real_C = self.gray_real_C.unsqueeze(1)
-        # self.gray_real_C = torch.cat([self.gray_real_C, self.gray_real_C, self.gray_real_C], dim=1)
-        # self.gray_vgg_Colors = 0.299 * self.vgg_Colors[:, 0, ...] + 0.587 * self.vgg_Colors[:, 1, ...] \
-        #     + 0.114 * self.vgg_Colors[:, 2, ...]
-        # self.gray_vgg_Colors = self.gray_vgg_Colors.unsqueeze(1)
-        # self.gray_vgg_Colors = torch.cat([self.gray_vgg_Colors, self.gray_vgg_Colors, self.gray_vgg_Colors], dim=1)
 
         # local blocks
         self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
