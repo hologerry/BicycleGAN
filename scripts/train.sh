@@ -91,8 +91,8 @@ case ${CLASS} in
   FINE_SIZE=64
   RESIZE_OR_CROP='none'
   NO_FLIP='--no_flip'
-  NITER=10
-  NITER_DECAY=20
+  NITER=50
+  NITER_DECAY=250
   SAVE_EPOCH=2
   NEF=64
   NGF=32
@@ -100,6 +100,7 @@ case ${CLASS} in
   NET_G='dualnet'
   NET_D='basic_64'
   NET_D2='basic_64'
+  NET_DLOCAL='basic_32'
   NET_R='basic_64'
   NET_E='resnet_64'
   LAMBDA_L1=100.0
@@ -109,12 +110,18 @@ case ${CLASS} in
   LAMBDA_L2=100.0
   LAMBDA_TX=0.0
   LAMBDA_TX_B=0.0
+  LAMBDA_PATCH=0
+  LAMBDA_LOCAL_D=0
+  LAMBDA_LOCAL_STYLE=0
+  LAMBDA_GAN=1.0
+  LAMBDA_GAN_B=1.0
   DATASET_MODE='multi_fusion'
   USE_ATTENTION='--use_attention'
   WHERE_ADD='all'
   CONDITIONAL_D='--conditional_D'
   CONTINUE_TRAIN=''
   BLACK_EPOCH=0
+  PRINT_FREQ=400
   ;;
 'base_gray_texture')
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
@@ -187,15 +194,15 @@ case ${CLASS} in
   #LAMBDA_CX_B=15.0
   #LAMBDA_L2=100.0
 
-  LAMBDA_GAN=10.0
-  LAMBDA_GAN_B=10.0
+  LAMBDA_GAN=1.0
+  LAMBDA_GAN_B=1.0
   LAMBDA_L1=100.0
   LAMBDA_L1_B=60.0
   LAMBDA_CX=0.0
   LAMBDA_CX_B=0.0
   LAMBDA_L2=0.0
-  LAMBDA_PATCH=0.00001
-  LAMBDA_LOCAL_D=100.0
+  LAMBDA_PATCH=0.000001
+  LAMBDA_LOCAL_D=1.0
   LAMBDA_LOCAL_STYLE=100.0
 
   DATASET_MODE='unpaired_few_fusion'

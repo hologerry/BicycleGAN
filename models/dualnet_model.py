@@ -19,8 +19,8 @@ class DualNetModel(BaseModel):
 
         BaseModel.initialize(self, opt)
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_GAN', 'G_GAN_B', 'D', 'D_B', 'G_TX', 'G_TX_B',
-                           'G_L1_val', 'G_L1_B_val']
+        self.loss_names = ['G_L1', 'G_L1_B', 'G_CX', 'G_CX_B', 'G_GAN', 'G_GAN_B', 'D', 'D_B',
+                           'G_L1_val', 'G_L1_B_val', 'patch_G', 'local_style', 'local_adv']
         self.loss_G_L1_val = 0.0
         self.loss_G_L1_B_val = 0.0
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
@@ -125,8 +125,8 @@ class DualNetModel(BaseModel):
             self.real_Bases = input['Bases'].to(self.device)
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
-        self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
-        self.vgg_Colors = input['vgg_Colors'].to(self.device)
+        #self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
+        #self.vgg_Colors = input['vgg_Colors'].to(self.device)
 
     def test(self):
         with torch.no_grad():
@@ -191,8 +191,8 @@ class DualNetModel(BaseModel):
         # self.gray_vgg_Colors = torch.cat([self.gray_vgg_Colors, self.gray_vgg_Colors, self.gray_vgg_Colors], dim=1)
 
         # local blocks
-        self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
-        self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
+        #self.fake_B_blocks, self.real_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes)
+        #self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
@@ -256,15 +256,21 @@ class DualNetModel(BaseModel):
         # 4. L2 loss no use ... deleted
 
         # 5. patch loss
-        self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) \
+        self.loss_patch_G = 0.0
+        if self.opt.lambda_patch > 0.0:
+            self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) \
             * self.opt.lambda_patch
 
         # 6. local adv loss
-        self.loss_local_adv = self.backward_G_GAN(self.fake_B_blocks, self.netD_local, self.opt.lambda_local_D) \
+        self.loss_local_adv = 0.0
+        if self.opt.lambda_local_D > 0.0:
+            self.loss_local_adv = self.backward_G_GAN(self.fake_B_blocks, self.netD_local, self.opt.lambda_local_D) \
             * self.opt.lambda_local_D
 
         # 7. local style loss
-        self.loss_local_style = self.criterionSlocal(self.fake_C_blocks[:,:3,...], self.real_color_blocks[:,:3,...]) \
+        self.loss_local_style = 0.0
+        if self.opt.lambda_local_style > 0.0:
+            self.loss_local_style = self.criterionSlocal(self.fake_C_blocks[:,:3,...], self.real_color_blocks[:,:3,...]) \
             * self.opt.lambda_local_style
 
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B \
@@ -278,7 +284,7 @@ class DualNetModel(BaseModel):
     def update_D(self):
         self.set_requires_grad(self.netD, True)
         self.set_requires_grad(self.netD_B, True)
-        self.set_requires_grad(self.netD_local, True)
+        #self.set_requires_grad(self.netD_local, True)
         # update D
         if self.opt.lambda_GAN > 0.0:
             self.optimizer_D.zero_grad()
@@ -300,7 +306,7 @@ class DualNetModel(BaseModel):
         # update dual net G
         self.set_requires_grad(self.netD, False)
         self.set_requires_grad(self.netD_B, False)
-        self.set_requires_grad(self.netD_local, False)
+        #self.set_requires_grad(self.netD_local, False)
 
         self.optimizer_G.zero_grad()
         self.backward_G()
