@@ -186,9 +186,6 @@ class DualNetModel(BaseModel):
         self.fake_C_blocks, self.real_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors)
         self.blur_color_blocks, _ = self.generate_random_block(self.blur_Colors, self.vgg_Colors)
 
-        # gaussian blur
-        self.blur_shape_blocks = self.gaussianFilter(self.real_shape_blocks)
-
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
             self.real_data_B = torch.cat([self.real_A, self.real_B_G], 1)
