@@ -159,7 +159,6 @@ def define_D(input_nc, ndf, netD,
         net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_32':
-        print(input_nc)
         net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_128':
