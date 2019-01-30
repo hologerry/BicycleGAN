@@ -71,7 +71,7 @@ class UnpairedFewFusionDataset(BaseDataset):
         A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors = \
             transform_triple_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors)
 
-        idx = range(4)
+        idx = np.array([0,1,2,3])
         random.shuffle(idx)
         second_A = Bases[..., (idx[0]*3):(idx[0]*3+3)]
         second_B = Shapes[..., (idx[0]*3):(idx[0]*3+3)]
