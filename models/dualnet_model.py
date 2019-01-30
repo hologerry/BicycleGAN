@@ -331,8 +331,8 @@ class DualNetModel(BaseModel):
         # update dual net G
         self.set_requires_grad(self.netD, False)
         self.set_requires_grad(self.netD_B, False)
-        self.set_requires_grad(self.netD_local, False)
-        self.set_requires_grad(self.netD_local_B, False)
+        #self.set_requires_grad(self.netD_local, False)
+        #self.set_requires_grad(self.netD_local_B, False)
 
         self.optimizer_G.zero_grad()
         self.backward_G()
