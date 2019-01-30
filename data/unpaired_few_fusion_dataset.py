@@ -71,12 +71,14 @@ class UnpairedFewFusionDataset(BaseDataset):
         A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors = \
             transform_triple_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors)
 
-        idx = np.random.randint(4)
-        second_A = Bases[..., (idx*3):(idx*3+3)]
-        second_B = Shapes[..., (idx*3):(idx*3+3)]
-        second_C = Colors[..., (idx*3):(idx*3+3)]
-        second_ref1 = Colors[..., :idx*3]
-        second_ref2 = Colors[..., idx*3+3:]
+        idx = range(4)
+        random.shuffle(idx)
+        second_A = Bases[..., (idx[0]*3):(idx[0]*3+3)]
+        second_B = Shapes[..., (idx[0]*3):(idx[0]*3+3)]
+        second_C = Colors[..., (idx[0]*3):(idx[0]*3+3)]
+        second_ref1 = Colors[..., (idx[1]*3):(idx[1]*3+3)]
+        second_ref2 = Colors[..., (idx[2]*3):(idx[2]*3+3)]
+        second_ref3 = Colors[..., (idx[3]*3):(idx[3]*3+3)]
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
@@ -84,7 +86,7 @@ class UnpairedFewFusionDataset(BaseDataset):
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
                 'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors,
                 'blur_Shapes': Blurs_shape, 'blur_Colors': Blurs_color,
-                'second_A': second_A, 'second_B':second_B, 'second_C': second_C, 'second_ref1':second_ref1, 'second_ref2':second_ref2
+                'second_A': second_A, 'second_B':second_B, 'second_C': second_C, 'second_ref1':second_ref1, 'second_ref2':second_ref2, 'second_ref3':second_ref3
                 }
 
     def __len__(self):

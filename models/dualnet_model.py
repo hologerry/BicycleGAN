@@ -145,6 +145,7 @@ class DualNetModel(BaseModel):
         self.second_A = input['second_A'].to(self.device) 
         self.second_ref1 = input['second_ref1'].to(self.device) 
         self.second_ref2 = input['second_ref2'].to(self.device) 
+        self.second_ref3 = input['second_ref3'].to(self.device)
         self.second_B = input['second_B'].to(self.device)
         self.second_C = input['second_C'].to(self.device) 
 
@@ -200,7 +201,9 @@ class DualNetModel(BaseModel):
             self.fake_data_C = self.fake_C
             self.real_data_C = self.real_C_G
 
-        self.second_input = torch.cat([self.second_ref1, self.fake_C, self.second_ref2], 1)
+        t1 = [self.second_ref1, self.fake_C, self.second_ref2, self.second_ref3]
+        random.shuffle(t1)
+        self.second_input = torch.cat(t1, 1)
         self.second_out_C, self.second_out_B = self.netG(self.second_A, self.second_input)
 
     def backward_D(self, netD, real, fake, blur=None):
