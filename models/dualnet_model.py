@@ -203,10 +203,6 @@ class DualNetModel(BaseModel):
 
         t1 = [self.second_ref1, self.fake_C, self.second_ref2, self.second_ref3]
         random.shuffle(t1)
-        print(self.second_ref1.shape)
-        print(self.second_ref2.shape)
-        print(self.second_ref3.shape)
-        print(self.fake_C.shape)
         self.second_input = torch.cat(t1, 1)
         self.second_out_C, self.second_out_B = self.netG(self.second_A, self.second_input)
 
