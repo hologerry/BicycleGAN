@@ -80,6 +80,8 @@ class TrainOptions(BaseOptions):
                             help='weight on local adv loss')
         parser.add_argument('--lambda_local_style', type=float, default=1.0,
                             help='weight on local style loss')
+        parser.add_argument('--lambda_second', type=float, default=0.0,
+                            help='weight on second cycle l1 loss')
 
         parser.add_argument('--block_size', type=int, default=32,
                             help='block size of the image')

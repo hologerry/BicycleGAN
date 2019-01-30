@@ -132,8 +132,8 @@ class DualNetModel(BaseModel):
         self.real_C_l = input['C_l'].to(self.device)  # C_l is the C * label, useful to visual
         self.label = input['label'].to(self.device)  # label == 1 means the image is in the few set
 
-        if self.TX:
-            self.real_Bases = input['Bases'].to(self.device)
+        # if self.TX:
+        self.real_Bases = input['Bases'].to(self.device)
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is multiple color characters
         self.vgg_Shapes = input['vgg_Shapes'].to(self.device)
@@ -141,6 +141,12 @@ class DualNetModel(BaseModel):
 
         self.blur_Shapes = input['blur_Shapes'].to(self.device)
         self.blur_Colors = input['blur_Colors'].to(self.device) 
+
+        self.second_A = input['second_A'].to(self.device) 
+        self.second_ref1 = input['second_ref1'].to(self.device) 
+        self.second_ref2 = input['second_ref2'].to(self.device) 
+        self.second_B = input['second_B'].to(self.device)
+        self.second_C = input['second_C'].to(self.device) 
 
     def test(self):
         with torch.no_grad():
@@ -193,6 +199,9 @@ class DualNetModel(BaseModel):
             self.real_data_B = self.real_B_G
             self.fake_data_C = self.fake_C
             self.real_data_C = self.real_C_G
+
+        self.second_input = torch.cat([self.second_ref1, self.fake_C, self.second_ref2], 1)
+        self.second_out_C, self.second_out_B = self.netG(self.second_A, self.second_input)
 
     def backward_D(self, netD, real, fake, blur=None):
         # Fake, stop backprop to the generator by detaching fake_B
@@ -268,11 +277,22 @@ class DualNetModel(BaseModel):
             self.loss_local_style = self.criterionSlocal(self.fake_C_blocks[:,:3,...], self.real_color_blocks[:,:3,...]) \
             * self.opt.lambda_local_style
 
+
+        # 8. second cycle l1 loss
+        self.loss_second_cycle_B = 0.0
+        self.loss_second_cycle_C = 0.0
+        if self.opt.lambda_second > 0.0:
+            self.loss_second_cycle_B = torch.mean(torch.mean(torch.mean(
+                self.criterionL1(self.second_out_B, self.second_B), dim=1), dim=1), dim=1) * self.opt.lambda_second
+            self.loss_second_cycle_C = torch.mean(torch.mean(torch.mean(
+                self.criterionL1(self.second_out_C, self.second_C), dim=1), dim=1), dim=1) * self.opt.lambda_second
+
         self.loss_G = self.loss_G_GAN + self.loss_G_GAN_B \
             + self.loss_G_L1 + self.loss_G_L1_B \
             + self.loss_G_CX + self.loss_G_CX_B \
             + self.loss_patch_G \
-            + self.loss_local_style + self.loss_local_adv + self.loss_local_adv_B
+            + self.loss_local_style + self.loss_local_adv + self.loss_local_adv_B \
+            + self.loss_second_cycle_C + self.loss_second_cycle_B
 
         self.loss_G.backward(retain_graph=True)
 

@@ -204,6 +204,7 @@ case ${CLASS} in
   LAMBDA_PATCH=0.000001
   LAMBDA_LOCAL_D=1.0
   LAMBDA_LOCAL_STYLE=100.0
+  LAMBDA_SECOND=10.0
 
   DATASET_MODE='unpaired_few_fusion'
   USE_ATTENTION='--use_attention'
@@ -470,6 +471,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --lambda_GAN_B ${LAMBDA_GAN_B} \
   --lambda_local_D ${LAMBDA_LOCAL_D} \
   --lambda_local_style ${LAMBDA_LOCAL_STYLE} \
+  --lambda_second ${LAMBDA_SECOND} \
   --where_add ${WHERE_ADD} \
   ${CONDITIONAL_D} \
   ${CONTINUE_TRAIN} \
