@@ -58,10 +58,10 @@ class UnpairedFewFusionDataset(BaseDataset):
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
             Blurs_color.append(
-                Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)).filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*2+2)))
+                Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)).filter(ImageFilter.GaussianBlur(radius=(np.random.rand(1)[0]*2+2)))
                 )
             Blurs_shape.append(
-                Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)).filter(ImageFilter.GaussianFilter(radius=(np.random.rand(1)[0]*2+2)))
+                Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)).filter(ImageFilter.GaussianBlur(radius=(np.random.rand(1)[0]*2+2)))
                 )
 
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
