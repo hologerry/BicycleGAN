@@ -203,7 +203,7 @@ class DualNetModel(BaseModel):
         loss_D_blur = 0.0
         if blur is not None:
             pred_blur = netD(blur)
-            loss_D_blur, _ = self.criterionGAN(pred_blur, False)
+            loss_D_blur, _ = self.criterionGAN(pred_blur, True)
 
         loss_D_fake, _ = self.criterionGAN(pred_fake, False)
         loss_D_real, _ = self.criterionGAN(pred_real, True)
