@@ -324,7 +324,7 @@ class DualNetModel(BaseModel):
         self.forward()
         self.update_D()
 
-    def generate_random_block(self, input, target, target_blur):
+    def generate_random_block(self, input, target, blurs):
 
         batch_size, _, height, width = target.size()
         target_tensor = target.data
@@ -341,7 +341,7 @@ class DualNetModel(BaseModel):
                 y = random.randint(0, width - block_size - 1)
                 target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size],
                                                    requires_grad=False)
-                target_blur_block = torch.tensor(target_blur[j, :, x:x + block_size, y:y + block_size],
+                target_blur_block = torch.tensor(blurs[j, :, x:x + block_size, y:y + block_size],
                                                    requires_grad=False)
                 if i == 0:
                     target_blocks = target_random_block
