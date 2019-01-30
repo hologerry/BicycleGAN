@@ -226,10 +226,13 @@ def transform_blur(Shapes, Colors):
 
     Shapes = list(map(lambda s: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
+    tmp1 = torch.cat((Shapes[0], Shapes[1]), 1)
+    tmp2 = torch.cat((Shapes[2], Shapes[3]), 1)
+    tmp3 = torch.cat((tmp1, tmp2), 2)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+    tmp4 = torch.cat((Colors[0], Colors[1]), 1)
+    tmp5 = torch.cat((Colors[2], Colors[3]), 1)
+    tmp6 = torch.cat((tmp4, tmp5), 2)
 
-    Shapes = torch.cat(Shapes)
-    Colors = torch.cat(Colors)
-
-    return Shapes, Colors
+    return tmp3, tmp6
