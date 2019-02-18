@@ -7,6 +7,7 @@ from torch.nn import Parameter, init
 from torch.optim import lr_scheduler
 
 from .vgg import VGG19
+from .roi_align import RoIAlign
 
 ###############################################################################
 # Functions
@@ -152,8 +153,6 @@ def define_D(input_nc, ndf, netD,
     norm_layer = get_norm_layer(layer_type=norm)
     nl = 'lrelu'  # use leaky relu for D
     nl_layer = get_non_linearity(layer_type=nl)
-
-
 
     if netD == 'basic_64':
         net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
@@ -415,11 +414,11 @@ class D_NLayers(nn.Module):
 
         nf_mult_prev = nf_mult
         nf_mult = min(2**n_layers, 8)
-        
+
         sequence += [
             nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
                       kernel_size=kw, stride=1, padding=padw, bias=use_bias)]
-        
+
         if norm_layer is not None:
             sequence += [norm_layer(ndf * nf_mult)]
         sequence += [nl_layer()]
@@ -1470,14 +1469,13 @@ class PatchLoss(nn.Module):
             dist.append(matched)
         dist = torch.cat(dist, dim=0)
 
-        #output_pat = self.l2_normalize_patch(output_pat)
-        #dist = self.l2_normalize_patch(dist)
+        # output_pat = self.l2_normalize_patch(output_pat)
+        # dist = self.l2_normalize_patch(dist)
 
         diff = (output_pat-dist).abs()
         l1_patch = diff.sum(dim=1).sum(dim=-2).sum(dim=-1)
         l1_clip = torch.clamp(l1_patch, 0, 1000)
         loss = l1_clip.sum()
-        
         return loss
 
 

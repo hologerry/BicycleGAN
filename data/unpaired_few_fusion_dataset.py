@@ -1,9 +1,12 @@
 import os.path
 import random
-import numpy as np
-from PIL import Image,ImageFilter
 
-from data.base_dataset import BaseDataset, transform_triple_with_label, transform_vgg, transform_blur
+import numpy as np
+import torch
+from PIL import Image, ImageFilter
+
+from data.base_dataset import (BaseDataset, transform_blur,
+                               transform_triple_with_label, transform_vgg)
 from data.image_folder import make_dataset
 
 
@@ -35,7 +38,7 @@ class UnpairedFewFusionDataset(BaseDataset):
         Shapes = []
         Colors = []
         Style_paths = []
-        #gaussion filter
+        # gaussion filter
         Blurs_shape = []
         Blurs_color = []
 
@@ -58,10 +61,12 @@ class UnpairedFewFusionDataset(BaseDataset):
             Colors.append(Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
             Blurs_color.append(
-                Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)).filter(ImageFilter.GaussianBlur(radius=(np.random.rand(1)[0]*2+2)))
+                Image.open(style_path).convert('RGB').crop((w+w, 0, w+w+w, h)).filter(
+                    ImageFilter.GaussianBlur(radius=(np.random.rand(1)[0]*2+2)))
                 )
             Blurs_shape.append(
-                Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)).filter(ImageFilter.GaussianBlur(radius=(np.random.rand(1)[0]*2+2)))
+                Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)).filter(
+                    ImageFilter.GaussianBlur(radius=(np.random.rand(1)[0]*2+2)))
                 )
 
         vgg_Shapes, vgg_Colors = transform_vgg(Shapes, Colors)
@@ -71,7 +76,7 @@ class UnpairedFewFusionDataset(BaseDataset):
         A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors = \
             transform_triple_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors)
 
-        idx = np.array([0,1,2,3])
+        idx = np.array([0, 1, 2, 3])
         random.shuffle(idx)
         second_A = Bases[(idx[0]*3):(idx[0]*3+3), ...]
         second_B = Shapes[(idx[0]*3):(idx[0]*3+3), ...]
@@ -86,7 +91,8 @@ class UnpairedFewFusionDataset(BaseDataset):
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
                 'vgg_Shapes': vgg_Shapes, 'vgg_Colors': vgg_Colors,
                 'blur_Shapes': Blurs_shape, 'blur_Colors': Blurs_color,
-                'second_A': second_A, 'second_B':second_B, 'second_C': second_C, 'second_ref1':second_ref1, 'second_ref2':second_ref2, 'second_ref3':second_ref3
+                'second_A': second_A, 'second_B': second_B, 'second_C': second_C, 'second_ref1': second_ref1,
+                'second_ref2': second_ref2, 'second_ref3': second_ref3
                 }
 
     def __len__(self):
@@ -94,7 +100,6 @@ class UnpairedFewFusionDataset(BaseDataset):
 
     def name(self):
         return 'UnpairedFewFusionDataset'
-
 
     def gaussianFilter(self, array):
 

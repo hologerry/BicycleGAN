@@ -4,8 +4,6 @@ from . import networks
 from .vgg import VGG19
 import random
 
-from PIL import Image,ImageFilter
-
 
 class DualNetModel(BaseModel):
     def name(self):
@@ -75,8 +73,8 @@ class DualNetModel(BaseModel):
                                                 num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
 
             self.netD_local_B = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
-                                                use_sigmoid=use_sigmoid, init_type=opt.init_type,
-                                                num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
+                                                  use_sigmoid=use_sigmoid, init_type=opt.init_type,
+                                                  num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
 
         if opt.isTrain:
             self.criterionGAN = networks.GANLoss(mse_loss=not use_sigmoid).to(self.device)
@@ -117,7 +115,7 @@ class DualNetModel(BaseModel):
                 self.optimizers.append(self.optimizer_Dlocal)
 
                 self.optimizer_Dlocal_B = torch.optim.Adam(self.netD_local_B.parameters(), lr=opt.lr,
-                                                         betas=(opt.beta1, 0.999))
+                                                           betas=(opt.beta1, 0.999))
                 self.optimizers.append(self.optimizer_Dlocal_B)
 
     def is_train(self):
@@ -140,14 +138,14 @@ class DualNetModel(BaseModel):
         self.vgg_Colors = input['vgg_Colors'].to(self.device)
 
         self.blur_Shapes = input['blur_Shapes'].to(self.device)
-        self.blur_Colors = input['blur_Colors'].to(self.device) 
+        self.blur_Colors = input['blur_Colors'].to(self.device)
 
-        self.second_A = input['second_A'].to(self.device) 
-        self.second_ref1 = input['second_ref1'].to(self.device) 
-        self.second_ref2 = input['second_ref2'].to(self.device) 
+        self.second_A = input['second_A'].to(self.device)
+        self.second_ref1 = input['second_ref1'].to(self.device)
+        self.second_ref2 = input['second_ref2'].to(self.device)
         self.second_ref3 = input['second_ref3'].to(self.device)
         self.second_B = input['second_B'].to(self.device)
-        self.second_C = input['second_C'].to(self.device) 
+        self.second_C = input['second_C'].to(self.device)
 
     def test(self):
         with torch.no_grad():
@@ -187,8 +185,10 @@ class DualNetModel(BaseModel):
                 self.vgg_real_Colors_list.append(self.vgg19(self.real_Colors[:, i*3:(i+1)*3, :, :]))
 
         # local blocks
-        self.fake_B_blocks, self.real_shape_blocks, self.blur_shape_blocks = self.generate_random_block(self.fake_B, self.vgg_Shapes, self.blur_Shapes)
-        self.fake_C_blocks, self.real_color_blocks, self.blur_color_blocks = self.generate_random_block(self.fake_C, self.vgg_Colors, self.blur_Colors)
+        self.fake_B_blocks, self.real_shape_blocks, self.blur_shape_blocks = \
+            self.generate_random_block(self.fake_B, self.vgg_Shapes, self.blur_Shapes)
+        self.fake_C_blocks, self.real_color_blocks, self.blur_color_blocks = \
+            self.generate_random_block(self.fake_C, self.vgg_Colors, self.blur_Colors)
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
@@ -265,21 +265,21 @@ class DualNetModel(BaseModel):
         self.loss_patch_G = 0.0
         if self.opt.lambda_patch > 0.0:
             self.loss_patch_G = self.patchLoss(self.fake_C, self.fake_B, self.vgg_Shapes, self.vgg_Colors) \
-            * self.opt.lambda_patch
+                * self.opt.lambda_patch
 
         # 6. local adv loss
         self.loss_local_adv = 0.0
         self.loss_local_adv_B = 0.0
         if self.opt.lambda_local_D > 0.0:
             self.loss_local_adv_B = self.backward_G_GAN(self.fake_B_blocks, self.netD_local_B, self.opt.lambda_local_D)
-            self.loss_local_adv = self.backward_G_GAN(self.fake_C_blocks, self.netD_local, self.opt.lambda_local_D) 
+            self.loss_local_adv = self.backward_G_GAN(self.fake_C_blocks, self.netD_local, self.opt.lambda_local_D)
 
         # 7. local style loss
         self.loss_local_style = 0.0
         if self.opt.lambda_local_style > 0.0:
-            self.loss_local_style = self.criterionSlocal(self.fake_C_blocks[:,:3,...], self.real_color_blocks[:,:3,...]) \
-            * self.opt.lambda_local_style
-
+            self.loss_local_style = \
+                self.criterionSlocal(self.fake_C_blocks[:, :3, ...], self.real_color_blocks[:, :3, ...]) \
+                * self.opt.lambda_local_style
 
         # 8. second cycle l1 loss
         self.loss_second_cycle_B = 0.0
@@ -300,7 +300,7 @@ class DualNetModel(BaseModel):
         self.loss_G.backward(retain_graph=True)
 
     def update_D(self):
-        
+
         # update D
         if self.opt.lambda_GAN > 0.0:
             self.set_requires_grad(self.netD, True)
@@ -324,15 +324,15 @@ class DualNetModel(BaseModel):
             self.set_requires_grad(self.netD_local_B, True)
             self.optimizer_Dlocal_B.zero_grad()
             self.loss_Dlocal_B, self.losses_Dlocal_B = self.backward_D(self.netD_local_B, self.real_shape_blocks,
-                                                                   self.fake_B_blocks, self.blur_shape_blocks)
-            self.optimizer_Dlocal_B.step()           
+                                                                       self.fake_B_blocks, self.blur_shape_blocks)
+            self.optimizer_Dlocal_B.step()
 
     def update_G(self):
         # update dual net G
         self.set_requires_grad(self.netD, False)
         self.set_requires_grad(self.netD_B, False)
-        #self.set_requires_grad(self.netD_local, False)
-        #self.set_requires_grad(self.netD_local_B, False)
+        # self.set_requires_grad(self.netD_local, False)
+        # self.set_requires_grad(self.netD_local_B, False)
 
         self.optimizer_G.zero_grad()
         self.backward_G()
@@ -365,7 +365,7 @@ class DualNetModel(BaseModel):
                 target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size],
                                                    requires_grad=False)
                 target_blur_block = torch.tensor(blurs[j, :, x:x + block_size, y:y + block_size],
-                                                   requires_grad=False)
+                                                 requires_grad=False)
                 if i == 0:
                     target_blocks = target_random_block
                     target_blur = target_blur_block
@@ -375,7 +375,7 @@ class DualNetModel(BaseModel):
 
                 """
                     x_m = random.randint(0, width-block_size-1)
-                y_m = random.randint(0, height-block_size-1)
+                    y_m = random.randint(0, height-block_size-1)
                     input_blocks.append(torch.tensor(input.data[:, x_m:x_m+block_size, y_m:y_m+block_size].unsqueeze(0),
                                                      requires_grad=False))
                 """
@@ -387,10 +387,10 @@ class DualNetModel(BaseModel):
                     input_blocks = input_random_block
                 else:
                     input_blocks = torch.cat([input_blocks, target_random_block], 0)
-        
+
             input_blocks = torch.unsqueeze(input_blocks, 0)
             target_blocks = torch.unsqueeze(target_blocks, 0)
-            target_blur = torch.unsqueeze(target_blur, 0)            
+            target_blur = torch.unsqueeze(target_blur, 0)
             inp_blk.append(input_blocks)
             tar_blk.append(target_blocks)
             tar_blr.append(target_blur)
