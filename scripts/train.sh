@@ -4,7 +4,6 @@ MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
-
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 
@@ -15,7 +14,6 @@ NENCODE=4
 FEW_SIZE=0 # no use for english dataset
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
-
 
 # dataset
 NO_FLIP='--no_flip'
@@ -121,7 +119,8 @@ case ${CLASS} in
   LAMBDA_L2=100.0
   DATASET_MODE='cn_few_fusion'
   CONTINUE_TRAIN='--continue_train'
-  DISPLAY_FREQ=100
+  DISPLAY_FREQ=50
+  LR=0.00002
   ;;
 *)
   echo 'WRONG category: '${CLASS}
