@@ -43,7 +43,6 @@ CONDITIONAL_D='--conditional_D'
 
 LR=0.0002
 
-
 VALIDATE_FREQ=0
 DISPLAY_FREQ=100
 
@@ -55,18 +54,13 @@ LAMBDA_GAN=1.0
 LAMBDA_GAN_B=1.0
 LAMBDA_LOCAL_D=1.0
 
-
-
 # dataset parameters
 case ${CLASS} in
 'base_gray_color' | 'base_gray_color_s')
   BATCH_SIZE=64
-
   NITER=50
   NITER_DECAY=250
-
   SAVE_EPOCH=2
-
   LAMBDA_L1=100.0
   LAMBDA_L1_B=50.0
   LAMBDA_CX=25.0
@@ -75,61 +69,33 @@ case ${CLASS} in
   LAMBDA_GAN_B=1.0
   LAMBDA_LOCAL_D=1.0
   DATASET_MODE='multi_fusion'
-
   CONTINUE_TRAIN=''
-
   PRINT_FREQ=400
   ;;
 
 'base_gray_texture' | 'base_gray_texture_s')
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
   CLASS=$CLASS'_'$DATA_ID
-
   BATCH_SIZE=64
-
   NITER=500
   NITER_DECAY=2500
-
-  SAVE_EPOCH=100
-
+  SAVE_EPOCH=50
   LAMBDA_L1=100.0
   LAMBDA_L1_B=60.0
   LAMBDA_CX=50.0
   LAMBDA_CX_B=15.0
   LAMBDA_LOCAL_D=0.1
   DATASET_MODE='few_fusion'
-
   CONTINUE_TRAIN='--continue_train'
   VALIDATE_FREQ=50
-
-  DISPLAY_FREQ=100
-  LR=0.00002
-  ;;
-
-'base_gray_texture_unpaired' | 'base_gray_texture_unpaired_s')
-  BATCH_SIZE=64
-
-  NITER=500
-  NITER_DECAY=2500
-  SAVE_EPOCH=10
-
-  LAMBDA_GAN=1.0
-  LAMBDA_GAN_B=1.0
-  LAMBDA_LOCAL_D=0.1
-  DATASET_MODE='few_fusion'
-
-  CONTINUE_TRAIN='--continue_train'
-  VALIDATE_FREQ=50
-
-  DISPLAY_FREQ=32
-  PRINT_FREQ=32
+  DISPLAY_FREQ=50
+  print_freq=50
   LR=0.00002
   ;;
 
 'skeleton_gray_color' | 'skeleton_gray_color_s')
   FEW_SIZE=10
   BATCH_SIZE=64
-
   NITER=10
   NITER_DECAY=10
   SAVE_EPOCH=2
@@ -137,7 +103,6 @@ case ${CLASS} in
   LAMBDA_L1_B=50.0
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
-
   DATASET_MODE='cn_multi_fusion'
   ;;
 
@@ -145,7 +110,6 @@ case ${CLASS} in
   NENCODE=10
   FEW_SIZE=30
   BATCH_SIZE=64
-
   NITER=40
   NITER_DECAY=60
   SAVE_EPOCH=10
@@ -154,11 +118,8 @@ case ${CLASS} in
   LAMBDA_CX=25.0
   LAMBDA_CX_B=15.0
   LAMBDA_L2=100.0
-
   DATASET_MODE='cn_multi_fusion'
-
   CONTINUE_TRAIN='--continue_train'
-
   DISPLAY_FREQ=100
   ;;
 *)
@@ -213,4 +174,3 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --display_freq ${DISPLAY_FREQ} \
   --print_freq ${PRINT_FREQ} \
   --lr ${LR}
-
