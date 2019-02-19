@@ -1,5 +1,5 @@
 set -ex
-# CLASS='edges2shoes'  # facades, day2night, edges2shoes, edges2handbags, maps
+
 MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
@@ -8,7 +8,8 @@ GPU_ID=${2}
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 
-PORT=10002
+PORT=9999
+# PORT=10000
 
 NENCODE=4
 FEW_SIZE=0 # no use for english dataset
@@ -38,8 +39,7 @@ NET_G='dualnet'
 NET_D='basic_64'
 NET_D2='basic_64'
 NET_DLOCAL='basic_32'
-NET_R='basic_64'
-NET_E='resnet_64'
+
 USE_ATTENTION='--use_attention'
 CONDITIONAL_D='--conditional_D'
 
@@ -55,7 +55,7 @@ LAMBDA_CX=25.0
 LAMBDA_CX_B=15.0
 LAMBDA_GAN=1.0
 LAMBDA_GAN_B=1.0
-LAMBDA_LOCAL_D=0
+LAMBDA_LOCAL_D=1.0
 
 
 
@@ -76,7 +76,7 @@ case ${CLASS} in
   LAMBDA_CX_B=15.0
   LAMBDA_GAN=1.0
   LAMBDA_GAN_B=1.0
-  LAMBDA_LOCAL_D=0
+  LAMBDA_LOCAL_D=1.0
   DATASET_MODE='multi_fusion'
 
   CONTINUE_TRAIN=''
@@ -100,7 +100,7 @@ case ${CLASS} in
   LAMBDA_L1_B=60.0
   LAMBDA_CX=50.0
   LAMBDA_CX_B=15.0
-
+  LAMBDA_LOCAL_D=0.1
   DATASET_MODE='few_fusion'
 
   CONTINUE_TRAIN='--continue_train'
