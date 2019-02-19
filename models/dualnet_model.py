@@ -292,7 +292,7 @@ class DualNetModel(BaseModel):
 
         for b in range(batch_size):
             for i in range(self.opt.block_num):
-                rand_idx = random.randint(0, self.opt.nencode)
+                rand_idx = random.randint(0, self.opt.nencode-1)
                 x = random.randint(0, height - block_size - 1)
                 y = random.randint(0, width - block_size - 1)
                 target_random_block = torch.tensor(target_tensor[b, rand_idx*3:(rand_idx+1)*3,
