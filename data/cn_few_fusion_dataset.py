@@ -2,25 +2,35 @@ import os.path
 import random
 
 from PIL import Image, ImageFilter
-import torch
 
-from data.base_dataset import BaseDataset, transform_multi
+from data.base_dataset import BaseDataset, transform_few_with_label
 from data.image_folder import make_dataset
 
 
-class MultiFusionDataset(BaseDataset):
-    """Pretrain dataset
-    """
+class CnFewFusionDataset(BaseDataset):
     @staticmethod
     def modify_commandline_options(parser, is_train):
         return parser
+
+    def rreplace(self, s, old, new, occurrence):
+        li = s.rsplit(old, occurrence)
+        return new.join(li)
 
     def initialize(self, opt):
         self.opt = opt
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
-        self.alphabets = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        # self.chars = list(range(500))  # only use 500 of 639 to train, and the remain 139 as test set
+        # guarantee consistent for test
+        # so just shuffle 500 once
+        self.shuffled_gb639list = [445, 10, 116, 113, 133, 365,
+                                   297, 368, 207, 241, 450, 486,
+                                   252, 301, 308, 121, 382, 269,
+                                   112, 356, 418, 197, 381, 205,
+                                   430, 236, 149, 435, 291, 455]
+        assert(opt.few_size <= len(self.shuffled_gb639list))
+        self.chars = self.shuffled_gb639list[:opt.few_size]
 
     def __getitem__(self, index):
         ABC_path = self.ABC_paths[index]
@@ -40,13 +50,16 @@ class MultiFusionDataset(BaseDataset):
         blur_Shapes = []
         blur_Colors = []
 
-        ABC_path_list = list(ABC_path)
-
-        random.shuffle(self.alphabets)
-        chars_random = self.alphabets[:self.opt.nencode]
+        target_char = int(ABC_path.split('_')[-1].split('.')[0])
+        ABC_path_c = ABC_path
+        label = 0.0
+        if target_char in self.chars:
+            label = 1.0
+        # for shapes
+        random.shuffle(self.chars)
+        chars_random = self.chars[:self.opt.nencode]
         for char in chars_random:
-            ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
-            s_path = "".join(ABC_path_list)
+            s_path = self.rreplace(ABC_path_c, str(target_char), str(char), 1)  # /path/to/img/XXXX_XX_XXX.png
             Style_paths.append(s_path)
             Bases.append(Image.open(s_path).convert('RGB').crop((0, 0, w, h)))
             Shapes.append(Image.open(s_path).convert('RGB').crop((w, 0, w+w, h)))
@@ -62,12 +75,8 @@ class MultiFusionDataset(BaseDataset):
                     ImageFilter.GaussianBlur(radius=(random.random()*2+2)))
                 )
 
-        A, B, C, Bases, Shapes, Colors, blur_Shapes, blur_Colors = \
-            transform_multi(self.opt, A, B, C, Bases, Shapes, Colors, blur_Shapes, blur_Colors)
-        C_l = C
-        label = torch.tensor(1.0)
-        B_G = B
-        C_G = C
+        A, B, B_G, C, C_G, C_l, Bases, Shapes, Colors, blur_Shapes, blur_Colors = \
+            transform_few_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
@@ -80,4 +89,4 @@ class MultiFusionDataset(BaseDataset):
         return len(self.ABC_paths)
 
     def name(self):
-        return 'MultiFusionDataset'
+        return 'CnFewFusionDataset'
