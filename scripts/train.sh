@@ -10,8 +10,6 @@ DISPLAY_ID=`date '+%H%M'`
 
 PORT=9999
 # PORT=10000
-
-NENCODE=4
 FEW_SIZE=0 # no use for english dataset
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
@@ -31,7 +29,7 @@ WHERE_ADD='all'
 CONDITIONAL_D=''
 
 # Networks module
-NGF=64
+NGF=32
 NDF=32
 NEF=32
 
@@ -62,7 +60,6 @@ LAMBDA_LOCAL_D=1.0
 # dataset parameters
 case ${CLASS} in
 'base_gray_color' | 'base_gray_color_s')
-  NENCODE=4
   BATCH_SIZE=64
 
   NITER=50
@@ -88,8 +85,7 @@ case ${CLASS} in
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
   CLASS=$CLASS'_'$DATA_ID
 
-  NENCODE=4
-  BATCH_SIZE=648
+  BATCH_SIZE=64
 
   NITER=500
   NITER_DECAY=2500
@@ -111,8 +107,7 @@ case ${CLASS} in
   ;;
 
 'base_gray_texture_unpaired' | 'base_gray_texture_unpaired_s')
-  NENCODE=4
-  BATCH_SIZE=648
+  BATCH_SIZE=64
 
   NITER=500
   NITER_DECAY=2500
@@ -132,9 +127,8 @@ case ${CLASS} in
   ;;
 
 'skeleton_gray_color' | 'skeleton_gray_color_s')
-  NENCODE=10
-  FEW_SIZE=30
-  BATCH_SIZE=648
+  FEW_SIZE=10
+  BATCH_SIZE=64
 
   NITER=10
   NITER_DECAY=10
@@ -150,7 +144,7 @@ case ${CLASS} in
   'skeleton_gray_texture_s')
   NENCODE=10
   FEW_SIZE=30
-  BATCH_SIZE=648
+  BATCH_SIZE=64
 
   NITER=40
   NITER_DECAY=60
