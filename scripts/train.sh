@@ -10,6 +10,8 @@ DISPLAY_ID=`date '+%H%M'`
 
 PORT=9999
 # PORT=10000
+
+NENCODE=4
 FEW_SIZE=0 # no use for english dataset
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
@@ -107,8 +109,7 @@ case ${CLASS} in
   ;;
 
   'skeleton_gray_texture_s')
-  NENCODE=10
-  FEW_SIZE=30
+  FEW_SIZE=10
   BATCH_SIZE=64
   NITER=40
   NITER_DECAY=60
