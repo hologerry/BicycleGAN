@@ -201,7 +201,6 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --ndf ${NDF} \
   --nef ${NEF} \
   --netG ${NET_G} \
-  --netE ${NET_E} \
   --netD ${NET_D} \
   --netD_B ${NET_D2} \
   --netD_local ${NET_DLOCAL} \
