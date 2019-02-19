@@ -4,11 +4,13 @@ import random
 from PIL import Image
 import torch
 
-from data.base_dataset import BaseDataset, transform_fusion
+from data.base_dataset import BaseDataset, transform_multi
 from data.image_folder import make_dataset
 
 
 class MultiFusionDataset(BaseDataset):
+    """Pretrain dataset
+    """
     @staticmethod
     def modify_commandline_options(parser, is_train):
         return parser
@@ -51,7 +53,7 @@ class MultiFusionDataset(BaseDataset):
             Color_paths.append(c_path)
             Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
-        A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
+        A, B, C, Shapes, Colors = transform_multi(self.opt, A, B, C, Shapes, Colors)
         C_l = C
         label = torch.tensor(1.0)
         B_G = B

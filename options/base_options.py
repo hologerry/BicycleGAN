@@ -28,7 +28,7 @@ class BaseOptions():
         parser.add_argument('--nencode', type=int, default=4,
                             help='# of image(s) for encoder, must smaller or equal than few_size')
         parser.add_argument('--few_size', type=int, default=10,
-                            help='complete set size for few shot')
+                            help='complete set size for few shot, cn dataset')
         parser.add_argument('--nz', type=int, default=8,
                             help='# latent vector')
         parser.add_argument('--nef', type=int, default=64,
@@ -83,8 +83,6 @@ class BaseOptions():
                             help='selects model to use for netD')
         parser.add_argument('--netD_local', type=str, default='basic_32',
                             help='local D')
-        parser.add_argument('--netR',  type=str, default='basic_256',
-                            help='selects model to use for netR')
         parser.add_argument('--netG', type=str, default='unet_256',
                             help='selects model to use for netG')
         parser.add_argument('--netE', type=str, default='resnet_256',

@@ -3,7 +3,7 @@ import random
 
 from PIL import Image
 
-from data.base_dataset import BaseDataset, transform_fusion
+from data.base_dataset import BaseDataset, transform_multi
 from data.image_folder import make_dataset
 
 
@@ -70,7 +70,7 @@ class CnMultiFusionDataset(BaseDataset):
             Shape_paths.append(ABC_path)
             Colors.append(C)
             Color_paths.append(ABC_path)
-        A, B, C, Shapes, Colors = transform_fusion(
+        A, B, C, Shapes, Colors = transform_multi(
             self.opt, A, B, C, Shapes, Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
