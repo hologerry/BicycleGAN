@@ -100,20 +100,6 @@ class BaseOptions():
         parser.add_argument('--use_spectral_norm_D', action='store_true',
                             help='if use spectral normalization in D')
 
-        # discirminative region options
-        parser.add_argument('--use_reviser', action='store_true',
-                            help='if use an additional reviser (from DRPAN paper)')
-        parser.add_argument('--window_width', type=int, default=2,
-                            help='slide window size for discriminative region')
-        parser.add_argument('--window_height', type=int, default=2,
-                            help='slide window size for discriminative region')
-        parser.add_argument('--region_width', type=int, default=32,
-                            help='discriminative region width')
-        parser.add_argument('--region_height', type=int, default=32,
-                            help='discriminative region height')
-        parser.add_argument('--mask_operation', type=bool, default=True,
-                            help='use mask operation or not')
-
         # extra parameters
         parser.add_argument('--where_add', type=str, default='all',
                             help='input|all|middle; where to add z in the network G')
