@@ -63,7 +63,7 @@ LAMBDA_LOCAL_D=1.0
 case ${CLASS} in
 'base_gray_color' | 'base_gray_color_s')
   NENCODE=4
-  BATCH_SIZE=80
+  BATCH_SIZE=64
 
   NITER=50
   NITER_DECAY=250
@@ -89,7 +89,7 @@ case ${CLASS} in
   CLASS=$CLASS'_'$DATA_ID
 
   NENCODE=4
-  BATCH_SIZE=80
+  BATCH_SIZE=64
 
   NITER=500
   NITER_DECAY=2500
@@ -134,7 +134,7 @@ case ${CLASS} in
 'skeleton_gray_color' | 'skeleton_gray_color_s')
   NENCODE=10
   FEW_SIZE=30
-  BATCH_SIZE=80
+  BATCH_SIZE=64
 
   NITER=10
   NITER_DECAY=10
@@ -150,7 +150,7 @@ case ${CLASS} in
   'skeleton_gray_texture_s')
   NENCODE=10
   FEW_SIZE=30
-  BATCH_SIZE=80
+  BATCH_SIZE=64
 
   NITER=40
   NITER_DECAY=60

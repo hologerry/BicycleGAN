@@ -119,6 +119,7 @@ def transform_multi(opt, A, B, C, Bases, Shapes, Colors):
 
     Bases = list(map(lambda b: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
+    Bases = torch.cat(Bases)
     Shapes = list(map(lambda s: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
     Shapes = torch.cat(Shapes)
