@@ -45,6 +45,7 @@ LR=0.0002
 
 VALIDATE_FREQ=0
 DISPLAY_FREQ=100
+PRINT_FREQ=100
 
 LAMBDA_L1=100.0
 LAMBDA_L1_B=50.0
@@ -89,7 +90,7 @@ case ${CLASS} in
   CONTINUE_TRAIN='--continue_train'
   VALIDATE_FREQ=50
   DISPLAY_FREQ=50
-  print_freq=50
+  PRINT_FREQ=50
   LR=0.00002
   ;;
 
@@ -120,6 +121,7 @@ case ${CLASS} in
   DATASET_MODE='cn_few_fusion'
   CONTINUE_TRAIN='--continue_train'
   DISPLAY_FREQ=50
+  PRINT_FREQ=50
   LR=0.00002
   ;;
 *)
