@@ -101,12 +101,13 @@ def get_transform(opt):
 #         return A, B
 
 
-def transform_multi(opt, A, B, C, Shapes, Colors):
+def transform_multi(opt, A, B, C, Bases, Shapes, Colors):
     """Transformer for multi fusion, pretrain dataset
     """
     if not opt.resize_or_crop == 'none':
         raise ValueError(
             "Only support none mode for resize_or_crop on base_gray_color dataset")
+    assert(isinstance(Bases, list))
     assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
     A = transforms.ToTensor()(A)
@@ -116,6 +117,8 @@ def transform_multi(opt, A, B, C, Shapes, Colors):
     B = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(B)
     C = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(C)
 
+    Bases = list(map(lambda b: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
     Shapes = list(map(lambda s: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
     Shapes = torch.cat(Shapes)
@@ -123,7 +126,7 @@ def transform_multi(opt, A, B, C, Shapes, Colors):
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
     Colors = torch.cat(Colors)
 
-    return A, B, C, Shapes, Colors
+    return A, B, C, Bases, Shapes, Colors
 
 
 # def transform_triple(opt, A, B, C, Bases, Shapes, Colors):

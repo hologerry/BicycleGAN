@@ -1,10 +1,10 @@
 import os.path
 import random
 
-from PIL import Image
+from PIL import Image, ImageFilter
 import torch
 
-from data.base_dataset import BaseDataset, transform_multi
+from data.base_dataset import BaseDataset, transform_multi, transform_grid
 from data.image_folder import make_dataset
 
 
@@ -30,30 +30,41 @@ class MultiFusionDataset(BaseDataset):
         A = ABC.crop((0, 0, w, h))
         B = ABC.crop((w, 0, w+w, h))
         C = ABC.crop((w+w, 0, w+w+w, h))
+
+        Bases = []
         Shapes = []
-        Shape_paths = []
+        Style_paths = []
         Colors = []
-        Color_paths = []
+
+        blur_Shapes = []
+        blur_Colors = []
 
         ABC_path_list = list(ABC_path)
-        # for shapes
+
         random.shuffle(self.alphabets)
         chars_random = self.alphabets[:self.opt.nencode]
         for char in chars_random:
             ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
             s_path = "".join(ABC_path_list)
-            Shape_paths.append(s_path)
+            Style_paths.append(s_path)
+            Bases.append(Image.open(s_path).convert('RGB').crop((0, 0, w, h)))
             Shapes.append(Image.open(s_path).convert('RGB').crop((w, 0, w+w, h)))
-        # for colors
-        random.shuffle(self.alphabets)
-        chars_random = self.alphabets[:self.opt.nencode]
-        for char in chars_random:
-            ABC_path_list[-5] = char  # /path/to/img/XXXX_X_X.png
-            c_path = "".join(ABC_path_list)
-            Color_paths.append(c_path)
-            Colors.append(Image.open(c_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
+            Colors.append(Image.open(s_path).convert('RGB').crop((w+w, 0, w+w+w, h)))
 
-        A, B, C, Shapes, Colors = transform_multi(self.opt, A, B, C, Shapes, Colors)
+            blur_Shapes.append(
+                Image.open(s_path).convert('RGB').crop((w, 0, w+w, h)).filter(
+                    ImageFilter.GaussianBlur(radius=(random.random()*2+2)))
+                )
+
+            blur_Colors.append(
+                Image.open(s_path).convert('RGB').crop((w+w, 0, w+w+w, h)).filter(
+                    ImageFilter.GaussianBlur(radius=(random.random()*2+2)))
+                )
+
+        Shapes_grid, Colors_grid = transform_grid(Shapes, Colors)
+        blur_Shapes_grid, blur_Colors_grid = transform_grid(blur_Shapes, blur_Colors)
+
+        A, B, C, Bases, Shapes, Colors = transform_multi(self.opt, A, B, C, Bases, Shapes, Colors)
         C_l = C
         label = torch.tensor(1.0)
         B_G = B
@@ -61,8 +72,11 @@ class MultiFusionDataset(BaseDataset):
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
-                'Shapes': Shapes, 'Colors': Colors,
-                'ABC_path': ABC_path, 'Shape_paths': Shape_paths, 'Color_paths': Color_paths}
+                'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
+                'ABC_path': ABC_path, 'Style_paths': Style_paths,
+                'Shapes_grid': Shapes_grid, 'Colors_grid': Colors_grid,
+                'blur_Shapes_grid': blur_Shapes_grid, 'blur_Colors_grid': blur_Colors_grid,
+                }
 
     def __len__(self):
         return len(self.ABC_paths)

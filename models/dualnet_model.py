@@ -116,9 +116,9 @@ class DualNetModel(BaseModel):
         self.label = input['label'].to(self.device)  # label == 1 means the image is in the few set
 
         self.real_Bases = input['Bases'].to(self.device)
-
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is reference color characters
+
         self.Shapes_grid = input['Shapes_grid'].to(self.device)
         self.Colors_grid = input['Colors_grid'].to(self.device)
 
