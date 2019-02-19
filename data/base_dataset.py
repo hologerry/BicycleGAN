@@ -101,7 +101,7 @@ def get_transform(opt):
 #         return A, B
 
 
-def transform_multi(opt, A, B, C, Bases, Shapes, Colors):
+def transform_multi(opt, A, B, C, Bases, Shapes, Colors, blur_Shapes, blur_Colors):
     """Transformer for multi fusion, pretrain dataset
     """
     if not opt.resize_or_crop == 'none':
@@ -110,6 +110,8 @@ def transform_multi(opt, A, B, C, Bases, Shapes, Colors):
     assert(isinstance(Bases, list))
     assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
+    assert(isinstance(blur_Shapes, list))
+    assert(isinstance(blur_Colors, list))
     A = transforms.ToTensor()(A)
     B = transforms.ToTensor()(B)
     C = transforms.ToTensor()(C)
@@ -119,15 +121,22 @@ def transform_multi(opt, A, B, C, Bases, Shapes, Colors):
 
     Bases = list(map(lambda b: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(b)), Bases))
-    Bases = torch.cat(Bases)
     Shapes = list(map(lambda s: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
-    Shapes = torch.cat(Shapes)
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
-    Colors = torch.cat(Colors)
+    blur_Shapes = list(map(lambda bs: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(bs)), blur_Shapes))
+    blur_Colors = list(map(lambda bc: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(bc)), blur_Colors))
 
-    return A, B, C, Bases, Shapes, Colors
+    Bases = torch.cat(Bases)
+    Shapes = torch.cat(Shapes)
+    Colors = torch.cat(Colors)
+    blur_Shapes = torch.cat(blur_Shapes)
+    blur_Colors = torch.cat(blur_Colors)
+
+    return A, B, C, Bases, Shapes, Colors, blur_Shapes, blur_Colors
 
 
 # def transform_triple(opt, A, B, C, Bases, Shapes, Colors):
@@ -157,13 +166,15 @@ def transform_multi(opt, A, B, C, Bases, Shapes, Colors):
 #     return A, B, C, Bases, Shapes, Colors
 
 
-def transform_few_with_label(opt, A, B, C, label, Bases, Shapes, Colors):
+def transform_few_with_label(opt, A, B, C, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors):
     if not opt.resize_or_crop == 'none':
         raise ValueError(
             "Only support none mode for resize_or_crop on base_gray_color dataset")
     assert(isinstance(Bases, list))
     assert(isinstance(Shapes, list))
     assert(isinstance(Colors, list))
+    assert(isinstance(blur_Shapes, list))
+    assert(isinstance(blur_Colors, list))
     A = transforms.ToTensor()(A)
     B = transforms.ToTensor()(B)
     C = transforms.ToTensor()(C)
@@ -183,6 +194,10 @@ def transform_few_with_label(opt, A, B, C, label, Bases, Shapes, Colors):
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(s)), Shapes))
     Colors = list(map(lambda c: transforms.Normalize(
         (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(c)), Colors))
+    blur_Shapes = list(map(lambda bs: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(bs)), blur_Shapes))
+    blur_Colors = list(map(lambda bc: transforms.Normalize(
+        (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(transforms.ToTensor()(bc)), blur_Colors))
 
     rand_idx = random.randrange(opt.nencode)
     if label == 0.0:
@@ -195,8 +210,10 @@ def transform_few_with_label(opt, A, B, C, label, Bases, Shapes, Colors):
     Bases = torch.cat(Bases)
     Shapes = torch.cat(Shapes)
     Colors = torch.cat(Colors)
+    blur_Shapes = torch.cat(blur_Shapes)
+    blur_Colors = torch.cat(blur_Colors)
 
-    return A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors
+    return A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors
 
 
 def __scale_width(img, target_width):

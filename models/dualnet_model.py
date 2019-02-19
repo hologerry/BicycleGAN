@@ -119,11 +119,8 @@ class DualNetModel(BaseModel):
         self.real_Shapes = input['Shapes'].to(self.device)
         self.real_Colors = input['Colors'].to(self.device)  # Colors is reference color characters
 
-        self.Shapes_grid = input['Shapes_grid'].to(self.device)
-        self.Colors_grid = input['Colors_grid'].to(self.device)
-
-        self.blur_Shapes_grid = input['blur_Shapes_grid'].to(self.device)
-        self.blur_Colors_grid = input['blur_Colors_grid'].to(self.device)
+        self.blur_Shapes = input['blur_Shapes'].to(self.device)
+        self.blur_Colors = input['blur_Colors'].to(self.device)
 
     def test(self):
         with torch.no_grad():
@@ -154,9 +151,9 @@ class DualNetModel(BaseModel):
 
         # local blocks
         self.fake_B_blocks, self.real_shape_blocks, self.blur_shape_blocks = \
-            self.generate_random_block(self.fake_B, self.Shapes_grid, self.blur_Shapes_grid)
+            self.generate_random_block(self.fake_B, self.real_Shapes, self.blur_Shapes)
         self.fake_C_blocks, self.real_color_blocks, self.blur_color_blocks = \
-            self.generate_random_block(self.fake_C, self.Colors_grid, self.blur_Colors_grid)
+            self.generate_random_block(self.fake_C, self.real_Colors, self.blur_Colors)
 
         if self.opt.conditional_D:   # tedious conditoinal data
             self.fake_data_B = torch.cat([self.real_A, self.fake_B], 1)
@@ -284,23 +281,24 @@ class DualNetModel(BaseModel):
         self.update_D()
 
     def generate_random_block(self, input, target, blurs):
-        batch_size, _, height, width = target.size()
+        batch_size, channel, height, width = target.size()  # B X 3*nencode X 64 X 64
         target_tensor = target.data
         block_size = self.opt.block_size
-        img_size = 64
+        img_size = self.opt.fineSize  # 64
 
         inp_blk = list()
         tar_blk = list()
         blr_blk = list()
 
-        for j in range(batch_size):
+        for b in range(batch_size):
             for i in range(self.opt.block_num):
+                rand_idx = random.randint(0, self.opt.nencode)
                 x = random.randint(0, height - block_size - 1)
                 y = random.randint(0, width - block_size - 1)
-                target_random_block = torch.tensor(target_tensor[j, :, x:x + block_size, y:y + block_size],
-                                                   requires_grad=False)
-                target_blur_block = torch.tensor(blurs[j, :, x:x + block_size, y:y + block_size],
-                                                 requires_grad=False)
+                target_random_block = torch.tensor(target_tensor[b, rand_idx*3:(rand_idx+1)*3,
+                                                   x:x + block_size, y:y + block_size], requires_grad=False)
+                target_blur_block = torch.tensor(blurs[b, rand_idx*3:(rand_idx+1)*3,
+                                                 x:x + block_size, y:y + block_size], requires_grad=False)
                 if i == 0:
                     target_blocks = target_random_block
                     blur_blocks = target_blur_block
@@ -316,7 +314,7 @@ class DualNetModel(BaseModel):
                 """
                 x1 = random.randint(0, img_size - block_size)
                 y1 = random.randint(0, img_size - block_size)
-                input_random_block = torch.tensor(input.data[j, :, x1:x1 + block_size, y1:y1 + block_size],
+                input_random_block = torch.tensor(input.data[b, :, x1:x1 + block_size, y1:y1 + block_size],
                                                   requires_grad=False)
                 if i == 0:
                     input_blocks = input_random_block

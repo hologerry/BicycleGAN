@@ -37,7 +37,7 @@ class BaseOptions():
                             help='# of gen filters in first conv layer')
         parser.add_argument('--ndf', type=int, default=64,
                             help='# of discrim filters in first conv layer')
-        parser.add_argument('--gpu_ids', type=str, default='0',
+        parser.add_argument('--gpu_ids', type=str, default='0,1',
                             help='gpu ids: e.g. 0  0,1,2, 0,2, -1 for CPU mode')
         parser.add_argument('--name', type=str, default='',
                             help='name of the experiment. It decides where to store samples and models')
@@ -52,7 +52,7 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=64,
+        parser.add_argument('--num_threads', default=32,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')

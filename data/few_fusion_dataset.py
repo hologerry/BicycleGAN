@@ -4,8 +4,7 @@ import random
 import torch
 from PIL import Image, ImageFilter
 
-from data.base_dataset import (BaseDataset, transform_grid,
-                               transform_few_with_label)
+from data.base_dataset import BaseDataset, transform_few_with_label
 from data.image_folder import make_dataset
 
 
@@ -71,19 +70,14 @@ class FewFusionDataset(BaseDataset):
                     ImageFilter.GaussianBlur(radius=(random.random()*2+2)))
                 )
 
-        Shapes_grid, Colors_grid = transform_grid(Shapes, Colors)
-        blur_Shapes_grid, blur_Colors_grid = transform_grid(blur_Shapes, blur_Colors)
-
-        # A, B, C, Shapes, Colors = transform_fusion(self.opt, A, B, C, Shapes, Colors)
-        A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors = \
-            transform_few_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors)
+        A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors = \
+            transform_few_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
                 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
+                'blur_Shapes': blur_Shapes, 'blur_Colors_grid': blur_Colors,
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
-                'Shapes_grid': Shapes_grid, 'Colors_grid': Colors_grid,
-                'blur_Shapes_grid': blur_Shapes_grid, 'blur_Colors_grid': blur_Colors_grid,
                 }
 
     def __len__(self):
