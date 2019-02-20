@@ -11,7 +11,7 @@ CLASS='base_gray_color_s'
 DATASET_MODE='multi_fusion'
 PHASE='val'
 
-NUM_TEST=3000
+NUM_TEST=260000
 
 DIRECTION='AtoC'
 LOAD_SIZE=64

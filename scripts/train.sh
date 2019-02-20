@@ -74,9 +74,9 @@ case ${CLASS} in
 
 'base_gray_texture' | 'base_gray_texture_s')
   PORT=9998
-  FEW_SIZE=5
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
   CLASS=$CLASS'_'$DATA_ID
+  FEW_SIZE=${4}
   BATCH_SIZE=100
   NITER=500
   NITER_DECAY=2500

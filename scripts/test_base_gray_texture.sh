@@ -10,7 +10,7 @@ CLASS='base_gray_texture_s_'${DATA_ID}
 DATASET_MODE='few_fusion'
 PHASE='val'
 
-NUM_TEST=3000
+NUM_TEST=1000
 
 DIRECTION='AtoC'
 LOAD_SIZE=64
