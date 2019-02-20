@@ -7,7 +7,6 @@ GPU_ID=${2}
 DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 
-NENCODE=4
 FEW_SIZE=0
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
@@ -56,6 +55,7 @@ LAMBDA_LOCAL_D=1.0
 case ${CLASS} in
 'base_gray_color' | 'base_gray_color_s')
   PORT=9999
+  NENCODE=4
   BATCH_SIZE=100
   NITER=50
   NITER_DECAY=250
@@ -74,6 +74,7 @@ case ${CLASS} in
 
 'base_gray_texture' | 'base_gray_texture_s')
   PORT=9998
+  NENCODE=4
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
   CLASS=$CLASS'_'$DATA_ID
   FEW_SIZE=${4}
@@ -96,6 +97,7 @@ case ${CLASS} in
 
 'skeleton_gray_color' | 'skeleton_gray_color_s')
   PORT=11111
+  NENCODE=4
   FEW_SIZE=30
   BATCH_SIZE=100
   NITER=10
@@ -110,6 +112,7 @@ case ${CLASS} in
 
   'skeleton_gray_texture_s')
   PORT=11112
+  NENCODE=4
   FEW_SIZE=30
   BATCH_SIZE=100
   NITER=40
