@@ -8,7 +8,7 @@ DISPLAY_ID=`date '+%H%M'`
 # DISPLAY_ID=0
 
 NENCODE=4
-FEW_SIZE=0 # no use for english dataset
+FEW_SIZE=0
 
 CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensure right path
 
@@ -74,6 +74,7 @@ case ${CLASS} in
 
 'base_gray_texture' | 'base_gray_texture_s')
   PORT=9998
+  FEW_SIZE=5
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
   CLASS=$CLASS'_'$DATA_ID
   BATCH_SIZE=100

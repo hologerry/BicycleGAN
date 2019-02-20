@@ -20,11 +20,13 @@ class FewFusionDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
-        # self.few_alphas = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
-        self.few_alphas = ['0', '1', '2', '3', '4']
+        self.shuffled_alphas = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
+        # self.few_alphas = ['0', '1', '2', '3', '4']
         with open(os.path.join(opt.dataroot, "few_dict.txt")) as f:
             self.few_dict = f.readlines()
-        assert(self.opt.nencode == (len(self.few_alphas)-1))
+        assert(self.opt.nencode < self.opt.few_size)
+        assert(self.opt.few_size <= len(self.shuffled_alphas))
+        self.few_alphas = self.shuffled_alphas[:self.opt.few_size]
 
     def __getitem__(self, index):
         ABC_path = self.ABC_paths[index]
@@ -46,7 +48,7 @@ class FewFusionDataset(BaseDataset):
         target_font = int(ABC_path.split("/")[-1].split("_")[0])
         target_char = ABC_path_list[-5]
         label = 0.0
-        if target_char in self.few_dict[target_font-11000].strip():
+        if target_char in self.few_dict[target_font-11000].strip()[:self.opt.few_size]:
             label = 1.0
         # for shapes
         random.shuffle(self.few_alphas)

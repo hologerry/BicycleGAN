@@ -125,7 +125,8 @@ class DualNetModel(BaseModel):
     def test(self):
         with torch.no_grad():
             self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
-            return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C
+            test_l1_loss = torch.nn.functional.l1_loss(self.fake_C, self.real_C)
+            return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C, test_l1_loss
 
     def validate(self):
         with torch.no_grad():

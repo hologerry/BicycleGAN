@@ -25,8 +25,9 @@ print('Loading model %s' % opt.model)
 web_dir = os.path.join(opt.results_dir, opt.phase + '_sync' if opt.sync else opt.phase)
 webpage = html.HTML(web_dir, 'Training = %s, Phase = %s, Class =%s' % (opt.name, opt.phase, opt.name))
 
-# TODO
-# add L1 loss and IoU accuracy
+l1_loss_file = os.path.join(opt.results_dir, opt.phase, "l1_loss.txt")
+cnt = 0
+mean_l1_loss = 0.0
 
 # test stage
 for i, data in enumerate(islice(dataset, opt.num_test)):
@@ -34,11 +35,17 @@ for i, data in enumerate(islice(dataset, opt.num_test)):
     ABC_path = data['ABC_path'][0]
     file_name = ABC_path.split('/')[-1].split('.')[0]
     print('process input image %3.3d/%3.3d' % (i, opt.num_test))
-    real_in, fake_out_B, real_out_B, fake_out, real_out = model.test()
-    images = [real_out, fake_out, real_out_B, fake_out_B]
-    names = ['real', 'fake', 'real_B', 'fake_B']
+    real_in, fake_out_B, real_out_B, fake_out, real_out, l1_loss = model.test()
+    mean_l1_loss += l1_loss
+    cnt += 1
+
+    images = [real_out, fake_out]
+    names = ['real', 'fake']
 
     img_path = file_name
     save_images(images, names, img_path, webpage=webpage, width=opt.fineSize)
 
 webpage.save()
+mean_l1_loss /= cnt
+with open(l1_loss_file, "w") as f:
+    f.write(mean_l1_loss)
