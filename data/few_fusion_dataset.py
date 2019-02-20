@@ -78,7 +78,7 @@ class FewFusionDataset(BaseDataset):
         # A is the reference, B is the gray shape, C is the gradient
         return {'A': A, 'B': B, 'B_G': B_G, 'C': C, 'C_G': C_G, 'C_l': C_l, 'label': label,
                 'Bases': Bases, 'Shapes': Shapes, 'Colors': Colors,
-                'blur_Shapes': blur_Shapes, 'blur_Colors_grid': blur_Colors,
+                'blur_Shapes': blur_Shapes, 'blur_Colors': blur_Colors,
                 'ABC_path': ABC_path, 'Style_paths': Style_paths,
                 }
 
