@@ -1,43 +1,39 @@
 set -ex
-# models
-DATA_ID=$2
-RESULTS_DIR='./results/base_gray_texture_'${DATA_ID}
-MODEL='dualnet'
-
-
-# dataset
-CLASS='base_gray_texture_'${DATA_ID}
-
-PHASE='val'
-
-DIRECTION='AtoC' # 'AtoB' or 'BtoC'
-LOAD_SIZE=64
-FINE_SIZE=64
-INPUT_NC=3
-NENCODE=4
-RESIZE_OR_CROP='none'
-NO_FLIP='--no_flip'
-NITER=30
-NITER_DECAY=50
-SAVE_EPOCH=10
-NEF=64
-NGF=32
-NDF=32
-NET_G='dualnet'
-NET_D='basic_64_multi'
-NET_D2='basic_64_multi'
-NET_E='resnet_64'
-LAMBDA_L1=20.0
-DATASET_MODE='few_fusion'  # NOTICE  train and test are different because of FEW
-USE_ATTENTION='--use_attention'
-WHERE_ADD='all'
-CONDITIONAL_D='--conditional_D'
-
-NUM_TEST=1000
-
 # misc
 GPU_ID=$1   # gpu id
+# models
+DATA_ID=$2
+RESULTS_DIR='./results/base_gray_texture_s_'${DATA_ID}
+MODEL='dualnet'
+# dataset
+CLASS='base_gray_texture_s_'${DATA_ID}
+DATASET_MODE='few_fusion'
+PHASE='val'
 
+NUM_TEST=3000
+
+DIRECTION='AtoC'
+LOAD_SIZE=64
+FINE_SIZE=64
+
+INPUT_NC=3
+NENCODE=4
+FEW_SIZE=0
+
+RESIZE_OR_CROP='none'
+NO_FLIP='--no_flip'
+
+NEF=32
+NGF=32
+NDF=32
+
+NET_G='dualnet'
+NET_D='basic_64'
+NET_D2='basic_64'
+NET_DLOCAL='basic_32'
+
+USE_ATTENTION='--use_attention'
+CONDITIONAL_D='--conditional_D'
 
 # command
 CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
@@ -57,9 +53,11 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python ./test.py \
   --ndf ${NDF} \
   --nef ${NEF} \
   --netG ${NET_G} \
-  --netE ${NET_E} \
   --netD ${NET_D} \
   --netD_B ${NET_D2} \
+  --netD_local ${NET_DLOCAL} \
+  --use_dropout \
+  ${USE_ATTENTION} \
   --dataset_mode ${DATASET_MODE} \
   --num_test ${NUM_TEST} \
   --no_flip

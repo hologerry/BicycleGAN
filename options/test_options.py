@@ -8,7 +8,7 @@ class TestOptions(BaseOptions):
                             default='../results/', help='saves results here.')
         parser.add_argument('--phase', type=str, default='val',
                             help='train, val, test, etc')
-        parser.add_argument('--num_test', type=int, default=500,
+        parser.add_argument('--num_test', type=int, default=10000,
                             help='how many test images to run')
         parser.add_argument('--n_samples', type=int,
                             default=4, help='#samples, first one encode, others random')
