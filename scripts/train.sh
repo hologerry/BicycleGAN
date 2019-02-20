@@ -78,7 +78,7 @@ case ${CLASS} in
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
   CLASS=$CLASS'_'$DATA_ID
   FEW_SIZE=${4}
-  BATCH_SIZE=100
+  BATCH_SIZE=26
   NITER=500
   NITER_DECAY=2500
   SAVE_EPOCH=50

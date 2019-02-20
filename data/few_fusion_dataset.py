@@ -20,7 +20,7 @@ class FewFusionDataset(BaseDataset):
         self.root = opt.dataroot
         self.dir_ABC = os.path.join(opt.dataroot, opt.phase)
         self.ABC_paths = sorted(make_dataset(self.dir_ABC))
-        self.shuffled_alphas = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
+        self.shuffled_alphas = ['0', '1', '2', '3', '4', '5', '6', '7']
         # self.few_alphas = ['0', '1', '2', '3', '4']
         with open(os.path.join(opt.dataroot, "few_dict.txt")) as f:
             self.few_dict = f.readlines()
