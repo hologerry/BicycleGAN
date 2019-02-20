@@ -36,7 +36,7 @@ for i, data in enumerate(islice(dataset, opt.num_test)):
     file_name = ABC_path.split('/')[-1].split('.')[0]
     print('process input image %3.3d/%3.3d' % (i, opt.num_test))
     real_in, fake_out_B, real_out_B, fake_out, real_out, l1_loss = model.test()
-    mean_l1_loss += l1_loss
+    mean_l1_loss += l1_loss.item()
     cnt += 1
 
     images = [real_out, fake_out]
@@ -48,4 +48,4 @@ for i, data in enumerate(islice(dataset, opt.num_test)):
 webpage.save()
 mean_l1_loss /= cnt
 with open(l1_loss_file, "w") as f:
-    f.write(mean_l1_loss)
+    f.write(str(mean_l1_loss))
