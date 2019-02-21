@@ -127,6 +127,7 @@ case ${CLASS} in
   LAMBDA_LOCAL_D=0.1
   DATASET_MODE='cn_few_fusion'
   CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=10
   DISPLAY_FREQ=50
   PRINT_FREQ=50
   LR=0.00002
