@@ -113,7 +113,9 @@ case ${CLASS} in
   'skeleton_gray_texture_s')
   PORT=11112
   NENCODE=4
-  FEW_SIZE=30
+  DATA_ID=${3}     # 0-11 means train the id dataset, 12 means train all the 12 dataset
+  CLASS=$CLASS'_'$DATA_ID
+  FEW_SIZE=${4}
   BATCH_SIZE=100
   NITER=50
   NITER_DECAY=150
