@@ -4,7 +4,7 @@ MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
-DISPLAY_ID=`date '+%H%M'`
+DISPLAY_ID=`date '+%H%M%S'`
 # DISPLAY_ID=0
 
 FEW_SIZE=0
