@@ -81,7 +81,7 @@ class CnFewFusionDataset(BaseDataset):
                     ImageFilter.GaussianBlur(radius=(random.random()*2+2)))
                 )
 
-        A, B, B_G, C, C_G, C_l, Bases, Shapes, Colors, blur_Shapes, blur_Colors = \
+        A, B, B_G, C, C_G, C_l, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors = \
             transform_few_with_label(self.opt, A, B, C, label, Bases, Shapes, Colors, blur_Shapes, blur_Colors)
 
         # A is the reference, B is the gray shape, C is the gradient
