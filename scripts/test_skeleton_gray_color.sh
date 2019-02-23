@@ -1,4 +1,6 @@
 set -ex
+# misc
+GPU_ID=$1   # gpu id
 # models
 RESULTS_DIR='./results/skeleton_gray_color_s'
 MODEL='dualnet'
