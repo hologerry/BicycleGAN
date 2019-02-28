@@ -1,3 +1,3 @@
-# DUalNet
+# DualNet
 
-DualNet for image transformation
+DualNet for artistic glyph synthesis.
