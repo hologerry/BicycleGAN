@@ -15,7 +15,7 @@ results/
 build/
 dist/
 
-*.png
+# *.png
 */__pycache__
 */**/__pycache__
 */*.pyc

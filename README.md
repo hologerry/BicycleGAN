@@ -3,11 +3,24 @@
 ## Introduction
 This is the official PyTorch implementation of the [Artistic Glyph Synthesis via One-Stage Few-Shot Learning]().
 
+- Overall Architecture
+![Architecture](imgs/architecture.png)
+
+Skip Connection               |  Local Discriminator
+:----------------------------:|:-------------------------:
+![](imgs/skipconnection.png)  |  ![](imgs/localpatch.png)
+
+
+## Demo
+![](imgs/ablation.png)
+
+
 ## Prerequisites
 - Linux or macOS
 - CPU or NVIDIA GPU + CUDA cuDNN
 - Python 3
 - PyTorch 0.4.0+
+
 
 ## Get Started
 
@@ -20,8 +33,8 @@ This is the official PyTorch implementation of the [Artistic Glyph Synthesis via
    ```
 3. Clone this repo:
    ```shell
-   git clone -b master --single-branch https://github.com/hologerry/BicycleGAN
-   cd BicycleGAN
+   git clone -b master --single-branch https://github.com/hologerry/DualNet
+   cd DualNet
    ```
 
 ### Datasets
@@ -79,8 +92,11 @@ bash ./datasets/download_dataset.sh dataset_name
   base ./scripts/test_base_gray_texture.sh GPU_ID DATA_ID
   ```
 
+
 ## Citation
+```
+```
 
 
 ## Acknowledgements
-This code borrows heavily from the [BicycleGAN](https://github.com/junyanz/BicycleGAN) repository.
+This code is inspired by the [BicycleGAN](https://github.com/junyanz/BicycleGAN) repository.
