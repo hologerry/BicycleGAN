@@ -1,7 +1,7 @@
 FILE=$1
 
-if [[ $FILE != "cityscapes" && $FILE != "night2day" &&  $FILE != "edges2handbags" && $FILE != "edges2shoes" && $FILE != "facades" && $FILE != "maps" ]]; then
-  echo "Available datasets are cityscapes, night2day, edges2handbags, edges2shoes, facades, maps"
+if [[ $FILE != "base_gray_color" && $FILE != "base_gray_texture" &&  $FILE != "skeleton_gray_color" && $FILE != "skeleton_gray_texture" ]]; then
+  echo "Available datasets are base_gray_color, base_gray_texture, skeleton_gray_color and skeleton_gray_texture"
   exit 1
 fi
 

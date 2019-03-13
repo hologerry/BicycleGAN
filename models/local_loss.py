@@ -1,4 +1,6 @@
-
+import torch
+from torch import nn
+from .vgg import VGG19
 
 
 class GramMatrix(nn.Module):
@@ -44,7 +46,7 @@ class StyleLoss(nn.Module):
     def __call__(self, input, target):
         loss = 0.0
         for layer in self.vgg_layers:
-        	inp_feat = self.vgg19(input)[self.vgg_layer]
-        	tar_feat = self.vgg19(target)[self.vgg_layer]
-        	loss += self.criterion(inp_feat, tar_feat)
+            inp_feat = self.vgg19(input)[self.vgg_layer]
+            tar_feat = self.vgg19(target)[self.vgg_layer]
+            loss += self.criterion(inp_feat, tar_feat)
         return loss

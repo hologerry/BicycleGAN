@@ -60,28 +60,13 @@ class TrainOptions(BaseOptions):
                             help='weight for contextual loss')
         parser.add_argument('--lambda_CX_B', type=float, default=5.0,
                             help='weight for contextual loss on B')
-        parser.add_argument('--lambda_L2', type=float, default=0.0,
-                            help='weight for mse(B-G(A, E(B)))')
         parser.add_argument('--lambda_GAN', type=float, default=1.0,
                             help='weight on D loss. D(G(C, E(C)))')
         parser.add_argument('--lambda_GAN_B', type=float, default=0.1,
                             help='weight on D (for B) loss, D(G(B, E(B)))')
-        parser.add_argument('--lambda_GAN_R', type=float, default=0.01,
-                            help='weight on D (for B) loss, D(G(B, E(B)))')
-        parser.add_argument('--lambda_TX', type=float, default=2.0,
-                            help='weight on D (for B) loss, D(G(B, E(B)))')
-        parser.add_argument('--lambda_TX_B', type=float, default=1.0,
-                            help='weight on D (for B) loss, D(G(B, E(B)))')
-        parser.add_argument('--lambda_patch', type=float, default=0.001,
-                            help='weight on patch loss')
-        parser.add_argument('--lambda_gray', type=float, default=1.0,
-                            help='weight on gray l1 loss')
+
         parser.add_argument('--lambda_local_D', type=float, default=1.0,
                             help='weight on local adv loss')
-        parser.add_argument('--lambda_local_style', type=float, default=1.0,
-                            help='weight on local style loss')
-        parser.add_argument('--lambda_second', type=float, default=0.0,
-                            help='weight on second cycle l1 loss')
 
         parser.add_argument('--block_size', type=int, default=32,
                             help='block size of the image')

@@ -52,7 +52,7 @@ class BaseOptions():
                             'the original BtoA is for other datasets')
         parser.add_argument('--epoch', type=str, default='latest',
                             help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--num_threads', default=40,
+        parser.add_argument('--num_threads', default=20,
                             type=int, help='# sthreads for loading data')
         parser.add_argument('--checkpoints_dir', type=str,
                             default='./checkpoints', help='models are saved here')
@@ -83,8 +83,6 @@ class BaseOptions():
                             help='selects model to use for netD')
         parser.add_argument('--netD_local', type=str, default='basic_32',
                             help='local D')
-        parser.add_argument('--netR',  type=str, default='basic_256',
-                            help='selects model to use for netR')
         parser.add_argument('--netG', type=str, default='unet_256',
                             help='selects model to use for netG')
         parser.add_argument('--netE', type=str, default='resnet_256',
@@ -101,20 +99,6 @@ class BaseOptions():
                             help='if use spectral normalization in G')
         parser.add_argument('--use_spectral_norm_D', action='store_true',
                             help='if use spectral normalization in D')
-
-        # discirminative region options
-        parser.add_argument('--use_reviser', action='store_true',
-                            help='if use an additional reviser (from DRPAN paper)')
-        parser.add_argument('--window_width', type=int, default=2,
-                            help='slide window size for discriminative region')
-        parser.add_argument('--window_height', type=int, default=2,
-                            help='slide window size for discriminative region')
-        parser.add_argument('--region_width', type=int, default=32,
-                            help='discriminative region width')
-        parser.add_argument('--region_height', type=int, default=32,
-                            help='discriminative region height')
-        parser.add_argument('--mask_operation', type=bool, default=True,
-                            help='use mask operation or not')
 
         # extra parameters
         parser.add_argument('--where_add', type=str, default='all',

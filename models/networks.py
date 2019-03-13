@@ -153,8 +153,6 @@ def define_D(input_nc, ndf, netD,
     nl = 'lrelu'  # use leaky relu for D
     nl_layer = get_non_linearity(layer_type=nl)
 
-
-
     if netD == 'basic_64':
         net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
@@ -415,11 +413,11 @@ class D_NLayers(nn.Module):
 
         nf_mult_prev = nf_mult
         nf_mult = min(2**n_layers, 8)
-        
+
         sequence += [
             nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
                       kernel_size=kw, stride=1, padding=padw, bias=use_bias)]
-        
+
         if norm_layer is not None:
             sequence += [norm_layer(ndf * nf_mult)]
         sequence += [nl_layer()]
@@ -804,95 +802,6 @@ class SpectralNorm(nn.Module):
     def forward(self, *args):
         self._update_u_v()
         return self.module.forward(*args)
-
-
-# Proposel module return a masked fake (masked with distriminative region) from DRPAN paper
-class Proposal(nn.Module):
-    def __init__(self, opt):
-        super(Proposal, self).__init__()
-        self.window_w = opt.window_width
-        self.window_h = opt.window_height
-        self.region_w = opt.region_width
-        self.region_h = opt.region_height
-        self.stride = 1
-        # using 5 layers PatchGAN
-        self.receptive_field = 32
-        self.roi_align = RoIAlign(self.region_h, self.region_w, transform_fpcoor=True)
-        # use mask operation or not
-        self.mask_op = opt.mask_operation
-
-    def _localize(self, score_map, input):
-        """
-        width range: (feature_width - w_width) / stride + 1
-        :param score_map: produced by Patch Discriminator
-        :param input: real data  N6HW
-        :return: location coordinates x, y
-        """
-        batch_size = score_map.size(0)
-        ax_tmp = torch.ones(batch_size, 3)  # x, y, score
-        proposal_height = (score_map.size(2) - self.window_h) // self.stride + 1
-        proposal_width = (score_map.size(3) - self.window_w) // self.stride + 1
-
-        # print("proposal height", proposal_height)
-        # print("region width", self.region_w)
-
-        # proposal means the score map region, to find the smallest value (most fake region)
-        for n in range(batch_size):
-            for i in range(proposal_width):
-                for j in range(proposal_height):
-                    _x, _y = i * self.stride, j * self.stride
-                    region_score = score_map[n, :, _x:_x + self.stride, _y:_y + self.stride].mean()
-                    if ax_tmp[n][2] > region_score.item():
-                        ax_tmp[n] = torch.tensor([_x, _y, region_score])
-
-        _img_stride = (input.size(2) - self.receptive_field) // score_map.size(2)
-        ax_transform = ax_tmp[:, :2] * _img_stride + self.receptive_field
-        return ax_transform.int()
-
-    def _mask_operation(self, real_data, fake_data, real, fake, ax):
-        mask = torch.zeros(real_data.size(0), real_data.size(1), real_data.size(2), real_data.size(3)).cuda()
-        for i in range(real_data.size(0)):
-            x, y = ax[i, :]
-            mask[i, :, x:x + self.receptive_field, y:y + self.receptive_field] = 1
-        masked_fake_data = fake_data * mask + real_data * (1 - mask)
-        mask = torch.zeros(real.size(0), real.size(1), real.size(2), real.size(3)).cuda()
-        for i in range(real.size(0)):
-            x, y = ax[i, :]
-            mask[i, :, x:x + self.receptive_field, y:y + self.receptive_field] = 1
-        masked_fake = fake * mask + real * (1 - mask)
-        return masked_fake_data, masked_fake
-
-    def forward(self, score_map, real_data, fake_data, real, fake):
-        # print("score_map size", score_map.size())
-        # print("real size", real.size())
-        ax = self._localize(score_map, real_data)
-        # r means the discriminative region
-        # without r means the image size
-        # data means 6 channels
-        real_data_r, fake_data_r, real_r, fake_r = [], [], [], []
-        N = real.size(0)
-        for i in range(N):
-            x, y = ax[i, :]
-            # Takes all the image
-            # NOTICE the y, x order of roi_align
-            boxes = torch.tensor([[y, x, y + self.region_h, x + self.region_w]], dtype=torch.float32).cuda()
-            box_index = torch.tensor([0], dtype=torch.int32).cuda()
-            fake_r.append(self.roi_align(fake[i].view(-1, real.size(1), real.size(2), real.size(3)), boxes, box_index))
-            real_r.append(self.roi_align(real[i].view(-1, real.size(1), real.size(2), real.size(3)), boxes, box_index))
-            fake_data_r.append(self.roi_align(fake_data[i].view(-1, real_data.size(1), real_data.size(2),
-                                                                real_data.size(3)), boxes, box_index))
-            real_data_r.append(self.roi_align(real_data[i].view(-1, real.size(1), real.size(2), real.size(3)),
-                                              boxes, box_index))
-
-        real_data_r = torch.cat(real_data_r, dim=0)
-        fake_data_r = torch.cat(fake_data_r, dim=0)
-        real_r = torch.cat(real_r, dim=0)
-        fake_r = torch.cat(fake_r, dim=0)
-        if self.mask_op:
-            masked_fake_data, masked_fake = self._mask_operation(real_data, fake_data, real, fake, ax)
-            return masked_fake_data, masked_fake, real_data_r, fake_data_r, real_r, fake_r
-        else:
-            return real_data_r, fake_data_r, real_r, fake_r
 
 
 # Self Attention module from self-attention gan
@@ -1470,14 +1379,13 @@ class PatchLoss(nn.Module):
             dist.append(matched)
         dist = torch.cat(dist, dim=0)
 
-        #output_pat = self.l2_normalize_patch(output_pat)
-        #dist = self.l2_normalize_patch(dist)
+        # output_pat = self.l2_normalize_patch(output_pat)
+        # dist = self.l2_normalize_patch(dist)
 
         diff = (output_pat-dist).abs()
         l1_patch = diff.sum(dim=1).sum(dim=-2).sum(dim=-1)
         l1_clip = torch.clamp(l1_patch, 0, 1000)
         loss = l1_clip.sum()
-        
         return loss
 
 
