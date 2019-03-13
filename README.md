@@ -52,20 +52,20 @@ bash ./datasets/download_dataset.sh dataset_name
 
 ### Model Training
 - To train a model, download the training images (e.g., English artistic glyph transfer)
-  ```
+  ```shell
   bash ./datasets/download_dataset.sh base_gray_color
-  base ./datasets/download_dataset.sh base_gray_texture
+  bash ./datasets/download_dataset.sh base_gray_texture
   ```
 
 - Train a model:
   1. Pretrain on synthesized gradient glyph dataset
-     ```
-     base ./scripts/train.sh base_gray_color GPU_ID
+     ```shell
+     bash ./scripts/train.sh base_gray_color GPU_ID
      ```
      > GPU_ID indicates which GPU to use.
   2. Fineture on artistic glyph dataset
-     ```
-     base ./scripts/train.sh base_gray_texture GPU_ID DATA_ID FEW_SIZE
+     ```shell
+     bash ./scripts/train.sh base_gray_texture GPU_ID DATA_ID FEW_SIZE
      ```
      > DATA_ID indicates which artistic font is fine-tuned.  
      > FEW_SIZE indicates the size of few-shot set.  
@@ -75,20 +75,20 @@ bash ./datasets/download_dataset.sh dataset_name
      FileNodeFoundError: [Error 2] No such file or directory: 'chechpoints/base_gray_texture/base_gray_texture_DATA_ID_TIME/latest_net_G.pth
      ```
      Copy the pretrained model to above path
-     ```
+     ```shell
      cp chechpoints/base_gray_color/base_gray_color_TIME/latest_net_* chechpoints/base_gray_texture/base_gray_texture_DATA_ID_TIME/
      ```
      And start train again. It will works well.
 
 ### Model Testing
 - To test a model, copy the trained model from `checkpoint` to `pretrained_models` folder (e.g., English artistic glyph transfer)
-  ```
+  ```shell
   cp chechpoints/base_gray_color/base_gray_texture_DATA_ID_TIME/latest_net_* pretrained_models/base_gray_texture_DATA_ID/
   ```
 
 - Test a model
-  ```
-  base ./scripts/test_base_gray_texture.sh GPU_ID DATA_ID
+  ```shell
+  bash ./scripts/test_base_gray_texture.sh GPU_ID DATA_ID
   ```
 
 
