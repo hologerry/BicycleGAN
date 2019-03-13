@@ -1,6 +1,6 @@
 FILE=$1
 
-echo "Note: available models are edges2shoes, edges2handbags, night2day, maps, and facades"
+echo "Note: available datasets are base_gray_color, base_gray_texture, skeleton_gray_color and skeleton_gray_texture"
 echo "downloading [$FILE]"
 MODEL_DIR=./pretrained_models/${FILE}
 mkdir -p ${MODEL_DIR}
