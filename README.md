@@ -3,7 +3,7 @@
 ## Introduction
 This is the official PyTorch implementation of the [Artistic Glyph Synthesis via One-Stage Few-Shot Learning]().
 
-- Overall Architecture
+- **Architecture**
 ![Architecture](imgs/architecture.png)
 
 Skip Connection               |  Local Discriminator
