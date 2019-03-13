@@ -40,7 +40,8 @@ Skip Connection               |  Local Discriminator
    ```
 
 ### Datasets
-Download the datasets using the following script, Four datasets are available.
+Download the datasets using the following script, four datasets are available.
+> It may take a while, please be patient
 ```
 bash ./datasets/download_dataset.sh dataset_name
 ```
