@@ -12,7 +12,9 @@ Skip Connection               |  Local Discriminator
 
 
 ## Demo
-![](imgs/ablation.png)
+![](imgs/comparison1.png)
+
+![](imgs/comparison2.png)
 
 
 ## Prerequisites
@@ -45,7 +47,7 @@ bash ./datasets/download_dataset.sh dataset_name
 - `base_gray_color` English synthesized gradient glyph dataset, proposed by [MC-GAN](https://arxiv.org/abs/1712.00516).
 - `base_gray_texture` English artistic glyph dataset, proposed by [MC-GAN](https://arxiv.org/abs/1712.00516).
 - `skeleton_gray_color` Chinese synthesized gradient glyph dataset by us.
-- `skeleton_gray_texture` Chinese artistic gpyph dataset proposed by us.
+- `skeleton_gray_texture` Chinese artistic glyph dataset proposed by us.
 
 ### Model Training
 - To train a model, download the training images (e.g., English artistic glyph transfer)
@@ -78,11 +80,7 @@ bash ./datasets/download_dataset.sh dataset_name
      And start train again. It will works well.
 
 ### Model Testing
-- To test a model, copy the trained model to `pretrained_models` folder (e.g., English artistic glyph transfer)
-  ```
-  bash ./pretrained_models/download_model.sh base_gray_texture
-  ```
-  or copy from `checkpoint`
+- To test a model, copy the trained model from `checkpoint` to `pretrained_models` folder (e.g., English artistic glyph transfer)
   ```
   cp chechpoints/base_gray_color/base_gray_texture_DATA_ID_TIME/latest_net_* pretrained_models/base_gray_texture_DATA_ID/
   ```
