@@ -7,7 +7,7 @@ fi
 
 echo "Specified [$FILE]"
 
-URL=http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/$FILE.zip
+URL=http://59.108.48.27/dualnet_public_release/$FILE.zip
 ZIP_FILE=./datasets/$FILE.zip
 TARGET_DIR=./datasets/
 wget -N $URL -O $TAR_FILE
