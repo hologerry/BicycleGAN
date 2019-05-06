@@ -67,12 +67,13 @@ class DualNetHDModel(BaseModel):
         # local adversarial loss
         use_local_D = opt.isTrain and opt.lambda_local_D > 0.0
         if use_local_D:
+            local_input_nc = self.opt.block_num * 3
             self.model_names += ['D_local', 'D_local_B']
-            self.netD_local = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
+            self.netD_local = networks.define_D(local_input_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
                                                 use_sigmoid=use_sigmoid, init_type=opt.init_type,
                                                 num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
 
-            self.netD_local_B = networks.define_D(D_output_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
+            self.netD_local_B = networks.define_D(local_input_nc, opt.ndf, netD=opt.netD_local, norm=opt.norm, nl=opt.nl,
                                                   use_sigmoid=use_sigmoid, init_type=opt.init_type,
                                                   num_Ds=opt.num_Ds, gpu_ids=self.gpu_ids)
 

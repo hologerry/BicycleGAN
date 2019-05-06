@@ -33,7 +33,7 @@ NET_D='basic_256'
 NET_D2='basic_256'
 NET_DLOCAL='basic_64'
 
-BLOCK_SIZE=256
+BLOCK_SIZE=64
 BLOCK_NUM=4
 
 USE_ATTENTION='--use_attention'
