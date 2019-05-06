@@ -19,14 +19,14 @@ FINE_SIZE=256
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 INPUT_NC=3
-BATCH_SIZE=100
+BATCH_SIZE=10
 DATASET_MODE='multi_fusion'
 WHERE_ADD='all'
 
 # Networks module
-NGF=64
-NDF=64
-NEF=64
+NGF=32
+NDF=32
+NEF=32
 
 NET_G='dualnet_256'
 NET_D='basic_256'
@@ -34,7 +34,7 @@ NET_D2='basic_256'
 NET_DLOCAL='basic_64'
 
 BLOCK_SIZE=64
-BLOCK_NUM=4
+BLOCK_NUM=2
 
 USE_ATTENTION='--use_attention'
 CONDITIONAL_D='--conditional_D'
@@ -58,7 +58,7 @@ case ${CLASS} in
 'base_gray_color' | 'base_gray_color_s' | 'base_gray_color_s_256')
   PORT=9999
   NENCODE=4
-  BATCH_SIZE=100
+  BATCH_SIZE=10
   NITER=50
   NITER_DECAY=250
   SAVE_EPOCH=2
