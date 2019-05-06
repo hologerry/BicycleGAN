@@ -113,7 +113,13 @@ def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectra
                       norm_layer=norm_layer,  nl_layer=nl_layer,
                       use_dropout=use_dropout, use_attention=use_attention,
                       use_spectral_norm=use_spectral_norm, upsample=upsample)
-
+    elif netG == 'dualnet_256':
+        input_content = input_nc
+        input_style = input_nc * nencode
+        net = DualNet(input_content, input_style, output_nc, 8, ngf,
+                      norm_layer=norm_layer,  nl_layer=nl_layer,
+                      use_dropout=use_dropout, use_attention=use_attention,
+                      use_spectral_norm=use_spectral_norm, upsample=upsample)
     elif netG == 'unet_64' and where_add == 'input':
         net = G_Unet_add_input(input_nc, output_nc, nz, 6, ngf, norm_layer=norm_layer, nl_layer=nl_layer,
                                use_dropout=use_dropout, use_attention=use_attention,
@@ -145,6 +151,20 @@ def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectra
     return init_net(net, init_type, gpu_ids)
 
 
+def define_G_hd(input_nc, output_nc, netG_hd='dualnet_hd', use_spectral_norm=False,
+                norm='batch', nl='relu', use_dropout=False, use_attention=False,
+                init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
+    # TODO hd code
+    net = None
+    # norm_layer = get_norm_layer(layer_type=norm)
+    # nl_layer = get_non_linearity(layer_type=nl)
+    if netG_hd == 'dualnet_hd':
+        net = DualNetHD(input_nc, output_nc, )
+    else:
+        raise NotImplementedError('Generator model name [%s] is not recognized' % netG_hd)
+    return init_net(net, init_type, gpu_ids)
+
+
 def define_D(input_nc, ndf, netD,
              norm='batch', nl='lrelu', use_spectral_norm=False,
              use_sigmoid=False, init_type='xavier', num_Ds=1, gpu_ids=[]):
@@ -153,10 +173,10 @@ def define_D(input_nc, ndf, netD,
     nl = 'lrelu'  # use leaky relu for D
     nl_layer = get_non_linearity(layer_type=nl)
 
-    if netD == 'basic_64':
-        net = D_NLayers(input_nc, ndf, n_layers=1, norm_layer=norm_layer,
+    if netD == 'basic_32':
+        net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
-    elif netD == 'basic_32':
+    elif netD == 'basic_64':
         net = D_NLayers(input_nc, ndf, n_layers=2, norm_layer=norm_layer,
                         use_spectral_norm=use_spectral_norm, nl_layer=nl_layer, use_sigmoid=use_sigmoid)
     elif netD == 'basic_128':
@@ -1269,6 +1289,17 @@ class DualNet(nn.Module):
 
     def forward(self, content, style):
         return self.model(content, style)
+
+
+# DualNet HD part generator
+class DualNetHD(nn.Module):
+    def __init__(self, input_content, input_style, output_nc, num_ups, ngf=64,
+                 norm_layer=None, nl_layer=None, use_dropout=False,
+                 use_attention=False, use_spectral_norm=False, upsample='basic'):
+        super(DualNetHD, self).__init__()
+
+    def forward(self, *input):
+        return super().forward(*input)
 
 
 # Defines the Unet generator.

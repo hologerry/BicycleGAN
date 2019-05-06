@@ -1,6 +1,6 @@
 set -ex
 
-MODEL='dualnet'
+MODEL='dualnethd'
 CLASS=${1}
 GPU_ID=${2}
 
@@ -14,25 +14,27 @@ CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensu
 # dataset
 NO_FLIP='--no_flip'
 DIRECTION='AtoC'
-LOAD_SIZE=64
-FINE_SIZE=64
+LOAD_SIZE=256
+FINE_SIZE=256
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 INPUT_NC=3
 BATCH_SIZE=100
 DATASET_MODE='multi_fusion'
 WHERE_ADD='all'
-CONDITIONAL_D=''
 
 # Networks module
-NGF=32
-NDF=32
-NEF=32
+NGF=64
+NDF=64
+NEF=64
 
-NET_G='dualnet'
-NET_D='basic_64'
-NET_D2='basic_64'
-NET_DLOCAL='basic_32'
+NET_G='dualnet_256'
+NET_D='basic_256'
+NET_D2='basic_256'
+NET_DLOCAL='basic_64'
+
+BLOCK_SIZE=256
+BLOCK_NUM=4
 
 USE_ATTENTION='--use_attention'
 CONDITIONAL_D='--conditional_D'
@@ -142,7 +144,8 @@ DATE=`date '+%d_%m_%Y-%H'`    # delete minute for more convinent continue traini
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command
-CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
+CUDA_VISIBLE_DEVICES=${GPU_ID}
+python3 ./train.py \
   --display_id ${DISPLAY_ID} \
   --dataroot ./datasets/${CLASS} \
   --name ${NAME} \
@@ -165,6 +168,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --ngf ${NGF} \
   --ndf ${NDF} \
   --nef ${NEF} \
+  --block_size ${BLOCK_SIZE} \
+  --block_num ${BLOCK_NUM} \
   --netG ${NET_G} \
   --netD ${NET_D} \
   --netD_B ${NET_D2} \
