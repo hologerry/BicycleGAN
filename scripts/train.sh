@@ -55,7 +55,7 @@ LAMBDA_LOCAL_D=1.0
 
 # dataset parameters
 case ${CLASS} in
-'base_gray_color' | 'base_gray_color_s')
+'base_gray_color' | 'base_gray_color_s' | 'base_gray_color_s_256')
   PORT=9999
   NENCODE=4
   BATCH_SIZE=100
@@ -74,7 +74,7 @@ case ${CLASS} in
   PRINT_FREQ=400
   ;;
 
-'base_gray_texture' | 'base_gray_texture_s')
+'base_gray_texture' | 'base_gray_texture_s' | 'base_gray_texture_s_256' )
   PORT=9998
   NENCODE=4
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
