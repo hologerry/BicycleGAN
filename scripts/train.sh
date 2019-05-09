@@ -28,10 +28,10 @@ NGF=32
 NDF=32
 NEF=32
 
-NET_G='dualnet_256'
-NET_D='basic_256'
-NET_D2='basic_256'
-NET_DLOCAL='basic_64'
+NET_G='dualnet_64'
+NET_D='basic_64'
+NET_D2='basic_64'
+NET_DLOCAL='basic_32'
 
 BLOCK_SIZE=64
 BLOCK_NUM=2
@@ -55,7 +55,31 @@ LAMBDA_LOCAL_D=1.0
 
 # dataset parameters
 case ${CLASS} in
-'base_gray_color' | 'base_gray_color_s' | 'base_gray_color_s_256')
+'base_gray_color_s_256')
+  NET_G='dualnet_256'
+  NET_D='basic_256'
+  NET_D2='basic_256'
+  NET_DLOCAL='basic_64'
+  BLOCK_SIZE=32·
+  BLOCK_NUM=2
+  PORT=9999
+  NENCODE=4
+  BATCH_SIZE=10
+  NITER=50
+  NITER_DECAY=250
+  SAVE_EPOCH=2
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=50.0
+  LAMBDA_CX=25.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_GAN=1.0
+  LAMBDA_GAN_B=1.0
+  LAMBDA_LOCAL_D=1.0
+  DATASET_MODE='multi_fusion'
+  CONTINUE_TRAIN=''
+  PRINT_FREQ=400
+  ;;
+'base_gray_color' | 'base_gray_color_s' )
   PORT=9999
   NENCODE=4
   BATCH_SIZE=10
@@ -74,7 +98,30 @@ case ${CLASS} in
   PRINT_FREQ=400
   ;;
 
-'base_gray_texture' | 'base_gray_texture_s' | 'base_gray_texture_s_256' )
+'base_gray_texture_s_256')
+  PORT=9998
+  NENCODE=4
+  DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
+  CLASS=$CLASS'_'$DATA_ID
+  FEW_SIZE=${4}
+  BATCH_SIZE=26
+  NITER=500
+  NITER_DECAY=2500
+  SAVE_EPOCH=50
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=60.0
+  LAMBDA_CX=50.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_LOCAL_D=0.1
+  DATASET_MODE='few_fusion'
+  CONTINUE_TRAIN='--continue_train'
+  VALIDATE_FREQ=50
+  DISPLAY_FREQ=50
+  PRINT_FREQ=50
+  LR=0.00002
+  ;;
+
+'base_gray_texture' | 'base_gray_texture_s')
   PORT=9998
   NENCODE=4
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
