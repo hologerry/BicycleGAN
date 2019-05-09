@@ -100,6 +100,7 @@ class BaseModel():
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda()
                     net = torch.nn.DataParallel(net)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)

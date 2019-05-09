@@ -213,8 +213,7 @@ DATE=`date '+%d_%m_%Y-%H'`    # delete minute for more convinent continue traini
 NAME=${CLASS}_${MODEL}_${DATE}  # experiment name defined in base_options.py
 
 # command
-CUDA_VISIBLE_DEVICES=${GPU_ID}
-python3 ./train.py \
+CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --display_id ${DISPLAY_ID} \
   --dataroot ./datasets/${CLASS} \
   --name ${NAME} \
