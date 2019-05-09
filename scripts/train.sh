@@ -55,6 +55,25 @@ LAMBDA_LOCAL_D=1.0
 
 # dataset parameters
 case ${CLASS} in
+'flickr' )
+  PORT=7777
+  NENCODE=4
+  BATCH_SIZE=10
+  NITER=50
+  NITER_DECAY=250
+  SAVE_EPOCH=2
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=50.0
+  LAMBDA_CX=25.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_GAN=1.0
+  LAMBDA_GAN_B=1.0
+  LAMBDA_LOCAL_D=1.0
+  DATASET_MODE='flickr'
+  CONTINUE_TRAIN=''
+  PRINT_FREQ=400
+  ;;
+
 'base_gray_color_s_256')
   NET_G='dualnet_256'
   NET_D='basic_256'
