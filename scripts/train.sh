@@ -74,10 +74,38 @@ case ${CLASS} in
   PRINT_FREQ=400
   ;;
 
+'flickr_256' )
+  LOAD_SIZE=256
+  FINE_SIZE=256
+  MODEL='dualnethd'
+  NET_G='dualnet_256'
+  NET_D='basic_256'
+  NET_D2='basic_256'
+  NET_DLOCAL='basic_64'
+  BLOCK_SIZE=64
+  BLOCK_NUM=2
+  PORT=7778
+  NENCODE=4
+  BATCH_SIZE=100
+  NITER=50
+  NITER_DECAY=250
+  SAVE_EPOCH=2
+  LAMBDA_L1=100.0
+  LAMBDA_L1_B=50.0
+  LAMBDA_CX=30.0
+  LAMBDA_CX_B=15.0
+  LAMBDA_GAN=1.0
+  LAMBDA_GAN_B=1.0
+  LAMBDA_LOCAL_D=1.0
+  DATASET_MODE='flickr'
+  CONTINUE_TRAIN=''
+  PRINT_FREQ=400
+  ;;
+
 'base_gray_color_s_256')
-  LOAD_SIZE=64
-  FINE_SIZE=64
-  MODEL='dualnet'
+  LOAD_SIZE=256
+  FINE_SIZE=256
+  MODEL='dualnethd'
   NET_G='dualnet_256'
   NET_D='basic_256'
   NET_D2='basic_256'
