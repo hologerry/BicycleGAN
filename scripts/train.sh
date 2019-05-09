@@ -1,6 +1,6 @@
 set -ex
 
-MODEL='dualnethd'
+MODEL='dualnet'
 CLASS=${1}
 GPU_ID=${2}
 
@@ -14,8 +14,8 @@ CHECKPOINTS_DIR=checkpoints/${CLASS}/  # execute .sh in project root dir to ensu
 # dataset
 NO_FLIP='--no_flip'
 DIRECTION='AtoC'
-LOAD_SIZE=256
-FINE_SIZE=256
+LOAD_SIZE=64
+FINE_SIZE=64
 RESIZE_OR_CROP='none'
 NO_FLIP='--no_flip'
 INPUT_NC=3
@@ -28,12 +28,12 @@ NGF=32
 NDF=32
 NEF=32
 
-NET_G='dualnet_64'
+NET_G='dualnet'
 NET_D='basic_64'
 NET_D2='basic_64'
 NET_DLOCAL='basic_32'
 
-BLOCK_SIZE=64
+BLOCK_SIZE=32
 BLOCK_NUM=2
 
 USE_ATTENTION='--use_attention'
@@ -58,7 +58,7 @@ case ${CLASS} in
 'flickr' )
   PORT=7777
   NENCODE=4
-  BATCH_SIZE=10
+  BATCH_SIZE=100
   NITER=50
   NITER_DECAY=250
   SAVE_EPOCH=2
@@ -75,11 +75,14 @@ case ${CLASS} in
   ;;
 
 'base_gray_color_s_256')
+  LOAD_SIZE=64
+  FINE_SIZE=64
+  MODEL='dualnet'
   NET_G='dualnet_256'
   NET_D='basic_256'
   NET_D2='basic_256'
   NET_DLOCAL='basic_64'
-  BLOCK_SIZE=32·
+  BLOCK_SIZE=64
   BLOCK_NUM=2
   PORT=9999
   NENCODE=4
