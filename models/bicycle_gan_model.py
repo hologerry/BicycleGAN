@@ -94,6 +94,11 @@ class BiCycleGANModel(BaseModel):
         z = eps.mul(std).add_(mu)
         return z, mu, logvar
 
+    def train(self):
+        for name in self.model_names:
+            model_name = 'net' + name
+            getattr(self, model_name).train()
+
     def test(self, z0=None, encode=False):
         with torch.no_grad():
             if encode:  # use encoded z
