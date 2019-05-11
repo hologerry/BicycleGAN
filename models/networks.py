@@ -96,7 +96,7 @@ def get_self_attention_layer(in_dim):
     return self_attn_layer
 
 
-def define_G(input_nc, output_nc, nz, ngf, nencode, netG='unet_128', use_spectral_norm=False,
+def define_G(input_nc, output_nc, nz, ngf, nencode=4, netG='unet_128', use_spectral_norm=False,
              norm='batch', nl='relu', use_dropout=False, use_attention=False,
              init_type='xavier', gpu_ids=[], where_add='input', upsample='bilinear'):
     net = None
