@@ -23,7 +23,7 @@ class BiCycleGANModel(BaseModel):
         # specify the models you want to save to the disk.
         # The program will call base_model.save_networks and base_model.load_networks
         use_D = opt.isTrain and opt.lambda_GAN > 0.0
-        use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0 and not opt.use_same_D
+        use_D2 = opt.isTrain and opt.lambda_GAN2 > 0.0
         use_E = opt.isTrain or not opt.no_encode
         use_vae = True
         self.model_names = ['G']
