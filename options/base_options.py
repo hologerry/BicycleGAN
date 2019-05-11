@@ -111,6 +111,9 @@ class BaseOptions():
                             help='if specified, print more debugging information')
         parser.add_argument('--suffix', default='', type=str,
                             help='customized suffix: opt.name = opt.name + suffix: e.g., {model}_{netG}_size{loadSize}')
+        # bicycle gan
+        parser.add_argument('--netD2', type=str, default='basic_256_multi', help='selects model to use for netD2')
+        parser.add_argument('--netE', type=str, default='resnet_256', help='selects model to use for netE')
         # special tasks
         self.initialized = True
         return parser

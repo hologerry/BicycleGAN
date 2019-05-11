@@ -31,7 +31,7 @@ NEF=32
 NET_G='unet_64'
 NET_D='basic_64'
 NET_D2='basic_64'
-NET_DLOCAL='basic_32'
+NET_E='resnet_64'
 
 BLOCK_SIZE=32
 BLOCK_NUM=2
@@ -157,8 +157,8 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python3 ./train.py \
   --block_num ${BLOCK_NUM} \
   --netG ${NET_G} \
   --netD ${NET_D} \
-  --netD_B ${NET_D2} \
-  --netD_local ${NET_DLOCAL} \
+  --netD2 ${NET_D2} \
+  --netE ${NET_E} \
   --use_dropout \
   --dataset_mode ${DATASET_MODE} \
   --lambda_L1 ${LAMBDA_L1} \
