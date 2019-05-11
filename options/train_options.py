@@ -72,5 +72,10 @@ class TrainOptions(BaseOptions):
                             help='block size of the image')
         parser.add_argument('--block_num', type=int, default=2,
                             help='block num of the image')
+
+        # lambda for bicycle gan
+        parser.add_argument('--lambda_GAN2', type=float, default=1.0, help='weight on D2 loss, D(G(A, random_z))')
+        parser.add_argument('--lambda_z', type=float, default=0.5, help='weight for ||E(G(random_z)) - random_z||')
+        parser.add_argument('--lambda_kl', type=float, default=0.01, help='weight for KL loss')
         self.isTrain = True
         return parser

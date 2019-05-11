@@ -1,8 +1,6 @@
 import argparse
 import os
 
-import torch
-
 import data
 import models
 from util import util
