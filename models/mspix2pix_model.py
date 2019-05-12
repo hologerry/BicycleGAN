@@ -83,6 +83,11 @@ class MSPix2PixModel(BaseModel):
             self.fake_B = self.netG(self.real_A, z0)
             return self.real_A, self.fake_B, self.real_B
 
+    def train(self):
+        for name in self.model_names:
+            model_name = 'net' + name
+            getattr(self, model_name).train()
+
     def forward(self):
         # get random z
         self.z_random1 = self.get_z_random(self.real_A.size(0), self.opt.nz)
