@@ -58,7 +58,7 @@ case ${CLASS} in
 'base_gray_color' | 'base_gray_color_s' )
   PORT=5556
   NENCODE=4
-  BATCH_SIZE=100
+  BATCH_SIZE=800
   NITER=50
   NITER_DECAY=250
   SAVE_EPOCH=5
@@ -94,7 +94,7 @@ case ${CLASS} in
   PORT=4446
   NENCODE=4
   FEW_SIZE=30
-  BATCH_SIZE=100
+  BATCH_SIZE=800
   NITER=10
   NITER_DECAY=10
   SAVE_EPOCH=2
