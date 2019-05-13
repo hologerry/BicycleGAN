@@ -88,6 +88,13 @@ class MSPix2PixModel(BaseModel):
             model_name = 'net' + name
             getattr(self, model_name).train()
 
+    def validate(self):
+        with torch.no_grad():
+            z0 = self.get_z_random(self.real_A.size(0), self.opt.nz)
+            self.fake_B = self.netG(self.real_A, z0)
+            return self.real_A, self.fake_B, self.real_B, self.fake_B, self.real_B, \
+                0.0, 0.0
+
     def forward(self):
         # get random z
         self.z_random1 = self.get_z_random(self.real_A.size(0), self.opt.nz)

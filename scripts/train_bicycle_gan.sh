@@ -82,7 +82,7 @@ case ${CLASS} in
   NITER_DECAY=2500
   SAVE_EPOCH=50
   LAMBDA_L1=10.0
-  DATASET_MODE='few_fusion'
+  DATASET_MODE='bg_few_fusion'
   CONTINUE_TRAIN='--continue_train'
   VALIDATE_FREQ=50
   DISPLAY_FREQ=50
@@ -102,7 +102,7 @@ case ${CLASS} in
   DATASET_MODE='cn_multi_fusion'
   ;;
 
-  'skeleton_gray_texture_s')
+  'skeleton_gray_texture')
   PORT=11114
   NENCODE=4
   DATA_ID=${3}     # 0-11 means train the id dataset, 12 means train all the 12 dataset
@@ -113,7 +113,7 @@ case ${CLASS} in
   NITER_DECAY=300
   SAVE_EPOCH=10
   LAMBDA_L1=10.0
-  DATASET_MODE='cn_few_fusion'
+  DATASET_MODE='bg_cn_few_fusion'
   CONTINUE_TRAIN='--continue_train'
   VALIDATE_FREQ=25
   DISPLAY_FREQ=50
