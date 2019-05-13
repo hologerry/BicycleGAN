@@ -59,7 +59,8 @@ class BgFewFusionDataset(BaseDataset):
         for char in chars_random:
             ABC_path_list[-5] = char  # /path/to/img/XXXX_X.png
             phase_path = "".join(ABC_path_list)
-            style_path = phase_path.replace('style', 'style')
+            if self.opt.phase == 'val':
+                style_path = phase_path.replace(self.opt.phase, 'style')
             Style_paths.append(style_path)
             Bases.append(Image.open(style_path).convert('RGB').crop((0, 0, w, h)))
             Shapes.append(Image.open(style_path).convert('RGB').crop((w, 0, w+w, h)))
