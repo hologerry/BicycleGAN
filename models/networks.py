@@ -113,6 +113,13 @@ def define_G(input_nc, output_nc, nz, ngf, nencode=4, netG='unet_128', use_spect
                       norm_layer=norm_layer,  nl_layer=nl_layer,
                       use_dropout=use_dropout, use_attention=use_attention,
                       use_spectral_norm=use_spectral_norm, upsample=upsample)
+    elif netG == 'dualnet_wo_skip':
+        input_content = input_nc
+        input_style = input_nc * nencode
+        net = DualNet(input_content, input_style, output_nc, 6, ngf,
+                      norm_layer=norm_layer,  nl_layer=nl_layer,
+                      use_dropout=use_dropout, use_attention=use_attention,
+                      use_spectral_norm=use_spectral_norm, upsample=upsample, wo_skip=True)
     elif netG == 'dualnet_256':
         input_content = input_nc
         input_style = input_nc * nencode
@@ -1039,8 +1046,9 @@ class DualnetBlock(nn.Module):
     def __init__(self, input_cont, input_style, outer_nc, inner_nc,
                  submodule=None, outermost=False, innermost=False, use_spectral_norm=False,
                  norm_layer=None, nl_layer=None, use_dropout=False, use_attention=False,
-                 upsample='basic', padding_type='zero'):
+                 upsample='basic', padding_type='zero', wo_skip=False):
         super(DualnetBlock, self).__init__()
+        self.wo_skip = wo_skip
         p = 0
         downconv1 = []
         downconv2 = []
@@ -1072,15 +1080,22 @@ class DualnetBlock(nn.Module):
             attn_layer = get_self_attention_layer(outer_nc)
 
         if outermost:
-            upconv = upsampleLayer(
-                inner_nc * 4, inner_nc, upsample=upsample, padding_type=padding_type,
-                use_spectral_norm=use_spectral_norm)
+            if self.wo_skip:
+                upconv = upsampleLayer(
+                    inner_nc, inner_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
+                upconv_B = upsampleLayer(
+                    inner_nc, outer_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
+            else:
+                upconv = upsampleLayer(
+                    inner_nc * 4, inner_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
+                upconv_B = upsampleLayer(
+                    inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
 
             upconv_out = [nn.Conv2d(inner_nc + outer_nc, outer_nc, kernel_size=3, stride=1, padding=p)]
-
-            upconv_B = upsampleLayer(
-                inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
-                use_spectral_norm=use_spectral_norm)
 
             down1 = downconv1
             down2 = downconv2
@@ -1115,12 +1130,20 @@ class DualnetBlock(nn.Module):
                 up += [norm_layer(outer_nc)]
                 up_B += [norm_layer(outer_nc)]
         else:
-            upconv = upsampleLayer(
-                inner_nc * 4, outer_nc, upsample=upsample, padding_type=padding_type,
-                use_spectral_norm=use_spectral_norm)
-            upconv_B = upsampleLayer(
-                inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
-                use_spectral_norm=use_spectral_norm)
+            if self.wo_skip:  # without skip-connection
+                upconv = upsampleLayer(
+                    inner_nc, outer_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
+                upconv_B = upsampleLayer(
+                    inner_nc, outer_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
+            else:
+                upconv = upsampleLayer(
+                    inner_nc * 4, outer_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
+                upconv_B = upsampleLayer(
+                    inner_nc * 3, outer_nc, upsample=upsample, padding_type=padding_type,
+                    use_spectral_norm=use_spectral_norm)
             down1 = [downrelu1] + downconv1
             down2 = [downrelu2] + downconv2
             if norm_layer is not None:
@@ -1164,13 +1187,19 @@ class DualnetBlock(nn.Module):
             fake_C = self.up(mid_C)
             fake_B = self.up_B(mid_B)
             tmp1 = torch.cat([content, style], 1)
-            return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
+            if self.wo_skip:
+                return fake_C, fake_B
+            else:
+                return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
         else:
             mid, mid_B = self.submodule(x1, x2)
             fake_C = self.up(mid)
             fake_B = self.up_B(mid_B)
             tmp1 = torch.cat([content, style], 1)
-            return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
+            if self.wo_skip:
+                return fake_C, fake_B
+            else:
+                return torch.cat([torch.cat([fake_C, fake_B], 1), tmp1], 1), torch.cat([fake_B, tmp1], 1)
 
 
 class BasicBlockUp(nn.Module):
@@ -1261,29 +1290,29 @@ class DualNet(nn.Module):
 
     def __init__(self, input_content, input_style, output_nc, num_downs, ngf=64,
                  norm_layer=None, nl_layer=None, use_dropout=False,
-                 use_attention=False, use_spectral_norm=False, upsample='basic'):
+                 use_attention=False, use_spectral_norm=False, upsample='basic', wo_skip=False):
         super(DualNet, self).__init__()
         max_nchn = 8  # max channel factor
         # construct unet structure
         dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn,
                                   use_spectral_norm=use_spectral_norm, innermost=True,
-                                  norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample)
+                                  norm_layer=norm_layer, nl_layer=nl_layer, upsample=upsample, wo_skip=wo_skip)
         for i in range(num_downs - 5):
             dual_block = DualnetBlock(ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, ngf*max_nchn, dual_block,
                                       norm_layer=norm_layer, nl_layer=nl_layer, use_dropout=use_dropout,
-                                      use_spectral_norm=use_spectral_norm, upsample=upsample)
+                                      use_spectral_norm=use_spectral_norm, upsample=upsample, wo_skip=wo_skip)
         dual_block = DualnetBlock(ngf*4, ngf*4, ngf*4, ngf*max_nchn, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
-                                  nl_layer=nl_layer, upsample=upsample)
+                                  nl_layer=nl_layer, upsample=upsample, wo_skip=wo_skip)
         dual_block = DualnetBlock(ngf*2, ngf*2, ngf*2, ngf*4, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
-                                  nl_layer=nl_layer, upsample=upsample)
+                                  nl_layer=nl_layer, upsample=upsample, wo_skip=wo_skip)
         dual_block = DualnetBlock(ngf, ngf, ngf, ngf*2, dual_block, use_attention=use_attention,
                                   use_spectral_norm=use_spectral_norm, norm_layer=norm_layer,
-                                  nl_layer=nl_layer, upsample=upsample)
+                                  nl_layer=nl_layer, upsample=upsample, wo_skip=wo_skip)
         dual_block = DualnetBlock(input_content, input_style, output_nc, ngf, dual_block,
                                   use_spectral_norm=use_spectral_norm, outermost=True, norm_layer=norm_layer,
-                                  nl_layer=nl_layer, upsample=upsample)
+                                  nl_layer=nl_layer, upsample=upsample, wo_skip=wo_skip)
 
         self.model = dual_block
 
