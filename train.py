@@ -102,8 +102,7 @@ if __name__ == '__main__':
                                 width=validate_opt.fineSize)
             validation_loss_B /= b
             validation_loss_C /= b
-            print('End of epoch %d / %d \t Validation loss: L1_B: %f, L1_C: %f' %
-                  (epoch, opt.niter + opt.niter_decay, validation_loss_B, validation_loss_C))
+            visualizer.print_val_losses(epoch, {'val_l1_B': validation_loss_B, 'val_l1': validation_loss_C})
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))

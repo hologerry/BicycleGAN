@@ -131,8 +131,8 @@ class DualNetModel(BaseModel):
     def validate(self):
         with torch.no_grad():
             self.fake_C, self.fake_B = self.netG(self.real_A, self.real_Colors)
-            self.loss_G_L1_val = self.criterionL1_reduce(self.fake_C, self.real_C)
-            self.loss_G_L1_B_val = self.criterionL1_reduce(self.fake_B, self.real_B)
+            self.loss_G_L1_val = torch.nn.functional.l1_loss(self.fake_C, self.real_C)
+            self.loss_G_L1_B_val = torch.nn.functional.l1_loss(self.fake_B, self.real_B)
             return self.real_A, self.fake_B, self.real_B, self.fake_C, self.real_C, \
                 self.loss_G_L1_B_val, self.loss_G_L1_val
 

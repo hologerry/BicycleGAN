@@ -58,9 +58,13 @@ class Visualizer():
             print('create web directory %s...' % self.web_dir)
             util.mkdirs([self.web_dir, self.img_dir])
         self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
+        self.val_log_name = os.path.join(opt.checkpoints_dir, opt.name, 'val_L1_loss_log.txt')
         with open(self.log_name, "a") as log_file:
             now = time.strftime("%c")
             log_file.write('================ Training Loss (%s) ================\n' % now)
+        with open(self.val_log_name, "a") as log_file:
+            now = time.strftime("%c")
+            log_file.write('================ Validation Loss (%s) ================\n' % now)
 
     def reset(self):
         self.saved = False
@@ -159,4 +163,12 @@ class Visualizer():
 
         print(message)
         with open(self.log_name, "a") as log_file:
+            log_file.write('%s\n' % message)
+
+    def print_val_losses(self, epoch, val_losses):
+        message = 'epoch: %d,' % epoch
+        for k, v in val_losses.items():
+            message += '%s: %.3f,' % (k, v)
+        print(message)
+        with open(self.val_log_name, "a") as log_file:
             log_file.write('%s\n' % message)
