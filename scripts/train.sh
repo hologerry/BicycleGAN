@@ -129,7 +129,7 @@ case ${CLASS} in
   CONTINUE_TRAIN=''
   PRINT_FREQ=400
   ;;
-'base_gray_color' | 'base_gray_color_s' )
+'base_gray_color' | 'base_gray_color_s' |  'courier_gray_color' | 'noteworthy_gray_color_s' | 'markerfelt_gray_color' )
   PORT=9999
   NENCODE=4
   BATCH_SIZE=100
@@ -171,7 +171,7 @@ case ${CLASS} in
   LR=0.00002
   ;;
 
-'base_gray_texture' | 'base_gray_texture_s')
+'base_gray_texture' | 'base_gray_texture_s' | 'courier_gray_texture' | 'noteworthy_gray_texture' | 'markerfelt_gray_texture')
   PORT=9998
   NENCODE=4
   DATA_ID=${3}     # 0-34 means train the id dataset, 35 means train all the 35 dataset
