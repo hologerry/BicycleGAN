@@ -129,7 +129,7 @@ case ${CLASS} in
   CONTINUE_TRAIN=''
   PRINT_FREQ=400
   ;;
-'base_gray_color' | 'base_gray_color_s' |  'courier_gray_color' | 'noteworthy_gray_color' | 'markerfelt_gray_color' )
+'base_gray_color' | 'base_gray_color_s' |  'courier_gray_color' | 'noteworthy_gray_color' | 'markerfelt_gray_color' | 'base_gray_shape' )
   PORT=9999
   NENCODE=4
   BATCH_SIZE=100
