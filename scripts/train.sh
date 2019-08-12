@@ -209,7 +209,7 @@ case ${CLASS} in
   DATASET_MODE='cn_multi_fusion'
   ;;
 
-  'skeleton_gray_texture_s')
+  'skeleton_gray_texture' | 'skeleton_gray_texture_s')
   PORT=11112
   NENCODE=4
   DATA_ID=${3}     # 0-11 means train the id dataset, 12 means train all the 12 dataset
